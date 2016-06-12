@@ -1,10 +1,10 @@
 [
   {
    "interface_name" : "eth0",
-   "lead_handler" : "Test1",
+   "lead_handler" : "Test3",
    "pcap_filter" : "udp"},
   {
-   "lead_handler" : "Test1",
+   "lead_handler" : "Test3",
    "interface_name" : "lo"},
   {
    "interface_name" : "eth1"}

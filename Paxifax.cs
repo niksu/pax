@@ -45,6 +45,8 @@ namespace Pax {
     // This must be greater than 1.
     // Note that no_interfaces may be larger than the number of interfaces to which a packet processor has
     // been attached (i.e., interfaces that have a "lead_handler" defined in the configuration).
+    // But this is fine, because there might be interface for which we don't want to process
+    // their incoming packets, but we want to be able to forward packets to them nonetheless.
     public static int no_interfaces;
 
     // Array "maps" from device offset to the device object.
@@ -70,6 +72,7 @@ namespace Pax {
 
   // Simple packet processor: it can only transform the given packet and forward it to at most one interface.
   public abstract class SimplePacketProcessor : PacketProcessor {
+    // Return the offset of network interface that "packet" is to be forwarded to.
     abstract public int handler (int in_port, ref Packet packet);
 
     public void packetHandler (object sender, CaptureEventArgs e)
@@ -77,17 +80,64 @@ namespace Pax {
       var packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
       int in_port = PaxConfig.rdeviceMap[e.Device.Name];
 
+#if DEBUG
+      Debug.Write(PaxConfig.deviceMap[in_port].Name + " -1> ");
+#endif
       int out_port = handler (in_port, ref packet);
       if (out_port > -1)
       {
         PaxConfig.deviceMap[out_port].SendPacket(packet);
+#if DEBUG
+        Debug.WriteLine(PaxConfig.deviceMap[out_port].Name);
+#endif
       }
     }
   }
 
-/*TODO
-retrieve number of interfaces
-forward to more than one interface
-manufacture new packet(s)
-*/
+  // Simple packet processor that can forward to multiple interfaces. It is "simple" because
+  // it can only transform the given packet, and cannot generate new ones.
+  public abstract class MultiInterface_SimplePacketProcessor : PacketProcessor {
+    // Return the offsets of network interfaces that "packet" is to be forwarded to.
+    abstract public int[] handler (int in_port, ref Packet packet);
+
+    public static int[] broadcast (int in_port)
+    {
+      int[] out_ports = new int[PaxConfig.no_interfaces - 1];
+      // We retrieve number of interfaces in use from PaxConfig.
+      // Naturally, we exclude in_port from the interfaces we're forwarding to since this is a broadcast.
+      int idx = 0;
+      for (int ofs = 0; ofs < PaxConfig.no_interfaces; ofs++)
+      {
+        if (ofs != in_port)
+        {
+          out_ports[idx] = ofs;
+          idx++;
+        }
+      }
+      return out_ports;
+    }
+
+    public void packetHandler (object sender, CaptureEventArgs e)
+    {
+      var packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
+      int in_port = PaxConfig.rdeviceMap[e.Device.Name];
+
+#if DEBUG
+      Debug.Write(PaxConfig.deviceMap[in_port].Name + " -> ");
+#endif
+      int[] out_ports = handler (in_port, ref packet);
+      for (int idx = 0; idx < out_ports.Length; idx++)
+      {
+        PaxConfig.deviceMap[out_ports[idx]].SendPacket(packet);
+#if DEBUG
+        if (idx < out_ports.Length - 1)
+        {
+          Debug.Write(PaxConfig.deviceMap[out_ports[idx]].Name + ", ");
+        } else {
+          Debug.WriteLine(PaxConfig.deviceMap[out_ports[idx]].Name);
+        }
+#endif
+      }
+    }
+  }
 }

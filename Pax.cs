@@ -61,6 +61,10 @@ namespace Pax
       // FIXME when we load the DLL and wiring.cfg, check them against each other (e.g., that all handlers exist)
       //       we can resolve all the "links" (by looking at return statements) and draw a wiring diagram. -- this can be a script.
 
+#if DEBUG
+      Debug.Listeners.Add(new TextWriterTraceListener(System.Console.Out));
+#endif
+
       if (args.Length < 2)
       {
         usage();

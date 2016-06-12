@@ -20,6 +20,10 @@ using System.Threading.Tasks;
 
 using Pax;
 
+// FIXME there's not indicator that multiple network interfaces might be using this
+//       class. this could lead to concurrency-related issues, which might be avoided
+//       through locking for instance. perhaps worth signalling that this class is
+//       "multithread-ready" by having it inherit from some indicator interface?
 public class Test1 : SimplePacketProcessor {
   private int count = 0;
 
@@ -27,7 +31,7 @@ public class Test1 : SimplePacketProcessor {
   {
 //    Console.Write("!");
     Console.Write("{0}({1}/{2}) ", in_port, count++, PaxConfig.no_interfaces);
-    return 1;
+    return 1; // This behaves like a static switch: it forwards everything to port 1.
   }
 }
 
@@ -36,6 +40,17 @@ public class Test2 : SimplePacketProcessor {
   override public int handler (int in_port, ref Packet packet)
   {
     Console.Write("?");
-    return -1;
+    return -1; // i.e., drop packet, since it's not being forwarded to any interface.
+  }
+}
+
+public class Test3 : MultiInterface_SimplePacketProcessor {
+  private int count = 0;
+
+  override public int[] handler (int in_port, ref Packet packet)
+  {
+//    Console.Write("!");
+//    Console.Write("{0}({1}/{2}) ", in_port, count++, PaxConfig.no_interfaces);
+    return (MultiInterface_SimplePacketProcessor.broadcast(in_port));
   }
 }
