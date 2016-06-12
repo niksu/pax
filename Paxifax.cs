@@ -41,7 +41,10 @@ namespace Pax {
 
   // FIXME crude design
   public static class PaxConfig {
-    // This must be greater than 1;
+    // This is the number of interfaces in the configuration file.
+    // This must be greater than 1.
+    // Note that no_interfaces may be larger than the number of interfaces to which a packet processor has
+    // been attached (i.e., interfaces that have a "lead_handler" defined in the configuration).
     public static int no_interfaces;
 
     // Array "maps" from device offset to the device object.
@@ -50,7 +53,7 @@ namespace Pax {
     public static Dictionary<string, int> rdeviceMap = new Dictionary<string, int>();
     // Map from device offset to the name of its handler.
     public static string[] interface_lead_handler;
-    public static PacketProcessor[] interface_lead_handler_obj;
+    public static SimplePacketProcessor[] interface_lead_handler_obj;
 
     // FIXME better to link to function (rather than have indirection) to speed things up at runtime.
     // The file containing the catalogue of network interfaces.
@@ -61,14 +64,14 @@ namespace Pax {
 
   }
 
-  public abstract class PacketProcessor {
+  public interface PacketProcessor {
+    void packetHandler (object sender, CaptureEventArgs e);
+  }
+
+  // Simple packet processor: it can only transform the given packet and forward it to at most one interface.
+  public abstract class SimplePacketProcessor {
     abstract public int handler (int in_port, ref Packet packet);
 
-/*TODO
-retrieve number of interfaces
-forward to more than one interface
-manufacture new packet(s)
-*/
     public void packetHandler (object sender, CaptureEventArgs e)
     {
       var packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
@@ -81,4 +84,10 @@ manufacture new packet(s)
       }
     }
   }
+
+/*TODO
+retrieve number of interfaces
+forward to more than one interface
+manufacture new packet(s)
+*/
 }

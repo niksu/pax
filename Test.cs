@@ -20,18 +20,18 @@ using System.Threading.Tasks;
 
 using Pax;
 
-public class Test1 : PacketProcessor {
+public class Test1 : SimplePacketProcessor {
   private int count = 0;
 
   override public int handler (int in_port, ref Packet packet)
   {
 //    Console.Write("!");
-    Console.Write("{0}({1}) ", in_port, count++);
+    Console.Write("{0}({1}/{2}) ", in_port, count++, PaxConfig.no_interfaces);
     return 1;
   }
 }
 
-public class Test2 : PacketProcessor {
+public class Test2 : SimplePacketProcessor {
 
   override public int handler (int in_port, ref Packet packet)
   {

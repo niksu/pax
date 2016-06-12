@@ -122,7 +122,7 @@ namespace Pax
         PaxConfig.no_interfaces = cfg.Count;
         PaxConfig.deviceMap = new ICaptureDevice[PaxConfig.no_interfaces];
         PaxConfig.interface_lead_handler = new string[PaxConfig.no_interfaces];
-        PaxConfig.interface_lead_handler_obj = new PacketProcessor[PaxConfig.no_interfaces];
+        PaxConfig.interface_lead_handler_obj = new SimplePacketProcessor[PaxConfig.no_interfaces];
 
         int idx = 0;
         foreach (var i in cfg) {
@@ -197,7 +197,7 @@ namespace Pax
               ty.Name == PaxConfig.interface_lead_handler[idx])
           {
             subscribed.Add(idx);
-            PaxConfig.interface_lead_handler_obj[idx] = (PacketProcessor)obj;
+            PaxConfig.interface_lead_handler_obj[idx] = (SimplePacketProcessor)obj;
           }
         }
 
