@@ -53,7 +53,7 @@ namespace Pax {
     public static Dictionary<string, int> rdeviceMap = new Dictionary<string, int>();
     // Map from device offset to the name of its handler.
     public static string[] interface_lead_handler;
-    public static SimplePacketProcessor[] interface_lead_handler_obj;
+    public static PacketProcessor[] interface_lead_handler_obj;
 
     // FIXME better to link to function (rather than have indirection) to speed things up at runtime.
     // The file containing the catalogue of network interfaces.
@@ -69,7 +69,7 @@ namespace Pax {
   }
 
   // Simple packet processor: it can only transform the given packet and forward it to at most one interface.
-  public abstract class SimplePacketProcessor {
+  public abstract class SimplePacketProcessor : PacketProcessor {
     abstract public int handler (int in_port, ref Packet packet);
 
     public void packetHandler (object sender, CaptureEventArgs e)

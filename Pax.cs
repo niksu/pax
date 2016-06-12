@@ -122,7 +122,7 @@ namespace Pax
         PaxConfig.no_interfaces = cfg.Count;
         PaxConfig.deviceMap = new ICaptureDevice[PaxConfig.no_interfaces];
         PaxConfig.interface_lead_handler = new string[PaxConfig.no_interfaces];
-        PaxConfig.interface_lead_handler_obj = new SimplePacketProcessor[PaxConfig.no_interfaces];
+        PaxConfig.interface_lead_handler_obj = new PacketProcessor[PaxConfig.no_interfaces];
 
         int idx = 0;
         foreach (var i in cfg) {
@@ -186,7 +186,7 @@ namespace Pax
       //       interfaces made available by Pax.
       foreach (Type ty in PaxConfig.assembly.GetExportedTypes())
       {
-        object obj = Activator.CreateInstance(ty);
+        PacketProcessor pp = (PacketProcessor)Activator.CreateInstance(ty);
 
         // Find which network interfaces this class is handling
         List<int> subscribed = new List<int>();
@@ -197,7 +197,7 @@ namespace Pax
               ty.Name == PaxConfig.interface_lead_handler[idx])
           {
             subscribed.Add(idx);
-            PaxConfig.interface_lead_handler_obj[idx] = (SimplePacketProcessor)obj;
+            PaxConfig.interface_lead_handler_obj[idx] = pp;
           }
         }
 
