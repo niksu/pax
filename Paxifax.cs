@@ -80,10 +80,10 @@ namespace Pax {
       var packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
       int in_port = PaxConfig.rdeviceMap[e.Device.Name];
 
+      int out_port = handler (in_port, ref packet);
 #if DEBUG
       Debug.Write(PaxConfig.deviceMap[in_port].Name + " -1> ");
 #endif
-      int out_port = handler (in_port, ref packet);
       if (out_port > -1)
       {
         PaxConfig.deviceMap[out_port].SendPacket(packet);
@@ -122,10 +122,10 @@ namespace Pax {
       var packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
       int in_port = PaxConfig.rdeviceMap[e.Device.Name];
 
+      int[] out_ports = handler (in_port, ref packet);
 #if DEBUG
       Debug.Write(PaxConfig.deviceMap[in_port].Name + " -> ");
 #endif
-      int[] out_ports = handler (in_port, ref packet);
       for (int idx = 0; idx < out_ports.Length; idx++)
       {
         PaxConfig.deviceMap[out_ports[idx]].SendPacket(packet);
