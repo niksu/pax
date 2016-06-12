@@ -26,7 +26,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Test.cs" />
   </ItemGroup>
 <!--
