@@ -92,7 +92,7 @@ namespace Pax
           true);
       print_kv  (indent + "on .NET runtime v", System.Environment.Version.ToString(),
                  true);
-      print_kv  (indent + "OS is",
+      print_kv  (indent + "OS is ",
           System.Environment.OSVersion.ToString() +
           " (" +
           (System.Environment.Is64BitOperatingSystem ? "64bit" : "32bit")
