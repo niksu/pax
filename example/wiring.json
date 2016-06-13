@@ -1,10 +1,9 @@
 [
   {
    "interface_name" : "eth0",
-   "lead_handler" : "LearningSwitch",
+   "lead_handler" : "Hub",
    "pcap_filter" : "udp"},
   {
-   "lead_handler" : "LearningSwitch",
    "interface_name" : "lo"},
   {
    "interface_name" : "eth1"}
