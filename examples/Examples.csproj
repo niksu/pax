@@ -2,7 +2,7 @@
 <!-- Hand-written .csproj file, based on instructions at https://msdn.microsoft.com/en-us/library/dd576348.aspx-->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <AssemblyName>LearningSwitch</AssemblyName>
+    <AssemblyName>Examples</AssemblyName>
     <OutputPath>Bin\</OutputPath>
     <OutputType>Library</OutputType>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -12,22 +12,25 @@
     <Reference Include="System" />
     <Reference Include="PacketDotNet, Version=0.10.0.0, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\PacketDotNet.dll</HintPath>
+      <HintPath>..\lib\PacketDotNet.dll</HintPath>
     </Reference>
     <Reference Include="SharpPcap, Version=4.2.0.0, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\SharpPcap.dll</HintPath>
+      <HintPath>..\lib\SharpPcap.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=8.0.3.0, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Pax, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\Bin\Pax.exe</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Hub.cs" />
     <Compile Include="LearningSwitch.cs" />
+    <Compile Include="Test.cs" />
   </ItemGroup>
 <!--
   <Target Name="Build">
