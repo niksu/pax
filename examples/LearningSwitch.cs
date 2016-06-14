@@ -7,14 +7,18 @@ Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 
 using System;
 using System.Net.NetworkInformation;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using PacketDotNet;
 using System.Diagnostics;
 using Pax;
 
 public class LearningSwitch : MultiInterface_SimplePacketProcessor {
-  // FIXME synchronise on this!
-  Dictionary<PhysicalAddress,int> forwarding_table = new Dictionary<PhysicalAddress,int>();
+  // NOTE Perhaps ConcurrentDictionary is overkill since:
+  // i) In this implementation we never "forget" learnt mappings. So there isn't
+  //    a risk of having an entry deleted in between it being checked and used.
+  // ii) Distinct ports A and B should never update the same mapping, unless
+  //    we're in a forwarding loop.
+  ConcurrentDictionary<PhysicalAddress,int> forwarding_table = new ConcurrentDictionary<PhysicalAddress,int>();
 
   override public int[] handler (int in_port, ref Packet packet)
   {
