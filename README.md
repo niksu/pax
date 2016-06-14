@@ -6,5 +6,5 @@ xbuild Pax.csproj && xbuild examples/Examples.csproj
 
 # Running
 ```
-sudo ./Bin/Pax.exe examples/wiring.json Bin/Examples.dll
+sudo ./Bin/Pax.exe examples/wiring.json examples/Bin/Examples.dll
 ```
