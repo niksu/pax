@@ -32,6 +32,7 @@
     <Compile Include="Hub.cs" />
     <Compile Include="LearningSwitch.cs" />
     <Compile Include="Mirror.cs" />
+    <Compile Include="NAT.cs" />
     <Compile Include="Test.cs" />
   </ItemGroup>
 <!--
