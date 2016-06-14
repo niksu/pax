@@ -190,7 +190,7 @@ namespace Pax
       //       interfaces made available by Pax.
       foreach (Type ty in PaxConfig.assembly.GetExportedTypes())
       {
-        PacketProcessor pp = (PacketProcessor)Activator.CreateInstance(ty);
+        PacketProcessor pp = (PacketProcessor)Activator.CreateInstance(ty); // NOTE this means that we require "ty" to define a default constructor.
 
         // Find which network interfaces this class is handling
         List<int> subscribed = new List<int>();
