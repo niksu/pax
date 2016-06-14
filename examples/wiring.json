@@ -1,7 +1,7 @@
 [
   {
    "interface_name" : "eth0",
-   "lead_handler" : "Hub",
+   "lead_handler" : "Nested_Chained_Test",
    "pcap_filter" : "udp"},
   {
    "interface_name" : "lo"},

@@ -56,3 +56,32 @@ public class Test3 : MultiInterface_SimplePacketProcessor {
     return (MultiInterface_SimplePacketProcessor.broadcast(in_port));
   }
 }
+
+public class Printer : PacketProcessor {
+  int id = 0;
+
+  // NOTE we always need to have a default constructor, because of how Pax works.
+  public Printer () { }
+
+  public Printer (int id) {
+    this.id = id;
+  }
+
+  public void packetHandler (object sender, CaptureEventArgs e) {
+    Console.WriteLine(id);
+  }
+}
+
+// Nested packet processor -- it contains a sequence of chained processors.
+public class Nested_Chained_Test : PacketProcessor {
+  PacketProcessor pp =
+    new PacketProcessor_Chain(new List<PacketProcessor>()
+        {
+          new Printer(1),
+          new Printer(2),
+        });
+
+  public void packetHandler (object sender, CaptureEventArgs e) {
+    pp.packetHandler (sender, e);
+  }
+}

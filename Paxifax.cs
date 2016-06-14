@@ -140,4 +140,18 @@ namespace Pax {
       }
     }
   }
+
+  public class PacketProcessor_Chain : PacketProcessor {
+    List<PacketProcessor> chain;
+
+    public PacketProcessor_Chain (List<PacketProcessor> chain) {
+      this.chain = chain;
+    }
+
+    public void packetHandler (object sender, CaptureEventArgs e) {
+      foreach (PacketProcessor pp in chain) {
+        pp.packetHandler (sender, e);
+      }
+    }
+  }
 }
