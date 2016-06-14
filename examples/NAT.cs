@@ -66,7 +66,7 @@ public class NAT : SimplePacketProcessor {
     }
 
     public bool Equals (NAT_Entry other) {
-      // Use the method from IEquatable<T>.
+      // For IEquatable<T> use the overridden method from Object.
       return this.Equals((Object)other);
     }
 
