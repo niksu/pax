@@ -216,8 +216,8 @@ namespace Pax
            String.Join(", ", subscribed.ConvertAll<string>(ofs => PaxConfig.deviceMap[ofs].Name)));
         // FIXME could also print type-related info of ty, such as which Pax interfaces it implements.
         Console.ForegroundColor = tmp;
-
       }
+      // FIXME add check to see if there's an interface that references a lead_handler that doesn't appear in the assembly. That should be flagged up to the user, and lead to termination of Pax.
 
       Console.ForegroundColor = ConsoleColor.Gray;
 
