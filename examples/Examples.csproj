@@ -6,6 +6,7 @@
     <OutputPath>Bin\</OutputPath>
     <OutputType>Library</OutputType>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
