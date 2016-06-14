@@ -85,3 +85,31 @@ public class Nested_Chained_Test : PacketProcessor {
     pp.packetHandler (sender, e);
   }
 }
+
+public class Nested_Chained_Test2 : PacketProcessor {
+  int[] mirror_cfg;
+  PacketProcessor pp;
+
+  public Nested_Chained_Test2 () {
+    mirror_cfg = Mirror.InitialConfig(PaxConfig.no_interfaces);
+    Debug.Assert(PaxConfig.no_interfaces >= 3);
+    mirror_cfg[0] = 2; // Mirror port 0 to port 2
+
+    PacketProcessor pp =
+      new PacketProcessor_Chain(new List<PacketProcessor>()
+          {
+  /* FIXME would be tidier to use this
+            new Mirror(
+              Mirror.InitialConfig(PaxConfig.no_interfaces).MirrorPort(0, 2)
+              ),
+  */
+            new Mirror(mirror_cfg),
+            new LearningSwitch(),
+          });
+  }
+
+
+  public void packetHandler (object sender, CaptureEventArgs e) {
+    pp.packetHandler (sender, e);
+  }
+}
