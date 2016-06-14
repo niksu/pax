@@ -17,6 +17,7 @@ using System.IO;
 using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Threading;
 
 using Pax;
 
@@ -24,13 +25,14 @@ using Pax;
 //       class. this could lead to concurrency-related issues, which might be avoided
 //       through locking for instance. perhaps worth signalling that this class is
 //       "multithread-ready" by having it inherit from some indicator interface?
+// NOTE i use Interlocked for atomic operations, to mitigate concurrency issues.
 public class Test1 : SimplePacketProcessor {
   private int count = 0;
 
   override public int handler (int in_port, ref Packet packet)
   {
 //    Console.Write("!");
-    Console.Write("{0}({1}/{2}) ", in_port, count++, PaxConfig.no_interfaces);
+    Console.Write("{0}({1}/{2}) ", in_port, Interlocked.Increment(ref count), PaxConfig.no_interfaces);
     return 1; // This behaves like a static switch: it forwards everything to port 1.
   }
 }
