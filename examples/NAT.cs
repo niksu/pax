@@ -113,7 +113,6 @@ public class NAT : SimplePacketProcessor {
     new ConcurrentDictionary<NAT_Entry,NAT_Entry>();
   ConcurrentDictionary<NAT_Entry,NAT_Entry> port_reverse_mapping =
     new ConcurrentDictionary<NAT_Entry,NAT_Entry>();
-//  FIXME dictionary not being used with concurrent methods
 
   private int outside_to_inside (IpPacket p_ip, TcpPacket p_tcp, NAT_Entry from, int in_port, ref Packet packet)
   {
@@ -122,9 +121,9 @@ public class NAT : SimplePacketProcessor {
 
     // Retrieve the mapping. If a mapping doesn't exist, then drop the packet.
     // Rewrite destination IP address and TCP port, and map to the (non-zero) port.
-    if (port_mapping.ContainsKey(from))
+    NAT_Entry to;
+    if (port_mapping.TryGetValue(from, out to))
     {
-      NAT_Entry to = port_mapping[from];
       p_ip.DestinationAddress = to.ip_address;
       p_tcp.DestinationPort = to.tcp_port;
       // Update packet.
@@ -148,19 +147,20 @@ public class NAT : SimplePacketProcessor {
     from.assigned_tcp_port = null;
     from.network_port = in_port;
 
+    NAT_Entry to;
     if (p_tcp.Syn)
     {
       // If a TCP SYN, then add a mapping.
 
-      NAT_Entry to;
-
       // We first delete any previous mapping that had the same key.
-      if (port_reverse_mapping.ContainsKey(from))
+      if (port_reverse_mapping.TryGetValue(from, out to))
       {
-        // FIXME check bool results.
+        // We don't really care about the boolean result returned by TryRemove,
+        // since if "true" then the key-value pair was removed (great), but
+        // if "false" then the key-value pair must have been already removed (great).
         port_mapping.TryRemove(port_reverse_mapping[from], out to);
         port_reverse_mapping.TryRemove(from, out to);
-      }
+      } // FIXME in case TryGetValue returns false, we could simply do TryUpdate or TryAdd instead of the TryRemove and TryAdd.
 
       to = new NAT_Entry();
       to.ip_address = p_ip.DestinationAddress;
@@ -169,11 +169,18 @@ public class NAT : SimplePacketProcessor {
       // Generate data for the mapping
       lock(my_address)
       {
-        to.assigned_tcp_port = next_port++;;
+        // NOTE can't use Interlocked.Increment since the type of next_port is short not int.
+        to.assigned_tcp_port = next_port++;
       }
 
-      port_mapping[to] = from;
-      port_reverse_mapping[from] = to;
+      if (!port_mapping.TryAdd(to, from))
+      {
+        Console.WriteLine("Concurrent update of port_mapping[to] where 'to'=" + to.ToString());
+      }
+      if (!port_reverse_mapping.TryAdd(from, to))
+      {
+        Console.WriteLine("Concurrent update of port_reverse_mapping[from] where 'from'=" + from.ToString());
+      }
 
       // Rewrite the packet.
       p_tcp.SourcePort = to.assigned_tcp_port.Value;
@@ -185,19 +192,18 @@ public class NAT : SimplePacketProcessor {
       return 0; //FIXME const
     } else {
       // Not a SYN, so this must be part of an ongoing connection.
-      if (!port_reverse_mapping.ContainsKey(from))
+      if (!port_reverse_mapping.TryGetValue(from, out to))
       {
         // if we don't have a mapping for it then drop.
         return -1;//FIXME const
       } else {
         //  otherwise apply the mapping (replacing source IP address and TCP port) and forward to the zero port.
-        NAT_Entry to = port_reverse_mapping[from];
         p_ip.SourceAddress = to.ip_address;
         p_tcp.SourcePort = to.tcp_port;
         // Update packet.
         p_ip.PayloadPacket = p_tcp;
         packet.PayloadPacket = p_ip;
-      // FIXME need to update checksums
+        // FIXME need to update checksums
         return 0; //FIXME const
       }
     }
