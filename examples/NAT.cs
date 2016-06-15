@@ -64,13 +64,14 @@ public class NAT : SimplePacketProcessor {
 
   override public int handler (int in_port, ref Packet packet)
   {
-    // We drop anything other than TCP packets
-    if (!(packet is PacketDotNet.EthernetPacket))
+    // We drop anything other than TCP packets that are encapsulated in IPv4,
+    // and in Ethernet.
+    if (!(packet is PacketDotNet.EthernetPacket) ||
+        !packet.Encapsulates(typeof(IPv4Packet), typeof(TcpPacket)))
     {
       return Port_Drop;
     }
 
-    // FIXME check payload types
     IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
     TcpPacket p_tcp = ((PacketDotNet.TcpPacket)(p_ip.PayloadPacket));
 

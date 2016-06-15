@@ -18,6 +18,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Linq;
 
 namespace Pax {
 
@@ -160,6 +161,28 @@ namespace Pax {
     public void packetHandler (object sender, CaptureEventArgs e) {
       foreach (PacketProcessor pp in chain) {
         pp.packetHandler (sender, e);
+      }
+    }
+  }
+
+  public static class PacketEncap {
+    public static bool Encapsulates (this Packet p, params Type[] encs) {
+      if (encs.Length > 0)
+      {
+        if (p.PayloadPacket == null)
+        {
+          // "p" doesn't encapsulate whatever it is that "encs" asks it to,
+          // since "p" doesn't encapsulate anything.
+          return false;
+        } else {
+          if (encs[0].IsAssignableFrom(p.PayloadPacket.GetType())) {
+            return p.PayloadPacket.Encapsulates(encs.Skip(1).ToArray());
+          } else {
+            return false;
+          }
+        }
+      } else {
+        return true;
       }
     }
   }
