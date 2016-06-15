@@ -82,9 +82,13 @@ public class NAT : SimplePacketProcessor {
     int out_port = Port_Drop;
     if (in_port == Port_Outside)
     {
-      out_port = outside_to_inside (p_ip, p_tcp, from, in_port, ref packet);
+      from.assigned_tcp_port = p_tcp.DestinationPort;
+      from.network_port = null;
+      out_port = outside_to_inside (p_ip, p_tcp, from);
     } else {
-      out_port = inside_to_outside (p_ip, p_tcp, from, in_port, ref packet);
+      from.assigned_tcp_port = null;
+      from.network_port = in_port;
+      out_port = inside_to_outside (p_ip, p_tcp, from);
     }
 
 #if DEBUG
@@ -96,11 +100,8 @@ public class NAT : SimplePacketProcessor {
     return out_port;
   }
 
-  private int outside_to_inside (IpPacket p_ip, TcpPacket p_tcp, NAT_Entry from, int in_port, ref Packet packet)
+  private int outside_to_inside (IpPacket p_ip, TcpPacket p_tcp, NAT_Entry from)
   {
-    from.assigned_tcp_port = p_tcp.DestinationPort;
-    from.network_port = null;
-
     // Retrieve the mapping. If a mapping doesn't exist, then it means that we're not
     // aware of a session to which the packet belongs: so drop the packet.
     NAT_Entry to;
@@ -109,11 +110,9 @@ public class NAT : SimplePacketProcessor {
       // Rewrite destination IP address and TCP port, and map to the appropriate Inside port.
       p_ip.DestinationAddress = to.ip_address;
       p_tcp.DestinationPort = to.tcp_port;
-      // Update packet, including checksums.
+      // Update checksums.
       p_tcp.UpdateTCPChecksum();
-      p_ip.PayloadPacket = p_tcp;
       ((IPv4Packet)p_ip).UpdateIPChecksum();
-      packet.PayloadPacket = p_ip;
       return to.network_port.Value;
     }
     else
@@ -122,14 +121,11 @@ public class NAT : SimplePacketProcessor {
     }
   }
 
-  private int inside_to_outside (IpPacket p_ip, TcpPacket p_tcp, NAT_Entry from, int in_port, ref Packet packet)
+  private int inside_to_outside (IpPacket p_ip, TcpPacket p_tcp, NAT_Entry from)
   {
     // In this case, we're querying the dictionary with "reversed" keying,
     // since we want to find out how the destination IP address and destination
     // TCP port need to be rewritten before forwarding to the outside.
-
-    from.assigned_tcp_port = null;
-    from.network_port = in_port;
 
     NAT_Entry to;
     if (p_tcp.Syn)
@@ -159,21 +155,19 @@ public class NAT : SimplePacketProcessor {
 
       if (!port_mapping.TryAdd(to, from))
       {
-        Console.WriteLine("Concurrent update of port_mapping[to] where 'to'=" + to.ToString());
+        Console.WriteLine("Concurrent update of port_mapping[to] where 'to'={0}", to);
       }
       if (!port_reverse_mapping.TryAdd(from, to))
       {
-        Console.WriteLine("Concurrent update of port_reverse_mapping[from] where 'from'=" + from.ToString());
+        Console.WriteLine("Concurrent update of port_reverse_mapping[from] where 'from'={0}", from);
       }
 
       // Rewrite the packet.
       p_tcp.SourcePort = to.assigned_tcp_port.Value;
       p_ip.SourceAddress = my_address;
-      // Update packet, including checksums.
+      // Update checksums.
       p_tcp.UpdateTCPChecksum();
-      p_ip.PayloadPacket = p_tcp;
       ((IPv4Packet)p_ip).UpdateIPChecksum();
-      packet.PayloadPacket = p_ip;
       return Port_Outside;
     } else {
       // Not a SYN, so this must be part of an ongoing connection.
@@ -185,11 +179,9 @@ public class NAT : SimplePacketProcessor {
         //  otherwise apply the mapping (replacing source IP address and TCP port) and forward to the Outside port.
         p_ip.SourceAddress = to.ip_address;
         p_tcp.SourcePort = to.tcp_port;
-        // Update packet, including checksums.
+        // Update checksums.
         p_tcp.UpdateTCPChecksum();
-        p_ip.PayloadPacket = p_tcp;
         ((IPv4Packet)p_ip).UpdateIPChecksum();
-        packet.PayloadPacket = p_ip;
         return Port_Outside;
       }
     }
