@@ -64,14 +64,13 @@ public class NAT : SimplePacketProcessor {
 
   override public int handler (int in_port, ref Packet packet)
   {
-    int out_port = Port_Drop;
-
     // We drop anything other than TCP packets
     if (!(packet is PacketDotNet.EthernetPacket))
     {
       return Port_Drop;
     }
 
+    // FIXME check payload types
     IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
     TcpPacket p_tcp = ((PacketDotNet.TcpPacket)(p_ip.PayloadPacket));
 
@@ -79,6 +78,7 @@ public class NAT : SimplePacketProcessor {
     from.ip_address = p_ip.SourceAddress;
     from.tcp_port = p_tcp.SourcePort;
 
+    int out_port = Port_Drop;
     if (in_port == Port_Outside)
     {
       out_port = outside_to_inside (p_ip, p_tcp, from, in_port, ref packet);
@@ -100,11 +100,12 @@ public class NAT : SimplePacketProcessor {
     from.assigned_tcp_port = p_tcp.DestinationPort;
     from.network_port = null;
 
-    // Retrieve the mapping. If a mapping doesn't exist, then drop the packet.
-    // Rewrite destination IP address and TCP port, and map to the appropriate Inside port.
+    // Retrieve the mapping. If a mapping doesn't exist, then it means that we're not
+    // aware of a session to which the packet belongs: so drop the packet.
     NAT_Entry to;
     if (port_mapping.TryGetValue(from, out to))
     {
+      // Rewrite destination IP address and TCP port, and map to the appropriate Inside port.
       p_ip.DestinationAddress = to.ip_address;
       p_tcp.DestinationPort = to.tcp_port;
       // Update packet, including checksums.
