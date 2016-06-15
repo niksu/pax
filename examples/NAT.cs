@@ -36,6 +36,8 @@ NOTE could improve the implementation by having configurable "forwarding ports"
      that enable you to run servers on non-zero network ports.
 */
 public class NAT : SimplePacketProcessor {
+  public const int Port_Drop = -1;
+  public const int Port_Outside = 0;
   // Entries in the mapping that the NAT keeps to track ongoing TCP connections.
   // A NAT_Entry can represent the "internal" or "external" entity between which the NAT mediates.
   class NAT_Entry : IEquatable<NAT_Entry> {
@@ -135,7 +137,7 @@ public class NAT : SimplePacketProcessor {
     }
     else
     {
-      return -1;//FIXME const
+      return Port_Drop;
     }
   }
 
@@ -191,13 +193,13 @@ public class NAT : SimplePacketProcessor {
       p_ip.PayloadPacket = p_tcp;
       ((IPv4Packet)p_ip).UpdateIPChecksum();
       packet.PayloadPacket = p_ip;
-      return 0; //FIXME const
+      return Port_Outside;
     } else {
       // Not a SYN, so this must be part of an ongoing connection.
       if (!port_reverse_mapping.TryGetValue(from, out to))
       {
         // if we don't have a mapping for it then drop.
-        return -1;//FIXME const
+        return Port_Drop;
       } else {
         //  otherwise apply the mapping (replacing source IP address and TCP port) and forward to the zero port.
         p_ip.SourceAddress = to.ip_address;
@@ -207,7 +209,7 @@ public class NAT : SimplePacketProcessor {
         p_ip.PayloadPacket = p_tcp;
         ((IPv4Packet)p_ip).UpdateIPChecksum();
         packet.PayloadPacket = p_ip;
-        return 0; //FIXME const
+        return Port_Outside;
       }
     }
   }
@@ -219,7 +221,7 @@ public class NAT : SimplePacketProcessor {
     // We drop anything other than TCP packets
     if (!(packet is PacketDotNet.EthernetPacket))
     {
-      return -1;//FIXME const
+      return Port_Drop;
     }
 
     IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
@@ -229,7 +231,7 @@ public class NAT : SimplePacketProcessor {
     from.ip_address = p_ip.SourceAddress;
     from.tcp_port = p_tcp.SourcePort;
 
-    if (in_port == 0/*FIXME const*/)
+    if (in_port == Port_Outside)
     {
       out_port = outside_to_inside (p_ip, p_tcp, from, in_port, ref packet);
     } else {
