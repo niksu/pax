@@ -28,12 +28,11 @@ public class LearningSwitch : MultiInterface_SimplePacketProcessor {
     {
       EthernetPacket eth = ((PacketDotNet.EthernetPacket)packet);
 
+      int lookup_out_port;
       // Forwarding decision.
-      if (forwarding_table.ContainsKey(eth.DestinationHwAddress))
+      if (forwarding_table.TryGetValue(eth.DestinationHwAddress, out lookup_out_port))
       {
-        int out_port = forwarding_table[eth.DestinationHwAddress];
-
-        if (out_port == in_port)
+        if (lookup_out_port == in_port)
         {
           var tmp = Console.ForegroundColor;
           Console.ForegroundColor = ConsoleColor.Red;
@@ -41,24 +40,33 @@ public class LearningSwitch : MultiInterface_SimplePacketProcessor {
           Console.ForegroundColor = tmp;
           out_ports = new int[0];
         } else {
-          out_ports = new int[1]{out_port};
+          out_ports = new int[1]{lookup_out_port};
         }
       } else {
         out_ports = MultiInterface_SimplePacketProcessor.broadcast(in_port);
       }
 
+      // This might hold the value that's mapped to by eth.SourceHwAddress,
+      // if one exists in our forwarding_table.
+      int supposed_in_port;
       // Switch learns which port knows about the SourceHwAddress.
-      if (forwarding_table.ContainsKey(eth.SourceHwAddress))
+      if (forwarding_table.TryGetValue(eth.SourceHwAddress, out supposed_in_port))
       {
-        if (forwarding_table[eth.SourceHwAddress] != in_port)
+        if (supposed_in_port != in_port)
         {
-          forwarding_table[eth.SourceHwAddress] = in_port;
+          if (!forwarding_table.TryUpdate(eth.SourceHwAddress, in_port, supposed_in_port))
+          {
+            Console.WriteLine("Concurrent update of output port for " + eth.SourceHwAddress.ToString());
+          }
 #if DEBUG
           Debug.WriteLine("Relearned " + eth.SourceHwAddress.ToString() + " <- " + PaxConfig.deviceMap[in_port].Name);
 #endif
         }
       } else {
-        forwarding_table[eth.SourceHwAddress] = in_port;
+        if (!forwarding_table.TryUpdate(eth.SourceHwAddress, in_port, supposed_in_port))
+        {
+          Console.WriteLine("Concurrent update of output port for " + eth.SourceHwAddress.ToString());
+        }
 #if DEBUG
         Debug.WriteLine("Learned " + eth.SourceHwAddress.ToString() + " <- " + PaxConfig.deviceMap[in_port].Name);
 #endif
