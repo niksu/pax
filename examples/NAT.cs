@@ -41,8 +41,8 @@ public class NAT : SimplePacketProcessor {
   public const int Port_Drop = -1;
   public const int Port_Outside = 0;
 
-  IPAddress my_address;
-  ushort next_port;
+  private IPAddress my_address;
+  private ushort next_port;
 
   public NAT () {
     // FIXME raise an exception if this constructor was used, since currently only the other constructor initialises things properly.
