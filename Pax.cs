@@ -86,11 +86,15 @@ namespace Pax
 
       // FIXME break up Main() into separate functions. The following block could be put into its own void function, for instance.
       Console.ForegroundColor = ConsoleColor.White;
-      Console.Write ("☮ ");
+      Console.Write ("✌ ");
       Console.ForegroundColor = ConsoleColor.Cyan;
       Console.Write ("Pax v{0}", "0.1"/*FIXME const -- get value from AssemblyInfo*/);
       Console.ForegroundColor = ConsoleColor.White;
-      Console.WriteLine (" ✌");
+      Console.Write (" ☮ ");
+      Console.ForegroundColor = ConsoleColor.DarkBlue;
+      Console.Write ("http://www.cl.cam.ac.uk/~ns441/pax");
+      Console.ForegroundColor = ConsoleColor.White;
+      Console.WriteLine();
       print_kv  (indent + "running as ",
           (System.Environment.Is64BitProcess ? "64bit" : "32bit") + " process",
           true);
