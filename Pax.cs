@@ -126,14 +126,14 @@ namespace Pax
 
       using (JsonTextReader r = new JsonTextReader(File.OpenText(PaxConfig.config_filename))) {
         JsonSerializer j = new JsonSerializer();
-        List<NetworkInterfaceConfig> cfg = j.Deserialize<List<NetworkInterfaceConfig>>(r);
-        PaxConfig.no_interfaces = cfg.Count;
+        PaxConfig.config = j.Deserialize<List<NetworkInterfaceConfig>>(r);
+        PaxConfig.no_interfaces = PaxConfig.config.Count;
         PaxConfig.deviceMap = new ICaptureDevice[PaxConfig.no_interfaces];
         PaxConfig.interface_lead_handler = new string[PaxConfig.no_interfaces];
         PaxConfig.interface_lead_handler_obj = new PacketProcessor[PaxConfig.no_interfaces];
 
         int idx = 0;
-        foreach (var i in cfg) {
+        foreach (var i in PaxConfig.config) {
           Debug.Assert (idx < PaxConfig.no_interfaces);
 
           PaxConfig.deviceMap[idx] = null;

@@ -119,10 +119,11 @@ public class Nested_Chained_Test2 : PacketProcessor {
 }
 
 public class Nested_NAT : PacketProcessor {
+  // NOTE we use "config[0]" below since we're interested in the information
+  //      related to the outside-facing port, which the NAT designates as being port 0.
   PacketProcessor pp =
-    // FIXME can get these values from the JSON file?
-    new NAT (IPAddress.Parse("192.168.2.2"/*FIXME const*/),
-        5000/*FIXME const*/);
+    new NAT (IPAddress.Parse(PaxConfig.config[0].environment["my_address"]),
+        UInt16.Parse(PaxConfig.config[0].environment["next_port"]));
 
   public void packetHandler (object sender, CaptureEventArgs e) {
     pp.packetHandler (sender, e);

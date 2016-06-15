@@ -37,6 +37,8 @@ namespace Pax {
     public string interface_name {get; set;}
     // The function that is called when traffic arrives on this interface.
     public string lead_handler {get; set;}
+
+    public IDictionary<string, string> environment {get; set;}
   }
 
   // FIXME crude design
@@ -64,6 +66,7 @@ namespace Pax {
     public static string assembly_filename;
     public static Assembly assembly;
 
+    public static List<NetworkInterfaceConfig> config;
   }
 
   public interface PacketProcessor {
