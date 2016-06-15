@@ -89,6 +89,8 @@ namespace Pax {
         PaxConfig.deviceMap[out_port].SendPacket(packet);
 #if DEBUG
         Debug.WriteLine(PaxConfig.deviceMap[out_port].Name);
+      } else {
+        Debug.WriteLine("");
 #endif
       }
     }
@@ -134,10 +136,14 @@ namespace Pax {
         {
           Debug.Write(PaxConfig.deviceMap[out_ports[idx]].Name + ", ");
         } else {
-          Debug.WriteLine(PaxConfig.deviceMap[out_ports[idx]].Name);
+          Debug.Write(PaxConfig.deviceMap[out_ports[idx]].Name);
         }
 #endif
       }
+
+#if DEBUG
+      Debug.WriteLine("");
+#endif
     }
   }
 
