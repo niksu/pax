@@ -51,6 +51,7 @@ public class NAT : SimplePacketProcessor {
     public int? network_port {get; set;}
 
     public override bool Equals (Object other_obj) {
+/*
       if (other_obj is NAT_Entry)
       {
         NAT_Entry other = other_obj as NAT_Entry;
@@ -63,17 +64,47 @@ public class NAT : SimplePacketProcessor {
       } else {
         throw (new Exception ("A NAT_Entry may only be compared with another NAT_Entry."));
       }
+*/
+      // FIXME brutal!
+      return (this.ToString() == other_obj.ToString());
     }
 
     public bool Equals (NAT_Entry other) {
       // For IEquatable<T> use the overridden method from Object.
+      // FIXME brutal!
       return this.Equals((Object)other);
     }
 
+    public static bool operator== (NAT_Entry x, NAT_Entry y) {
+      // FIXME brutal!
+      return (x.ToString() == y.ToString());
+    }
+
+    public static bool operator!= (NAT_Entry x, NAT_Entry y) {
+      // FIXME brutal!
+      return (x.ToString() != y.ToString());
+    }
+
+    public override int GetHashCode() {
+      return this.ToString().GetHashCode();
+    }
+
+    public override string ToString() {
+      return ("(" +
+          ip_address.ToString() +
+          ":" + tcp_port.ToString() +
+          " " + (assigned_tcp_port.HasValue ? Convert.ToString(assigned_tcp_port.Value) : ".") +
+          "|" + (network_port.HasValue ? Convert.ToString(network_port.Value) : ".") +
+          ")");
+    }
   }
 
   IPAddress my_address;
   ushort next_port;
+
+  public NAT () {
+    // FIXME raise an exception if this constructor was used, since currently only the other constructor initialises things properly.
+  }
 
   public NAT (IPAddress my_address, ushort next_port) {
     this.my_address = my_address;
@@ -88,6 +119,7 @@ public class NAT : SimplePacketProcessor {
     new ConcurrentDictionary<NAT_Entry,NAT_Entry>();
   ConcurrentDictionary<NAT_Entry,NAT_Entry> port_reverse_mapping =
     new ConcurrentDictionary<NAT_Entry,NAT_Entry>();
+//  FIXME dictionary not being used with concurrent methods
 
   private int outside_to_inside (IpPacket p_ip, TcpPacket p_tcp, NAT_Entry from, int in_port, ref Packet packet)
   {
@@ -124,9 +156,18 @@ public class NAT : SimplePacketProcessor {
     if (p_tcp.Syn)
     {
       // If a TCP SYN, then add a mapping.
-      // NOTE we simply overwrite any previous mapping that had the same key.
 
-      NAT_Entry to = new NAT_Entry();
+      NAT_Entry to;
+
+      // We first delete any previous mapping that had the same key.
+      if (port_reverse_mapping.ContainsKey(from))
+      {
+        // FIXME check bool results.
+        port_mapping.TryRemove(port_reverse_mapping[from], out to);
+        port_reverse_mapping.TryRemove(from, out to);
+      }
+
+      to = new NAT_Entry();
       to.ip_address = p_ip.DestinationAddress;
       to.tcp_port = p_tcp.DestinationPort;
 
@@ -178,17 +219,31 @@ public class NAT : SimplePacketProcessor {
     IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
     TcpPacket p_tcp = ((PacketDotNet.TcpPacket)(p_ip.PayloadPacket));
 
-    NAT_Entry k = new NAT_Entry(); //FIXME for increased efficiency could avoid this allocation, and use a thread-local but static one done at the start?
-    k.ip_address = p_ip.SourceAddress;
-    k.tcp_port = p_tcp.SourcePort;
+    NAT_Entry from = new NAT_Entry(); //FIXME for increased efficiency could avoid this allocation, and use a thread-local but static one done at the start?
+    from.ip_address = p_ip.SourceAddress;
+    from.tcp_port = p_tcp.SourcePort;
 
     if (in_port == 0/*FIXME const*/)
     {
-      out_port = outside_to_inside (p_ip, p_tcp, k, in_port, ref packet);
+      out_port = outside_to_inside (p_ip, p_tcp, from, in_port, ref packet);
     } else {
-      out_port = inside_to_outside (p_ip, p_tcp, k, in_port, ref packet);
+      out_port = inside_to_outside (p_ip, p_tcp, from, in_port, ref packet);
     }
 
+#if DEBUG
+    print_mapping (port_mapping, " (------ Outside ------) ", " (------ Inside ------) ");
+    Console.WriteLine();
+    print_mapping (port_reverse_mapping, " (------ Inside ------) ", " (------ Outside ------) ");
+#endif
+
     return out_port;
+  }
+
+  void print_mapping (ConcurrentDictionary<NAT_Entry,NAT_Entry> mapping, string h1, string h2) {
+    Console.WriteLine("{0} \t<->\t {1}", h1, h2);
+    foreach (var entry in mapping)
+    {
+      Console.WriteLine("{0} \t<->\t {1}", entry.Key, entry.Value);
+    }
   }
 }

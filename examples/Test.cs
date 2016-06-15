@@ -2,6 +2,9 @@
 Pax : tool support for prototyping packet processors
 Nik Sultana, Cambridge University Computer Lab, June 2016
 
+This module is mainly intended to collect test cases and examples of instantiating
+packet processors, some of which are implemented in other modules.
+
 Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 */
 
@@ -18,6 +21,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Net;
 
 using Pax;
 
@@ -108,6 +112,17 @@ public class Nested_Chained_Test2 : PacketProcessor {
           });
   }
 
+
+  public void packetHandler (object sender, CaptureEventArgs e) {
+    pp.packetHandler (sender, e);
+  }
+}
+
+public class Nested_NAT : PacketProcessor {
+  PacketProcessor pp =
+    // FIXME can get these values from the JSON file?
+    new NAT (IPAddress.Parse("192.168.2.2"/*FIXME const*/),
+        5000/*FIXME const*/);
 
   public void packetHandler (object sender, CaptureEventArgs e) {
     pp.packetHandler (sender, e);
