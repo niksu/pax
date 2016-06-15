@@ -49,7 +49,7 @@ public class NAT : SimplePacketProcessor {
     // communicates.
     public ushort? assigned_tcp_port {get; set;}
     // This is null when NAT_Entry represents the outside host, and should never
-    // be 0 when NAT_Entry represents the inside host.
+    // be Port_Outside when NAT_Entry represents the inside host.
     public int? network_port {get; set;}
 
     public override bool Equals (Object other_obj) {
@@ -109,8 +109,8 @@ public class NAT : SimplePacketProcessor {
 
   // We keep 2 dictionaries, one for queries related to packets crossing from the outside (O) to the inside (I), and
   // the other for the inverse.
-  // O --> I: when we get a packet on port 0, to find out how to rewrite the packet and forward it on which internal port.
-  // I --> O: when we get a packet on port != 0, to find out how to rewrite the packet before forwarding it on port 0.
+  // O --> I: when we get a packet on port Port_Outside, to find out how to rewrite the packet and forward it on which internal port.
+  // I --> O: when we get a packet on port != Port_Outside, to find out how to rewrite the packet before forwarding it on port Port_Outside.
   ConcurrentDictionary<NAT_Entry,NAT_Entry> port_mapping =
     new ConcurrentDictionary<NAT_Entry,NAT_Entry>();
   ConcurrentDictionary<NAT_Entry,NAT_Entry> port_reverse_mapping =
@@ -216,7 +216,7 @@ public class NAT : SimplePacketProcessor {
 
   override public int handler (int in_port, ref Packet packet)
   {
-    int out_port = -1;
+    int out_port = Port_Drop;
 
     // We drop anything other than TCP packets
     if (!(packet is PacketDotNet.EthernetPacket))
