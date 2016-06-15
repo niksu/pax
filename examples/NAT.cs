@@ -3,23 +3,18 @@ Pax : tool support for prototyping packet processors
 Nik Sultana, Cambridge University Computer Lab, June 2016
 
 Use of this source code is governed by the Apache 2.0 license; see LICENSE.
-*/
 
-using System;
-using System.Net.NetworkInformation;
-using System.Collections.Concurrent;
-using PacketDotNet;
-using System.Diagnostics;
-using System.Net;
-using Pax;
+This assembly implements a NAT (Network Address Translation) middlebox using
+Pax. The NAT mediates between two networks, which we call "Outside" and "Inside",
+and multiplexes TCP connections originating form Inside to Outside, and allows
+Outside to participate in such connections.
 
-/*
-                  ---------
-                  |      [1]-- ...
-(Outside) ... ---[0] NAT [2]-- ... (Inside)
-                  |      ...
-                  |      [n]-- ...
-                  ---------
+                                 ---------
+                                 |      [1]-- ...
+               (Outside) ... ---[0] NAT [2]-- ... (Inside)
+                                 |      ...
+                                 |      [n]-- ...
+                                 ---------
 
 This NAT only works for TCP connections over IPv4. It maps TCP connections
 arriving on non-zero ports, onto the NAT's zero port. It maintains a mapping of
@@ -35,65 +30,16 @@ FIXME currently we don't remove entries
 NOTE could improve the implementation by having configurable "forwarding ports"
      that enable you to run servers on non-zero network ports.
 */
+
+using System;
+using System.Collections.Concurrent;
+using PacketDotNet;
+using System.Net;
+using Pax;
+
 public class NAT : SimplePacketProcessor {
   public const int Port_Drop = -1;
   public const int Port_Outside = 0;
-  // Entries in the mapping that the NAT keeps to track ongoing TCP connections.
-  // A NAT_Entry can represent the "internal" or "external" entity between which the NAT mediates.
-  class NAT_Entry : IEquatable<NAT_Entry> {
-    public IPAddress ip_address {get; set;}
-    public ushort tcp_port {get; set;}
-    // "assigned_tcp_port" is null when NAT_Entry represents the internal host,
-    // since it tells us a "public" value in the relationship. It is the TCP
-    // port on the NAT's public interface with which the external side
-    // communicates.
-    public ushort? assigned_tcp_port {get; set;}
-    // This is null when NAT_Entry represents the outside host, and should never
-    // be Port_Outside when NAT_Entry represents the inside host.
-    public int? network_port {get; set;}
-
-    public override bool Equals (Object other_obj) {
-      if (other_obj is NAT_Entry)
-      {
-        NAT_Entry other = other_obj as NAT_Entry;
-
-        bool eq_ip = this.ip_address.Equals(other.ip_address);
-        bool eq_port = this.tcp_port.Equals(other.tcp_port);
-        bool eq_atp = this.assigned_tcp_port.Equals(other.assigned_tcp_port);
-        bool eq_np = this.network_port.Equals(other.network_port);
-        return (eq_ip && eq_port && eq_atp && eq_np);
-      } else {
-        throw (new Exception ("A NAT_Entry may only be compared with another NAT_Entry."));
-      }
-    }
-
-    public bool Equals (NAT_Entry other) {
-      // For IEquatable<T> use the overridden method from Object.
-      return this.Equals((Object)other);
-    }
-
-    public static bool operator== (NAT_Entry x, NAT_Entry y) {
-      return (x.Equals(y));
-    }
-
-    public static bool operator!= (NAT_Entry x, NAT_Entry y) {
-      return (!x.Equals(y));
-    }
-
-    public override int GetHashCode() {
-      // FIXME this is a bit heavy to compute
-      return this.ToString().GetHashCode();
-    }
-
-    public override string ToString() {
-      return ("(" +
-          ip_address.ToString() +
-          ":" + tcp_port.ToString() +
-          " " + (assigned_tcp_port.HasValue ? Convert.ToString(assigned_tcp_port.Value) : ".") +
-          "|" + (network_port.HasValue ? Convert.ToString(network_port.Value) : ".") +
-          ")");
-    }
-  }
 
   IPAddress my_address;
   ushort next_port;
@@ -115,6 +61,39 @@ public class NAT : SimplePacketProcessor {
     new ConcurrentDictionary<NAT_Entry,NAT_Entry>();
   ConcurrentDictionary<NAT_Entry,NAT_Entry> port_reverse_mapping =
     new ConcurrentDictionary<NAT_Entry,NAT_Entry>();
+
+  override public int handler (int in_port, ref Packet packet)
+  {
+    int out_port = Port_Drop;
+
+    // We drop anything other than TCP packets
+    if (!(packet is PacketDotNet.EthernetPacket))
+    {
+      return Port_Drop;
+    }
+
+    IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
+    TcpPacket p_tcp = ((PacketDotNet.TcpPacket)(p_ip.PayloadPacket));
+
+    NAT_Entry from = new NAT_Entry(); //FIXME for increased efficiency could avoid this allocation, and use a thread-local but static one done at the start?
+    from.ip_address = p_ip.SourceAddress;
+    from.tcp_port = p_tcp.SourcePort;
+
+    if (in_port == Port_Outside)
+    {
+      out_port = outside_to_inside (p_ip, p_tcp, from, in_port, ref packet);
+    } else {
+      out_port = inside_to_outside (p_ip, p_tcp, from, in_port, ref packet);
+    }
+
+#if DEBUG
+    print_mapping (port_mapping, " (------ Outside ------) ", " (------ Inside ------) ");
+    Console.WriteLine();
+    print_mapping (port_reverse_mapping, " (------ Inside ------) ", " (------ Outside ------) ");
+#endif
+
+    return out_port;
+  }
 
   private int outside_to_inside (IpPacket p_ip, TcpPacket p_tcp, NAT_Entry from, int in_port, ref Packet packet)
   {
@@ -214,44 +193,68 @@ public class NAT : SimplePacketProcessor {
     }
   }
 
-  override public int handler (int in_port, ref Packet packet)
-  {
-    int out_port = Port_Drop;
-
-    // We drop anything other than TCP packets
-    if (!(packet is PacketDotNet.EthernetPacket))
-    {
-      return Port_Drop;
-    }
-
-    IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
-    TcpPacket p_tcp = ((PacketDotNet.TcpPacket)(p_ip.PayloadPacket));
-
-    NAT_Entry from = new NAT_Entry(); //FIXME for increased efficiency could avoid this allocation, and use a thread-local but static one done at the start?
-    from.ip_address = p_ip.SourceAddress;
-    from.tcp_port = p_tcp.SourcePort;
-
-    if (in_port == Port_Outside)
-    {
-      out_port = outside_to_inside (p_ip, p_tcp, from, in_port, ref packet);
-    } else {
-      out_port = inside_to_outside (p_ip, p_tcp, from, in_port, ref packet);
-    }
-
-#if DEBUG
-    print_mapping (port_mapping, " (------ Outside ------) ", " (------ Inside ------) ");
-    Console.WriteLine();
-    print_mapping (port_reverse_mapping, " (------ Inside ------) ", " (------ Outside ------) ");
-#endif
-
-    return out_port;
-  }
-
   void print_mapping (ConcurrentDictionary<NAT_Entry,NAT_Entry> mapping, string h1, string h2) {
     Console.WriteLine("{0} \t<->\t {1}", h1, h2);
     foreach (var entry in mapping)
     {
       Console.WriteLine("{0} \t<->\t {1}", entry.Key, entry.Value);
+    }
+  }
+
+  // Entries in the mapping that the NAT keeps to track ongoing TCP connections.
+  // A NAT_Entry can represent the "internal" or "external" entity between which the NAT mediates.
+  class NAT_Entry : IEquatable<NAT_Entry> {
+    public IPAddress ip_address {get; set;}
+    public ushort tcp_port {get; set;}
+    // "assigned_tcp_port" is null when NAT_Entry represents the internal host,
+    // since it tells us a "public" value in the relationship. It is the TCP
+    // port on the NAT's public interface with which the external side
+    // communicates.
+    public ushort? assigned_tcp_port {get; set;}
+    // This is null when NAT_Entry represents the outside host, and should never
+    // be Port_Outside when NAT_Entry represents the inside host.
+    public int? network_port {get; set;}
+
+    public override bool Equals (Object other_obj) {
+      if (other_obj is NAT_Entry)
+      {
+        NAT_Entry other = other_obj as NAT_Entry;
+
+        bool eq_ip = this.ip_address.Equals(other.ip_address);
+        bool eq_port = this.tcp_port.Equals(other.tcp_port);
+        bool eq_atp = this.assigned_tcp_port.Equals(other.assigned_tcp_port);
+        bool eq_np = this.network_port.Equals(other.network_port);
+        return (eq_ip && eq_port && eq_atp && eq_np);
+      } else {
+        throw (new Exception ("A NAT_Entry may only be compared with another NAT_Entry."));
+      }
+    }
+
+    public bool Equals (NAT_Entry other) {
+      // For IEquatable<T> use the overridden method from Object.
+      return this.Equals((Object)other);
+    }
+
+    public static bool operator== (NAT_Entry x, NAT_Entry y) {
+      return (x.Equals(y));
+    }
+
+    public static bool operator!= (NAT_Entry x, NAT_Entry y) {
+      return (!x.Equals(y));
+    }
+
+    public override int GetHashCode() {
+      // FIXME this is a bit heavy to compute
+      return this.ToString().GetHashCode();
+    }
+
+    public override string ToString() {
+      return ("(" +
+          ip_address.ToString() +
+          ":" + tcp_port.ToString() +
+          " " + (assigned_tcp_port.HasValue ? Convert.ToString(assigned_tcp_port.Value) : ".") +
+          "|" + (network_port.HasValue ? Convert.ToString(network_port.Value) : ".") +
+          ")");
     }
   }
 }
