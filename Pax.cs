@@ -85,8 +85,12 @@ namespace Pax
       }
 
       // FIXME break up Main() into separate functions. The following block could be put into its own void function, for instance.
+      Console.ForegroundColor = ConsoleColor.White;
+      Console.Write ("☮ ");
       Console.ForegroundColor = ConsoleColor.Cyan;
-      Console.WriteLine ("Pax v{0}", "0.1"/*FIXME const -- get value from AssemblyInfo*/);
+      Console.Write ("Pax v{0}", "0.1"/*FIXME const -- get value from AssemblyInfo*/);
+      Console.ForegroundColor = ConsoleColor.White;
+      Console.WriteLine (" ✌");
       print_kv  (indent + "running as ",
           (System.Environment.Is64BitProcess ? "64bit" : "32bit") + " process",
           true);
@@ -262,6 +266,7 @@ namespace Pax
       print_heading("Starting");
       Console.ResetColor();
 
+      // FIXME accept a -j parameter to limit number of threads?
       Parallel.ForEach(PaxConfig.deviceMap, device => device.Capture());
 
       // FIXME am i right in thinking that this location is unreachable, since the threads won't terminate unless the whole process is being terminated.
