@@ -101,7 +101,7 @@ public class NAT : SimplePacketProcessor {
     from.network_port = null;
 
     // Retrieve the mapping. If a mapping doesn't exist, then drop the packet.
-    // Rewrite destination IP address and TCP port, and map to the (non-zero) port.
+    // Rewrite destination IP address and TCP port, and map to the appropriate Inside port.
     NAT_Entry to;
     if (port_mapping.TryGetValue(from, out to))
     {
@@ -180,7 +180,7 @@ public class NAT : SimplePacketProcessor {
         // if we don't have a mapping for it then drop.
         return Port_Drop;
       } else {
-        //  otherwise apply the mapping (replacing source IP address and TCP port) and forward to the zero port.
+        //  otherwise apply the mapping (replacing source IP address and TCP port) and forward to the Outside port.
         p_ip.SourceAddress = to.ip_address;
         p_tcp.SourcePort = to.tcp_port;
         // Update packet, including checksums.
@@ -193,13 +193,15 @@ public class NAT : SimplePacketProcessor {
     }
   }
 
-  void print_mapping (ConcurrentDictionary<NAT_Entry,NAT_Entry> mapping, string h1, string h2) {
+#if DEBUG
+  private void print_mapping (ConcurrentDictionary<NAT_Entry,NAT_Entry> mapping, string h1, string h2) {
     Console.WriteLine("{0} \t<->\t {1}", h1, h2);
     foreach (var entry in mapping)
     {
       Console.WriteLine("{0} \t<->\t {1}", entry.Key, entry.Value);
     }
   }
+#endif
 
   // Entries in the mapping that the NAT keeps to track ongoing TCP connections.
   // A NAT_Entry can represent the "internal" or "external" entity between which the NAT mediates.
