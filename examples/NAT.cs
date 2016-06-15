@@ -51,7 +51,6 @@ public class NAT : SimplePacketProcessor {
     public int? network_port {get; set;}
 
     public override bool Equals (Object other_obj) {
-/*
       if (other_obj is NAT_Entry)
       {
         NAT_Entry other = other_obj as NAT_Entry;
@@ -64,28 +63,23 @@ public class NAT : SimplePacketProcessor {
       } else {
         throw (new Exception ("A NAT_Entry may only be compared with another NAT_Entry."));
       }
-*/
-      // FIXME brutal!
-      return (this.ToString() == other_obj.ToString());
     }
 
     public bool Equals (NAT_Entry other) {
       // For IEquatable<T> use the overridden method from Object.
-      // FIXME brutal!
       return this.Equals((Object)other);
     }
 
     public static bool operator== (NAT_Entry x, NAT_Entry y) {
-      // FIXME brutal!
-      return (x.ToString() == y.ToString());
+      return (x.Equals(y));
     }
 
     public static bool operator!= (NAT_Entry x, NAT_Entry y) {
-      // FIXME brutal!
-      return (x.ToString() != y.ToString());
+      return (!x.Equals(y));
     }
 
     public override int GetHashCode() {
+      // FIXME this is a bit heavy to compute
       return this.ToString().GetHashCode();
     }
 
@@ -136,6 +130,7 @@ public class NAT : SimplePacketProcessor {
       // Update packet.
       p_ip.PayloadPacket = p_tcp;
       packet.PayloadPacket = p_ip;
+      // FIXME need to update checksums
       return to.network_port.Value;
     }
     else
@@ -186,6 +181,7 @@ public class NAT : SimplePacketProcessor {
       // Update packet.
       p_ip.PayloadPacket = p_tcp;
       packet.PayloadPacket = p_ip;
+      // FIXME need to update checksums
       return 0; //FIXME const
     } else {
       // Not a SYN, so this must be part of an ongoing connection.
@@ -201,6 +197,7 @@ public class NAT : SimplePacketProcessor {
         // Update packet.
         p_ip.PayloadPacket = p_tcp;
         packet.PayloadPacket = p_ip;
+      // FIXME need to update checksums
         return 0; //FIXME const
       }
     }
