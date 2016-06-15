@@ -126,10 +126,11 @@ public class NAT : SimplePacketProcessor {
     {
       p_ip.DestinationAddress = to.ip_address;
       p_tcp.DestinationPort = to.tcp_port;
-      // Update packet.
+      // Update packet, including checksums.
+      p_tcp.UpdateTCPChecksum();
       p_ip.PayloadPacket = p_tcp;
+      ((IPv4Packet)p_ip).UpdateIPChecksum();
       packet.PayloadPacket = p_ip;
-      // FIXME need to update checksums
       return to.network_port.Value;
     }
     else
@@ -185,10 +186,11 @@ public class NAT : SimplePacketProcessor {
       // Rewrite the packet.
       p_tcp.SourcePort = to.assigned_tcp_port.Value;
       p_ip.SourceAddress = my_address;
-      // Update packet.
+      // Update packet, including checksums.
+      p_tcp.UpdateTCPChecksum();
       p_ip.PayloadPacket = p_tcp;
+      ((IPv4Packet)p_ip).UpdateIPChecksum();
       packet.PayloadPacket = p_ip;
-      // FIXME need to update checksums
       return 0; //FIXME const
     } else {
       // Not a SYN, so this must be part of an ongoing connection.
@@ -200,10 +202,11 @@ public class NAT : SimplePacketProcessor {
         //  otherwise apply the mapping (replacing source IP address and TCP port) and forward to the zero port.
         p_ip.SourceAddress = to.ip_address;
         p_tcp.SourcePort = to.tcp_port;
-        // Update packet.
+        // Update packet, including checksums.
+        p_tcp.UpdateTCPChecksum();
         p_ip.PayloadPacket = p_tcp;
+        ((IPv4Packet)p_ip).UpdateIPChecksum();
         packet.PayloadPacket = p_ip;
-        // FIXME need to update checksums
         return 0; //FIXME const
       }
     }
