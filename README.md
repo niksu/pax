@@ -1,4 +1,4 @@
-![Pax](http://www.cl.cam.ac.uk/~ns441/files/pax.png)
+![Pax](http://www.cl.cam.ac.uk/~ns441/pax/pax.png)
 
 System and network programming can be a magical mystery tour de force across
 several APIs and tools.  Pax aspires to be your peaceful
@@ -9,6 +9,12 @@ Using Pax you describe a network packet processor in terms of what it does to
 packets sent and received through network logical *ports*, which are attached
 at runtime to network interfaces made available by your OS. The interfaces may
 be physical or virtual (e.g., a tap device).
+
+![A Pax packet processor](http://www.cl.cam.ac.uk/~ns441/pax/packetproc.png)
+A Pax processor can have any number of ports (numbered 0-4 in the drawing
+above) which serve as the main interface with the outside world. The processor
+can write to any of these ports, and processes data that arrives on some of the
+ports (according to its configuration).
 
 Pax provides a library and runtime support that wrap underlying wrappers so
 you can quickly test prototypes of packet-processors written in high-level
@@ -36,6 +42,9 @@ The workflow is as follows:
 1. Write your packet processors and use a .NET compiler to produce a DLL. Your DLL may contain multiple packet processors -- it is the *configuration file* that specifies which processor you wish you bind with which network interface.
 2. Write a configuration file (or scheme) for your packet processor. This specifies all parameters to your packet processor, including which specific network interfaces that are bound to logical ports. Configuration in Pax is [JSON](https://en.wikipedia.org/wiki/JSON)-encoded.
 3. Run Pax, indicating your configuration and DLL.
+
+![A running Pax processor](http://www.cl.cam.ac.uk/~ns441/pax/running.png)
+The configuration file "wires up" the network interfaces with packet processors in your assembly. Not all packet processors in your assembly need be connected, and different network interfaces may be connected to the same handler.
 
 # Running
 Simply run `Pax.exe CONFIGURATION_FILENAME ASSEMBLY_FILENAME`.
