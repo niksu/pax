@@ -45,6 +45,7 @@ The workflow is as follows:
 3. Run Pax, indicating your configuration and DLL.
 
 ![A running Pax processor](http://www.cl.cam.ac.uk/~ns441/pax/running.png)
+
 The configuration file "wires up" the network interfaces with packet processors in your assembly. Not all packet processors in your assembly need be connected, and different network interfaces may be connected to the same handler.
 The drawing example shows an assembly with four packet processors, only two of which is used. The blue processor handles packets coming on network port 0. The configuration file determines which processors handle traffic coming on which network interface.
 
