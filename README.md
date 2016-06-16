@@ -58,7 +58,14 @@ For the example code I run:
 sudo ./Bin/Pax.exe examples/wiring.json examples/Bin/Examples.dll
 ```
 
-# What does it look like?
+Pax then starts up and checks the configuration file and assembly, listing some of their contents.
+It connects the network interfaces with the handlers in the assembly, as specified in the configuration.
+Then Pax activates the handlers, and your code takes it from there.
+
+![Startup](http://www.cl.cam.ac.uk/~ns441/pax/start_screenshot.png)
+
+
+# What does a Pax processor look like?
 The main handler function of our [NAT example](https://github.com/niksu/pax/blob/master/examples/NAT.cs) looks like this.
 The return value is the port over which to emit the (modified) packet. The
 actual network interface connected to that port is determined by the
