@@ -125,7 +125,7 @@ private int outside_to_inside (IpPacket p_ip, TcpPacket p_tcp, NAT_Entry from)
 Apache 2.0
 
 # Acknowledgements
-* Project [NaaS](http://www.naas-project.org/) and its funders ([EPSRC](http://epsrc.ac.uk)).
+* Project [NaaS](http://www.naas-project.org/) and its funder ([EPSRC](http://epsrc.ac.uk)).
 * Colleagues at [NetOS](http://www.cl.cam.ac.uk/research/srg/netos/).
 * Contributors to [PacketDotNet](https://github.com/chmorgan/packetnet), [SharpPcap](https://github.com/chmorgan/sharppcap), [Newtonsoft.JSON](https://github.com/JamesNK/Newtonsoft.Json/), [libpcap](http://www.tcpdump.org/) and [winpcap](http://www.winpcap.org/).
 
