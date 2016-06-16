@@ -12,7 +12,7 @@ be physical or virtual (e.g., a tap device).
 
 ![A Pax packet processor](http://www.cl.cam.ac.uk/~ns441/pax/packetproc.png)
 
-A Pax processor can have any number of ports (numbered 0-4 in the drawing
+A Pax processor can have any number of ports (numbered 0-3 in the drawing
 above) which serve as the main interface with the outside world. The processor
 can write to any of these ports, and processes data that arrives on some of the
 ports (according to its configuration).
@@ -26,7 +26,7 @@ languages. Some [example](https://github.com/niksu/pax/tree/master/examples) imp
 Other than a C# compiler and runtime, you need:
 * libpcap (on UNIXy systems) or winpcap.dll (on Windows)
 * [SharpPcap](https://github.com/chmorgan/sharppcap) and [PacketDotNet](https://github.com/chmorgan/packetnet)
-* Newtonsoft's JSON library ([releases](https://github.com/JamesNK/Newtonsoft.Json/releases))
+* Newtonsoft's JSON library (download one of the [releases](https://github.com/JamesNK/Newtonsoft.Json/releases))
 
 Put the DLLs for Newtonsoft.Json, SharpPcap and PacketDotNet in Pax's `lib/` directory.
 
@@ -40,6 +40,7 @@ This will produce a single file (Pax.exe), called an *assembly* in .NET jargon. 
 Packet processers using Pax can be written in any .NET language. They use Pax's API and define one or more functions that handle incoming packets.
 The [examples](https://github.com/niksu/pax/tree/master/examples) included with Pax could help get you going.
 The workflow is as follows:
+
 1. Write your packet processors and use a .NET compiler to produce a DLL. Your DLL may contain multiple packet processors -- it is the *configuration file* that specifies which processor you wish you bind with which network interface.
 2. Write a configuration file (or scheme) for your packet processor. This specifies all parameters to your packet processor, including which specific network interfaces that are bound to logical ports. Configuration in Pax is [JSON](https://en.wikipedia.org/wiki/JSON)-encoded.
 3. Run Pax, indicating your configuration and DLL.
