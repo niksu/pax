@@ -4,7 +4,7 @@ Nik Sultana, Cambridge University Computer Lab, June 2016
 
 Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 
-This assembly implements a NAT (Network Address Translation) middlebox using
+This class implements a NAT (Network Address Translation) middlebox using
 Pax. The NAT mediates between two networks, which we call "Outside" and "Inside",
 and multiplexes TCP connections originating form Inside to Outside, and allows
 Outside to participate in such connections.
