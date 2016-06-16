@@ -11,6 +11,7 @@ at runtime to network interfaces made available by your OS. The interfaces may
 be physical or virtual (e.g., a tap device).
 
 ![A Pax packet processor](http://www.cl.cam.ac.uk/~ns441/pax/packetproc.png)
+
 A Pax processor can have any number of ports (numbered 0-4 in the drawing
 above) which serve as the main interface with the outside world. The processor
 can write to any of these ports, and processes data that arrives on some of the
@@ -45,6 +46,7 @@ The workflow is as follows:
 
 ![A running Pax processor](http://www.cl.cam.ac.uk/~ns441/pax/running.png)
 The configuration file "wires up" the network interfaces with packet processors in your assembly. Not all packet processors in your assembly need be connected, and different network interfaces may be connected to the same handler.
+The drawing example shows an assembly with four packet processors, only two of which is used. The blue processor handles packets coming on network port 0. The configuration file determines which processors handle traffic coming on which network interface.
 
 # Running
 Simply run `Pax.exe CONFIGURATION_FILENAME ASSEMBLY_FILENAME`.
