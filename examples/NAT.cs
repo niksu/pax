@@ -72,9 +72,11 @@ public class NAT : SimplePacketProcessor {
       return Port_Drop;
     }
 
+    // Unencapsulate the packets, so we can read and change their fields more easily.
     IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
     TcpPacket p_tcp = ((PacketDotNet.TcpPacket)(p_ip.PayloadPacket));
 
+    // Prepare the structure with which we'll query our port mapping.
     NAT_Entry from = new NAT_Entry(); //FIXME for increased efficiency could avoid this allocation, and use a thread-local but static one done at the start?
     from.ip_address = p_ip.SourceAddress;
     from.tcp_port = p_tcp.SourcePort;
