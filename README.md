@@ -37,7 +37,8 @@ This will produce a single file (Pax.exe), called an *assembly* in .NET jargon. 
 * It is the library that your packet processors reference. This reference will be checked by the .NET compiler when compiling your code.
 
 # Writing for Pax
-Packet processers using Pax can be written in any .NET language. They use Pax's API and define one or more functions that handle incoming packets.
+Packet processers using Pax can be written in any [.NET language](https://en.wikipedia.org/wiki/List_of_CLI_languages).
+They use Pax's API and define one or more functions that handle incoming packets.
 The [examples](https://github.com/niksu/pax/tree/master/examples) included with Pax could help get you going.
 The workflow is as follows:
 
