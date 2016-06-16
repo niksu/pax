@@ -14,7 +14,7 @@ Examples:
 
 ![Mirror](http://www.cl.cam.ac.uk/~ns441/pax/mirror.png)
 
-[Test](Test.cs) -- slightly random, but also instantiates other packet processors
+[Test](Test.cs) includes a variety of different packet processors (mostly contrived), including nested and chained packet processors. This means that packet processors can be combined with others to form a new kind of packet processor. Our assembly can accommodate such packet processors, as illustrated below. [Test](Test.cs) contains an example of a Mirror chained with a Switch.
 
 ![Chained](http://www.cl.cam.ac.uk/~ns441/pax/chained.png)
 
