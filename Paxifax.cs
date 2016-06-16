@@ -68,6 +68,45 @@ namespace Pax {
     public static Assembly assembly;
 
     public static List<NetworkInterfaceConfig> config;
+
+    public static string resolve_config_parameter (int port_no, string key) {
+      NetworkInterfaceConfig port_conf;
+      try {
+        port_conf = config[port_no];
+      } catch (ArgumentOutOfRangeException e) {
+        throw (new Exception ("resolve_config_parameter: port_no > config size, since " + port_no.ToString() + " > " +
+              config.Count.ToString()));
+      }
+
+      if (port_conf.environment == null)
+      {
+        throw (new Exception ("resolve_config_parameter: 'environment' has not been defined " +
+              "for port_no " + port_no.ToString() + ". Configuration is incomplete."));
+      }
+
+      if (port_conf.environment.ContainsKey(key)) {
+        return port_conf.environment[key];
+      } else {
+        throw (new Exception ("resolve_config_parameter: could not find key '" + key + "'" +
+              " (in 'environment') for port_no " + port_no.ToString() + ". Configuration is incomplete."));
+      }
+    }
+
+    public static bool can_resolve_config_parameter (int port_no, string key) {
+      NetworkInterfaceConfig port_conf;
+      if (port_no >= config.Count)
+      {
+        return false;
+      }
+
+      port_conf = config[port_no];
+      if (port_conf.environment == null)
+      {
+        return false;
+      }
+
+      return (port_conf.environment.ContainsKey(key));
+    }
   }
 
   public interface PacketProcessor {

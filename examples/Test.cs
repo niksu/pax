@@ -119,13 +119,27 @@ public class Nested_Chained_Test2 : PacketProcessor {
 }
 
 public class Nested_NAT : PacketProcessor {
-  // NOTE we use "config[0]" below since we're interested in the information
+  // NOTE we use 0 below since we're interested in the information
   //      related to the outside-facing port, which the NAT designates as being port 0.
-  PacketProcessor pp =
-    new NAT (IPAddress.Parse(PaxConfig.config[0].environment["my_address"]),
-        UInt16.Parse(PaxConfig.config[0].environment["next_port"]));
+  const int outside_port = 0;
+  PacketProcessor pp = null;
+
+  public Nested_NAT () {
+    if (PaxConfig.can_resolve_config_parameter (outside_port, "my_address") &&
+        PaxConfig.can_resolve_config_parameter (outside_port, "next_port"))
+    {
+      pp = new NAT (IPAddress.Parse(PaxConfig.resolve_config_parameter (outside_port, "my_address")),
+          UInt16.Parse(PaxConfig.resolve_config_parameter (outside_port, "next_port")));
+    } else {
+      pp = null;
+    }
+  }
 
   public void packetHandler (object sender, CaptureEventArgs e) {
-    pp.packetHandler (sender, e);
+    if (pp != null) {
+      pp.packetHandler (sender, e);
+    } else {
+      throw (new Exception ("The NAT nested in NestedNAT was not initialised."));
+    }
   }
 }
