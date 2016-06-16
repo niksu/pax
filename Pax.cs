@@ -198,6 +198,9 @@ namespace Pax
       //       interfaces made available by Pax.
       foreach (Type ty in PaxConfig.assembly.GetExportedTypes())
       {
+#if MOREDEBUG
+        Console.WriteLine("Trying to instantiate {0}", ty);
+#endif
         PacketProcessor pp = (PacketProcessor)Activator.CreateInstance(ty); // NOTE this means that we require "ty" to define a default constructor.
 
         // Find which network interfaces this class is handling
@@ -205,7 +208,7 @@ namespace Pax
 
         for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
         {
-          if (PaxConfig.interface_lead_handler[idx] != null &&
+          if ((!String.IsNullOrEmpty(PaxConfig.interface_lead_handler[idx])) &&
               ty.Name == PaxConfig.interface_lead_handler[idx])
           {
             subscribed.Add(idx);
