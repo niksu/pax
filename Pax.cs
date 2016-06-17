@@ -49,7 +49,7 @@ namespace Pax
       Console.ForegroundColor = ConsoleColor.Black;
       Console.BackgroundColor = ConsoleColor.White;
       Console.Write(s);
-      //Console.ResetColor();
+      Console.ResetColor();
       Console.ForegroundColor = tmp_fore;
       Console.BackgroundColor = tmp_back;
       Console.WriteLine();
