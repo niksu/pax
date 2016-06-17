@@ -76,10 +76,18 @@ send((IP(dst=destination_ip,src=source_ip)/TCP(dport=destination_tcp_port,sport=
 I use the following snippet to send a reply.
 
 ```python
-nat_ip = "..."
-nat_assigned_port = ...
+# Reusing some values from above.
+destination_ip = "..."
+destination_tcp_port = ...
+
+# Probably updating some fields from above.
 interface = "..."
-send((IP(dst=destination_ip,src=source_ip)/TCP(dport=destination_tcp_port,sport=source_tcp_port,flags=tcp_flags)/"Reply"),iface=interface)
+flags = "..."
+
+# Additional values used for reply.
+nat_ip = "..."
+nat_assigned_tcp_port = ...
+send((IP(dst=nat_ip,src=destination_ip)/TCP(dport=nat_assigned_tcp_port,sport=destination_tcp_port,flags=tcp_flags)/"Reply"),iface=interface)
 ```
 
 **FIXME**: It might be worth wrapping this into a tiny library of Python functions, and to automate the testing.
