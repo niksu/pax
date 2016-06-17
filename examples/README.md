@@ -97,3 +97,5 @@ use tools like ping or Scapy to generate generic or customised traffic, and
 send it to a specific port. I then observe how the packet processor behaves,
 through diagnostic messages it emits to the console, and through the packets
 sniffed up by tcpdump on recipient interfaces.
+I use `sudo tcpdump -vvvnXX -i IF` to see a detailed description of each packet,
+replacing `IF` with the interface you want to sniff on.
