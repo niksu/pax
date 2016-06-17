@@ -179,8 +179,8 @@ public class NAT : SimplePacketProcessor {
         return Port_Drop;
       } else {
         //  otherwise apply the mapping (replacing source IP address and TCP port) and forward to the Outside port.
-        p_ip.SourceAddress = to.ip_address;
-        p_tcp.SourcePort = to.tcp_port;
+        p_tcp.SourcePort = to.assigned_tcp_port.Value;
+        p_ip.SourceAddress = my_address;
         // Update checksums.
         p_tcp.UpdateTCPChecksum();
         ((IPv4Packet)p_ip).UpdateIPChecksum();
