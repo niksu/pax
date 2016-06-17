@@ -56,7 +56,7 @@ I set up tcpdump to monitor the different network ports between which the NAT
 is mediating, and see if the NAT's behaviour matches my intended behaviour.  Of
 course, you need to generate network traffic to observe how the NAT behaves.
 One could simple use a TCP-based application (e.g., telnet or a web browser) for
-this, but I use Scapy to craft specific packets as follows.
+this, but I use [Scapy](https://en.wikipedia.org/wiki/Scapy) to craft specific packets as follows.
 
 I use the following code skeleton to generate TCP packets, sometimes setting
 `tcp_flags="S"` to generate TCP packets with the SYN flag set.  (You must fill
@@ -101,7 +101,7 @@ You need at least one port for the Inside.
 # Test workflow
 As described for the NAT example above,
 I set up tcpdump to monitor an interface over which I expect to see data, and
-use tools like ping or Scapy to generate generic or customised traffic, and
+use tools like ping or [Scapy](https://en.wikipedia.org/wiki/Scapy) to generate generic or customised traffic, and
 send it to a specific port. I then observe how the packet processor behaves,
 through diagnostic messages it emits to the console, and through the packets
 sniffed up by tcpdump on recipient interfaces.
