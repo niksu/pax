@@ -113,6 +113,28 @@ namespace Pax {
     void packetHandler (object sender, CaptureEventArgs e);
   }
 
+  // A packet monitor does not output anything onto the network, it simply
+  // accumulates state based on what it observes happening on the network.
+  // It might produce output on side-channels, through side-effects.
+  // This could be used for diagnosis, to observe network activity and print
+  // digests to the console or log.
+  public abstract class PacketMonitor : PacketProcessor {
+    abstract public void handler (int in_port, Packet packet);
+
+    public void packetHandler (object sender, CaptureEventArgs e)
+    {
+      var packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
+      int in_port = PaxConfig.rdeviceMap[e.Device.Name];
+
+      handler (in_port, packet);
+#if DEBUG
+      // FIXME could append name of the class in the debug message, so we know which
+      //       packet processor is being used.
+      Debug.Write(PaxConfig.deviceMap[in_port].Name + " -|");
+#endif
+    }
+  }
+
   // Simple packet processor: it can only transform the given packet and forward it to at most one interface.
   public abstract class SimplePacketProcessor : PacketProcessor {
     // Return the offset of network interface that "packet" is to be forwarded to.
