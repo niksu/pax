@@ -9,6 +9,7 @@ using System;
 using System.Net.NetworkInformation;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using PacketDotNet;
 using SharpPcap;
 using SharpPcap.LibPcap;
@@ -193,16 +194,52 @@ namespace Pax
       print_heading("Scanning assembly");
       Console.ResetColor();
 
-      // FIXME currently assuming that the assembly only contains stuff that concerns
-      //       us. it would be best to filter by the implemented interfaces, and focus on
-      //       interfaces made available by Pax.
+      Predicate<Type> allowedParamType = PacketProcessorHelper.IsAllowedConstructorParameterType;
+      Func<Type, string, object> convertArg = PacketProcessorHelper.ConvertConstructorParameter;
       foreach (Type ty in PaxConfig.assembly.GetExportedTypes()
                                             .Where(typeof(PacketProcessor).IsAssignableFrom))
       {
 #if MOREDEBUG
         Console.WriteLine("Trying to instantiate {0}", ty);
 #endif
-        PacketProcessor pp = (PacketProcessor)Activator.CreateInstance(ty); // NOTE this means that we require "ty" to define a default constructor.
+        IDictionary<string,string> environment =
+          PaxConfig.config.Where(intf => ty.Name.Equals(intf.lead_handler)) // FIXME should non-port specific env be in a separate part of config?
+                          .Select(intf => intf.environment)
+                          .Where(dict => dict != null)
+                          .SelectMany(dict => dict)
+                          .ToLookup(pair => pair.Key, pair => pair.Value) // Allow multiple definitions of values
+                          .ToDictionary(group => group.Key, group => group.First()); // FIXME resolve multiple definitions
+#if MOREDEBUG
+        Console.WriteLine("  Environment:");
+        foreach (var pair in environment)
+          Console.WriteLine("    {0} : {1}", pair.Key, pair.Value);
+        Console.WriteLine("  Public constructors:");
+        foreach (var ctor in ty.GetConstructors(BindingFlags.Instance | BindingFlags.Public))
+        {
+          var parameters = ctor.GetParameters()
+                               .Select(p => String.Format("{0}: {1}", p.Name, p.ParameterType.FullName));
+          Console.WriteLine("    {0}({1})", ty.Name, String.Join(", ", parameters));
+        }
+#endif
+        // Get the most specific constructor we can call
+        var constructor = ty.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
+                            .Where(ctor => ctor.GetParameters()
+                                               .All(param => environment.ContainsKey(param.Name)
+                                                          && allowedParamType(param.ParameterType)))
+                            .OrderByDescending(ctor => ctor.GetParameters().Length)
+                            .FirstOrDefault();
+        if (constructor == null)
+        {
+          Console.WriteLine("Could not instantiate type {0} - no valid constructor found. Please check your config.", ty.FullName);
+          continue;
+        }
+        var arguments = constructor.GetParameters()
+                                   .Select(param => convertArg(param.ParameterType, environment[param.Name]))
+                                   .ToArray();
+#if MOREDEBUG
+        Console.WriteLine("Invoking new {0}({1})", ty.Name, String.Join(", ", arguments));
+#endif
+        PacketProcessor pp = (PacketProcessor)constructor.Invoke(arguments);
 
         // Find which network interfaces this class is handling
         List<int> subscribed = new List<int>();

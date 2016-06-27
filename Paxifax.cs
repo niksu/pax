@@ -113,6 +113,40 @@ namespace Pax {
     void packetHandler (object sender, CaptureEventArgs e);
   }
 
+  internal static class PacketProcessorHelper
+  {
+    public readonly static Type[] AllowedConstructorParameterTypes = new Type[]
+      {
+        typeof(Boolean),  typeof(Byte),   typeof(SByte),  typeof(UInt16),   typeof(Int16),
+        typeof(UInt32),   typeof(Int32),  typeof(UInt64), typeof(Int64),    typeof(Decimal),
+        typeof(Single),   typeof(Double), typeof(String), typeof(DateTime),
+        typeof(TimeSpan), typeof(System.Net.IPAddress)
+      };
+    public static bool IsAllowedConstructorParameterType(Type ty)
+    {
+      // Allow nullable types
+      if (ty.IsGenericType && ty.GetGenericTypeDefinition() == typeof(Nullable<>))
+        ty = Nullable.GetUnderlyingType(ty);
+      return AllowedConstructorParameterTypes.Contains(ty);
+    }
+    public static object ConvertConstructorParameter(Type ty, string s)
+    {
+      // Get the underlying type if nullable (e.g. int?)
+      if (ty.IsGenericType && ty.GetGenericTypeDefinition() == typeof(Nullable<>))
+        ty = Nullable.GetUnderlyingType(ty);
+
+      if (ty == typeof(string))
+        return s;
+      else if (ty == typeof(System.Net.IPAddress))
+        return System.Net.IPAddress.Parse(s);
+      else if (ty == typeof(TimeSpan))
+        return TimeSpan.Parse(s);
+      else
+        // Convert to primitives + DateTime
+        return ((IConvertible)s).ToType(ty, System.Globalization.CultureInfo.CurrentCulture); // NOTE throws InvalidCastException
+    }
+  }
+
   // Simple packet processor: it can only transform the given packet and forward it to at most one interface.
   public abstract class SimplePacketProcessor : PacketProcessor {
     // Return the offset of network interface that "packet" is to be forwarded to.
