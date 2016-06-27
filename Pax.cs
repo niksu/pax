@@ -196,7 +196,8 @@ namespace Pax
       // FIXME currently assuming that the assembly only contains stuff that concerns
       //       us. it would be best to filter by the implemented interfaces, and focus on
       //       interfaces made available by Pax.
-      foreach (Type ty in PaxConfig.assembly.GetExportedTypes())
+      foreach (Type ty in PaxConfig.assembly.GetExportedTypes()
+                                            .Where(typeof(PacketProcessor).IsAssignableFrom))
       {
 #if MOREDEBUG
         Console.WriteLine("Trying to instantiate {0}", ty);
