@@ -185,7 +185,7 @@ namespace Pax
             {
               PaxConfig.deviceMap[idx] = device;
               PaxConfig.rdeviceMap.Add(device.Name, idx);
-              device.Open();
+              device.Open(DeviceMode.Normal, 100); // 100ms timeout
 
               if (!String.IsNullOrEmpty(i.pcap_filter))
               {
