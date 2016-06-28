@@ -120,7 +120,7 @@ namespace Pax {
         typeof(Boolean),  typeof(Byte),   typeof(SByte),  typeof(UInt16),   typeof(Int16),
         typeof(UInt32),   typeof(Int32),  typeof(UInt64), typeof(Int64),    typeof(Decimal),
         typeof(Single),   typeof(Double), typeof(String), typeof(DateTime),
-        typeof(TimeSpan), typeof(System.Net.IPAddress)
+        typeof(TimeSpan), typeof(System.Net.IPAddress), typeof(PhysicalAddress)
       };
     public static bool IsAllowedConstructorParameterType(Type ty)
     {
@@ -139,6 +139,8 @@ namespace Pax {
         return s;
       else if (ty == typeof(System.Net.IPAddress))
         return System.Net.IPAddress.Parse(s);
+      else if (ty == typeof(PhysicalAddress))
+        return PhysicalAddress.Parse(s.ToUpper().Replace(':', '-'));
       else if (ty == typeof(TimeSpan))
         return TimeSpan.Parse(s);
       else
