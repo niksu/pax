@@ -185,11 +185,14 @@ namespace Pax {
 #endif
       if (out_port > -1)
       {
-        PaxConfig.deviceMap[out_port].SendPacket(packet);
+        var device = PaxConfig.deviceMap[out_port];
+        if (packet is EthernetPacket)
+          ((EthernetPacket)packet).SourceHwAddress = device.MacAddress;
+        device.SendPacket(packet);
 #if DEBUG
         Debug.WriteLine(PaxConfig.deviceMap[out_port].Name);
       } else {
-        Debug.WriteLine("");
+        Debug.WriteLine("<dropped>");
 #endif
       }
     }
