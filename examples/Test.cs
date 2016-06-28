@@ -126,10 +126,12 @@ public class Nested_NAT : PacketProcessor {
 
   public Nested_NAT () {
     if (PaxConfig.can_resolve_config_parameter (outside_port, "my_address") &&
-        PaxConfig.can_resolve_config_parameter (outside_port, "next_port"))
+        PaxConfig.can_resolve_config_parameter (outside_port, "next_port") &&
+        PaxConfig.can_resolve_config_parameter (outside_port, "next_hop_mac"))
     {
       pp = new NAT (IPAddress.Parse(PaxConfig.resolve_config_parameter (outside_port, "my_address")),
-          UInt16.Parse(PaxConfig.resolve_config_parameter (outside_port, "next_port")));
+          UInt16.Parse(PaxConfig.resolve_config_parameter (outside_port, "next_port")),
+          PhysicalAddress.Parse(PaxConfig.resolve_config_parameter(outside_port, "next_hop_mac").ToUpper().Replace(':', '-')));
     } else {
       pp = null;
     }

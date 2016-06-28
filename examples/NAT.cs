@@ -36,6 +36,7 @@ using System.Collections.Concurrent;
 using PacketDotNet;
 using System.Net;
 using Pax;
+using System.Net.NetworkInformation;
 
 public class NAT : SimplePacketProcessor {
   public const int Port_Drop = -1;
@@ -43,79 +44,98 @@ public class NAT : SimplePacketProcessor {
 
   private IPAddress my_address;
   private ushort next_port;
+  private readonly object portLock = new object();
+  private readonly PhysicalAddress next_hop_mac;
 
   public NAT () {
     // FIXME raise an exception if this constructor was used, since currently only the other constructor initialises things properly.
   }
 
-  public NAT (IPAddress my_address, ushort next_port) {
+  public NAT (IPAddress my_address, ushort next_port, PhysicalAddress next_hop_mac) {
     this.my_address = my_address;
     this.next_port = next_port;
+    this.next_hop_mac = next_hop_mac;
   }
 
   // We keep 2 dictionaries, one for queries related to packets crossing from the outside (O) to the inside (I), and
   // the other for the inverse.
   // O --> I: when we get a packet on port Port_Outside, to find out how to rewrite the packet and forward it on which internal port.
   // I --> O: when we get a packet on port != Port_Outside, to find out how to rewrite the packet before forwarding it on port Port_Outside.
-  ConcurrentDictionary<NAT_Entry,NAT_Entry> port_mapping =
-    new ConcurrentDictionary<NAT_Entry,NAT_Entry>();
-  ConcurrentDictionary<NAT_Entry,NAT_Entry> port_reverse_mapping =
-    new ConcurrentDictionary<NAT_Entry,NAT_Entry>();
+  ConcurrentDictionary<MapToInside_Key,InternalNode> NAT_MapToInside =
+    new ConcurrentDictionary<MapToInside_Key,InternalNode>();
+  ConcurrentDictionary<MapToOutside_Key,ushort> NAT_MapToOutside =
+    new ConcurrentDictionary<MapToOutside_Key,ushort>();
 
   override public int handler (int in_port, ref Packet packet)
   {
-    // We drop anything other than TCP packets that are encapsulated in IPv4,
-    // and in Ethernet.
-    if (!(packet is PacketDotNet.EthernetPacket) ||
-        !packet.Encapsulates(typeof(IPv4Packet), typeof(TcpPacket)))
+    if (packet is PacketDotNet.EthernetPacket)
     {
-      return Port_Drop;
+      if (packet.Encapsulates(typeof(IPv4Packet), typeof(TcpPacket)))
+      {
+        // Unencapsulate the packets, so we can read and change their fields more easily.
+        EthernetPacket p_eth = (EthernetPacket)packet;
+        IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
+        TcpPacket p_tcp = ((PacketDotNet.TcpPacket)(p_ip.PayloadPacket));
+
+        #if DEBUG
+        Console.WriteLine("RX {0}:{1} -> {2}:{3} on {4} [{5}]",
+          p_ip.SourceAddress, p_tcp.SourcePort, p_ip.DestinationAddress, p_tcp.DestinationPort, in_port,
+          p_tcp.Syn?"S":"");
+        #endif
+
+        int out_port = Port_Drop;
+        if (in_port == Port_Outside)
+          out_port = outside_to_inside (p_eth, p_ip, p_tcp);
+        else
+          out_port = inside_to_outside (p_eth, p_ip, p_tcp, in_port);
+
+        #if DEBUG
+        Console.WriteLine(" (------ Outside ------)  \t<->\t (------ Inside ------) ");
+        foreach (var entry in NAT_MapToInside)
+        {
+          Console.WriteLine("{0} \t<->\t {1}", entry.Key, entry.Value);
+        }
+        Console.WriteLine();
+        Console.WriteLine(" (------ Inside ------)  \t<->\t (------ Outside ------) ");
+        foreach (var entry in NAT_MapToOutside)
+        {
+          Console.WriteLine("{0} \t<->\t {1}", entry.Key, entry.Value);
+        }
+        #endif
+
+        return out_port;
+      }
     }
 
-    // Unencapsulate the packets, so we can read and change their fields more easily.
-    IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
-    TcpPacket p_tcp = ((PacketDotNet.TcpPacket)(p_ip.PayloadPacket));
-
-    // Prepare the structure with which we'll query our port mapping.
-    NAT_Entry from = new NAT_Entry(); //FIXME for increased efficiency could avoid this allocation, and use a thread-local but static one done at the start?
-    from.ip_address = p_ip.SourceAddress;
-    from.tcp_port = p_tcp.SourcePort;
-
-    int out_port = Port_Drop;
-    if (in_port == Port_Outside)
-    {
-      from.assigned_tcp_port = p_tcp.DestinationPort;
-      from.network_port = null;
-      out_port = outside_to_inside (p_ip, p_tcp, from);
-    } else {
-      from.assigned_tcp_port = null;
-      from.network_port = in_port;
-      out_port = inside_to_outside (p_ip, p_tcp, from);
-    }
-
-#if DEBUG
-    print_mapping (port_mapping, " (------ Outside ------) ", " (------ Inside ------) ");
-    Console.WriteLine();
-    print_mapping (port_reverse_mapping, " (------ Inside ------) ", " (------ Outside ------) ");
-#endif
-
-    return out_port;
+    // Drop packets that aren't handled
+    return Port_Drop;
   }
 
-  private int outside_to_inside (IpPacket p_ip, TcpPacket p_tcp, NAT_Entry from)
+  /// <summary>
+  /// Rewrite packets coming from the Outside and forward on the relevant Inside network port.
+  /// </summary>
+  private int outside_to_inside (EthernetPacket p_eth, IpPacket p_ip, TcpPacket p_tcp)
   {
+    // p_ip.DestinationAddress should be my_address
+    if (!p_ip.DestinationAddress.Equals(my_address))
+      return Port_Drop;
+
     // Retrieve the mapping. If a mapping doesn't exist, then it means that we're not
     // aware of a session to which the packet belongs: so drop the packet.
-    NAT_Entry to;
-    if (port_mapping.TryGetValue(from, out to))
+    InternalNode destination;
+    var key = new MapToInside_Key(p_ip.SourceAddress, p_tcp.SourcePort, p_tcp.DestinationPort);
+    if (NAT_MapToInside.TryGetValue(key, out destination))
     {
       // Rewrite destination IP address and TCP port, and map to the appropriate Inside port.
-      p_ip.DestinationAddress = to.ip_address;
-      p_tcp.DestinationPort = to.tcp_port;
-      // Update checksums.
-      p_tcp.UpdateTCPChecksum();
+      p_ip.DestinationAddress = destination.Address;
+      p_tcp.DestinationPort = destination.Port;
+      // Update checksums. NOTE IP updated before TCP
       ((IPv4Packet)p_ip).UpdateIPChecksum();
-      return to.network_port.Value;
+      p_tcp.UpdateTCPChecksum();
+      // Update destination MAC address
+      p_eth.DestinationHwAddress = destination.MacAddress;
+      // Forward on the mapped network port
+      return destination.NetworkPort;
     }
     else
     {
@@ -123,136 +143,241 @@ public class NAT : SimplePacketProcessor {
     }
   }
 
-  private int inside_to_outside (IpPacket p_ip, TcpPacket p_tcp, NAT_Entry from)
+  /// <summary>
+  /// Rewrite packets coming from the Iside and forward on the Outside network port.
+  /// </summary>
+  private int inside_to_outside (EthernetPacket p_eth, IpPacket p_ip, TcpPacket p_tcp, int incomingPort)
   {
-    // In this case, we're querying the dictionary with "reversed" keying,
-    // since we want to find out how the destination IP address and destination
-    // TCP port need to be rewritten before forwarding to the outside.
-
-    NAT_Entry to;
+    var out_key = new MapToOutside_Key(p_ip.SourceAddress, p_tcp.SourcePort,
+                                       p_ip.DestinationAddress, p_tcp.DestinationPort);
+    ushort natPort;
     if (p_tcp.Syn)
     {
-      // If a TCP SYN, then add a mapping.
-
-      // We first delete any previous mapping that had the same key.
-      if (port_reverse_mapping.TryGetValue(from, out to))
-      {
-        // We don't really care about the boolean result returned by TryRemove,
-        // since if "true" then the key-value pair was removed (great), but
-        // if "false" then the key-value pair must have been already removed (great).
-        port_mapping.TryRemove(port_reverse_mapping[from], out to);
-        port_reverse_mapping.TryRemove(from, out to);
-      } // FIXME in case TryGetValue returns false, we could simply do TryUpdate or TryAdd instead of the TryRemove and TryAdd.
-
-      to = new NAT_Entry();
-      to.ip_address = p_ip.DestinationAddress;
-      to.tcp_port = p_tcp.DestinationPort;
-
-      // Generate data for the mapping
-      lock(my_address)
-      {
-        // NOTE can't use Interlocked.Increment since the type of next_port is short not int.
-        to.assigned_tcp_port = next_port++;
-      }
-
-      if (!port_mapping.TryAdd(to, from))
-      {
-        Console.WriteLine("Concurrent update of port_mapping[to] where 'to'={0}", to);
-      }
-      if (!port_reverse_mapping.TryAdd(from, to))
-      {
-        Console.WriteLine("Concurrent update of port_reverse_mapping[from] where 'from'={0}", from);
-      }
-
-      // Rewrite the packet.
-      p_tcp.SourcePort = to.assigned_tcp_port.Value;
-      p_ip.SourceAddress = my_address;
-      // Update checksums.
-      p_tcp.UpdateTCPChecksum();
-      ((IPv4Packet)p_ip).UpdateIPChecksum();
-      return Port_Outside;
-    } else {
-      // Not a SYN, so this must be part of an ongoing connection.
-      if (!port_reverse_mapping.TryGetValue(from, out to))
-      {
-        // if we don't have a mapping for it then drop.
-        return Port_Drop;
-      } else {
-        //  otherwise apply the mapping (replacing source IP address and TCP port) and forward to the Outside port.
-        p_tcp.SourcePort = to.assigned_tcp_port.Value;
-        p_ip.SourceAddress = my_address;
-        // Update checksums.
-        p_tcp.UpdateTCPChecksum();
-        ((IPv4Packet)p_ip).UpdateIPChecksum();
-        return Port_Outside;
-      }
+      // If a TCP SYN, then add a mapping for the new connection.
+      natPort = GetNATPort();
+      // Add to NAT_MapToOutside
+      NAT_MapToOutside[out_key] = natPort;
+      // Add to NAT_MapToInside
+      var in_key = new MapToInside_Key(p_ip.DestinationAddress, p_tcp.DestinationPort, natPort);
+      var internalNode = new InternalNode(p_ip.SourceAddress, p_tcp.SourcePort, incomingPort, p_eth.SourceHwAddress);
+      NAT_MapToInside[in_key] = internalNode;
+      Console.WriteLine("Added mapping");
     }
-  }
-
-#if DEBUG
-  private void print_mapping (ConcurrentDictionary<NAT_Entry,NAT_Entry> mapping, string h1, string h2) {
-    Console.WriteLine("{0} \t<->\t {1}", h1, h2);
-    foreach (var entry in mapping)
+    else if (!NAT_MapToOutside.TryGetValue(out_key, out natPort))
     {
-      Console.WriteLine("{0} \t<->\t {1}", entry.Key, entry.Value);
+      // Not a SYN, and no existing connection, so drop.
+      return Port_Drop;
+    }
+
+    // Rewrite the packet.
+    p_tcp.SourcePort = natPort;
+    p_ip.SourceAddress = my_address;
+    // Update checksums. NOTE IP updated before TCP
+    ((IPv4Packet)p_ip).UpdateIPChecksum();
+    p_tcp.UpdateTCPChecksum();
+    // Update destination MAC address
+    p_eth.DestinationHwAddress = next_hop_mac;
+    return Port_Outside;
+  }
+
+  private ushort GetNATPort()
+  {
+    lock(portLock)
+    {
+      // NOTE can't use Interlocked.Increment since the type of next_port is short not int.
+      return next_port++;
     }
   }
-#endif
 
-  // Entries in the mapping that the NAT keeps to track ongoing TCP connections.
-  // A NAT_Entry can represent the "internal" or "external" entity between which the NAT mediates.
-  class NAT_Entry : IEquatable<NAT_Entry> {
-    public IPAddress ip_address {get; set;}
-    public ushort tcp_port {get; set;}
-    // "assigned_tcp_port" is null when NAT_Entry represents the internal host,
-    // since it tells us a "public" value in the relationship. It is the TCP
-    // port on the NAT's public interface with which the external side
-    // communicates.
-    public ushort? assigned_tcp_port {get; set;}
-    // This is null when NAT_Entry represents the outside host, and should never
-    // be Port_Outside when NAT_Entry represents the inside host.
-    public int? network_port {get; set;}
+  sealed class InternalNode : IEquatable<InternalNode>
+  {
+    private readonly IPAddress _Address; // FIXME we should really use immutable values since we are using a dictionary
+    private readonly ushort _Port;
+    private readonly int _NetworkPort;
+    private readonly PhysicalAddress _MacAddress;
+    public IPAddress Address { get { return _Address; } }
+    public ushort Port { get { return _Port; } }
+    public int NetworkPort { get { return _NetworkPort; } }
+    public PhysicalAddress MacAddress { get { return _MacAddress; } }
+    private readonly int hashCode;
+    #if DEBUG
+    private string asString;
+    #endif
 
-    public override bool Equals (Object other_obj) {
-      if (other_obj is NAT_Entry)
-      {
-        NAT_Entry other = other_obj as NAT_Entry;
+    public InternalNode(IPAddress address, ushort port, int networkPort, PhysicalAddress macAddress)
+    {
+      if (ReferenceEquals(null, address)) throw new ArgumentNullException("address");
+      if (ReferenceEquals(null, macAddress)) throw new ArgumentNullException("macAddress");
 
-        bool eq_ip = this.ip_address.Equals(other.ip_address);
-        bool eq_port = this.tcp_port.Equals(other.tcp_port);
-        bool eq_atp = this.assigned_tcp_port.Equals(other.assigned_tcp_port);
-        bool eq_np = this.network_port.Equals(other.network_port);
-        return (eq_ip && eq_port && eq_atp && eq_np);
-      } else {
-        throw (new Exception ("A NAT_Entry may only be compared with another NAT_Entry."));
-      }
+      _Address = address;
+      _Port = port;
+      _NetworkPort = networkPort;
+      _MacAddress = macAddress;
+      // FIXME computing hash at construction relies on address being immutable (addr.Scope can change)
+      hashCode = new { Address, Port, NetworkPort }.GetHashCode();
+      #if DEBUG
+      asString = this.ToString();
+      #endif
     }
 
-    public bool Equals (NAT_Entry other) {
-      // For IEquatable<T> use the overridden method from Object.
-      return this.Equals((Object)other);
+    public static bool operator ==(InternalNode a, InternalNode b)
+    {
+      return !ReferenceEquals(null, a) && a.Equals(b);
+    }
+    public static bool operator !=(InternalNode a, InternalNode b)
+    {
+      return !(a == b);
+    }
+    public override bool Equals(Object other)
+    {
+      if (ReferenceEquals(null, other)) return false;
+      if (ReferenceEquals(this, other)) return true;
+      if (other.GetType() != GetType()) return false;
+      return this.Equals(other as InternalNode);
+    }
+    public bool Equals(InternalNode other)
+    {
+      return !ReferenceEquals(null, other)
+        && Address.Equals(other.Address)
+        && Port.Equals(other.Port)
+        && NetworkPort.Equals(other.NetworkPort)
+        && MacAddress.Equals(other.MacAddress);
+    }
+    public override int GetHashCode() { return hashCode; }
+    public override string ToString()
+    {
+      #if DEBUG
+      if (asString != null)
+        return asString;
+      else
+      #endif
+      return String.Format("{0}:{1} at {2} on port {3}",
+        Address.ToString(), Port.ToString(), MacAddress.ToString(), NetworkPort.ToString());
+    }
+  }
+  sealed class MapToInside_Key : IEquatable<MapToInside_Key>
+  {
+    private readonly IPAddress _SourceAddress; // FIXME we should really use immutable values since we are using a dictionary
+    private readonly ushort _SourcePort, _ArrivalPort;
+    public IPAddress SourceAddress { get { return _SourceAddress; } }
+    public ushort SourcePort { get { return _SourcePort; } }
+    public ushort ArrivalPort { get { return _ArrivalPort; } }
+    private readonly int hashCode;
+    #if DEBUG
+    private string asString;
+    #endif
+
+    public MapToInside_Key(IPAddress sourceAddress, ushort sourcePort, ushort arrivalPort)
+    {
+      if (ReferenceEquals(null, sourceAddress)) throw new ArgumentNullException("sourceAddress");
+
+      _SourceAddress = sourceAddress;
+      _SourcePort = sourcePort;
+      _ArrivalPort = arrivalPort;
+      // FIXME computing hash at construction relies on address being immutable (addr.Scope can change)
+      hashCode = new { SourceAddress, SourcePort, ArrivalPort }.GetHashCode();
+      #if DEBUG
+      asString = this.ToString();
+      #endif
     }
 
-    public static bool operator== (NAT_Entry x, NAT_Entry y) {
-      return (x.Equals(y));
+    public static bool operator ==(MapToInside_Key a, MapToInside_Key b)
+    {
+      return !ReferenceEquals(null, a) && a.Equals(b);
+    }
+    public static bool operator !=(MapToInside_Key a, MapToInside_Key b)
+    {
+      return !(a == b);
+    }
+    public override bool Equals(Object other)
+    {
+      if (ReferenceEquals(null, other)) return false;
+      if (ReferenceEquals(this, other)) return true;
+      if (other.GetType() != GetType()) return false;
+      return this.Equals(other as MapToInside_Key);
+    }
+    public bool Equals(MapToInside_Key other)
+    {
+      return !ReferenceEquals(null, other)
+        && SourceAddress.Equals(other.SourceAddress)
+        && SourcePort.Equals(other.SourcePort)
+        && ArrivalPort.Equals(other.ArrivalPort);
+    }
+    public override int GetHashCode() { return hashCode; }
+    public override string ToString()
+    {
+      #if DEBUG
+      if (asString != null)
+        return asString;
+      else
+      #endif
+      return SourceAddress.ToString() + ":" + SourcePort.ToString() + " to :" + ArrivalPort.ToString();
+    }
+  }
+  sealed class MapToOutside_Key : IEquatable<MapToOutside_Key>
+  {
+    // FIXME we should really use immutable values for IPAddress since we are using a dictionary
+    private readonly IPAddress _SourceAddress, _DestinationAddress;
+    private readonly ushort _SourcePort, _DestinationPort;
+    public IPAddress SourceAddress { get { return _SourceAddress; } }
+    public ushort SourcePort { get { return _SourcePort; } }
+    public IPAddress DestinationAddress { get { return _DestinationAddress; } }
+    public ushort DestinationPort { get { return _DestinationPort; } }
+    private readonly int hashCode;
+    #if DEBUG
+    private string asString;
+    #endif
+
+    public MapToOutside_Key(IPAddress sourceAddress, ushort sourcePort,
+                            IPAddress destinationAddress, ushort destinationPort)
+    {
+      if (ReferenceEquals(null, sourceAddress)) throw new ArgumentNullException("sourceAddress");
+      if (ReferenceEquals(null, destinationAddress)) throw new ArgumentNullException("destinationAddress");
+
+      _SourceAddress = sourceAddress;
+      _SourcePort = sourcePort;
+      _DestinationAddress = destinationAddress;
+      _DestinationPort = destinationPort;
+      // FIXME computing hash at construction relies on address being immutable (addr.Scope can change)
+      hashCode = new { SourceAddress, SourcePort, DestinationAddress, DestinationPort }.GetHashCode();
+      #if DEBUG
+      asString = this.ToString();
+      #endif
     }
 
-    public static bool operator!= (NAT_Entry x, NAT_Entry y) {
-      return (!x.Equals(y));
+    public static bool operator ==(MapToOutside_Key a, MapToOutside_Key b)
+    {
+      return !ReferenceEquals(null, a) && a.Equals(b);
     }
-
-    public override int GetHashCode() {
-      // FIXME this is a bit heavy to compute
-      return this.ToString().GetHashCode();
+    public static bool operator !=(MapToOutside_Key a, MapToOutside_Key b)
+    {
+      return !(a == b);
     }
-
-    public override string ToString() {
-      return ("(" +
-          ip_address.ToString() +
-          ":" + tcp_port.ToString() +
-          " " + (assigned_tcp_port.HasValue ? Convert.ToString(assigned_tcp_port.Value) : ".") +
-          "|" + (network_port.HasValue ? Convert.ToString(network_port.Value) : ".") +
-          ")");
+    public override bool Equals(Object other)
+    {
+      if (ReferenceEquals(null, other)) return false;
+      if (ReferenceEquals(this, other)) return true;
+      if (other.GetType() != GetType()) return false;
+      return this.Equals(other as MapToOutside_Key);
+    }
+    public bool Equals(MapToOutside_Key other)
+    {
+      return !ReferenceEquals(null, other)
+        && SourceAddress.Equals(other.SourceAddress)
+        && SourcePort.Equals(other.SourcePort)
+        && DestinationAddress.Equals(other.DestinationAddress)
+        && DestinationPort.Equals(other.DestinationPort);
+    }
+    public override int GetHashCode() { return hashCode; }
+    public override string ToString()
+    {
+      #if DEBUG
+      if (asString != null)
+        return asString;
+      else
+      #endif
+      return SourceAddress.ToString() + ":" + SourcePort.ToString() + " to "
+        + DestinationAddress.ToString() + ":" + DestinationPort.ToString();
     }
   }
 }
