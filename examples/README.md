@@ -107,3 +107,34 @@ through diagnostic messages it emits to the console, and through the packets
 sniffed up by tcpdump on recipient interfaces.
 I use `sudo tcpdump -vvvnXX -i IF` to see a detailed description of each packet,
 replacing `IF` with the interface you want to sniff on.
+
+# Testing the NAT with Mininet
+[Mininet](http://mininet.org/) is a tool for emulating networks on your local machine.
+This is quite handy, because we can run reproducible tests.
+
+To test the NAT implementation:
+- [Install](http://mininet.org/download/) Mininet - VM or otherwise is fine
+- cd into your cloned Pax directory and run `$ sudo ./examples/nat_topo.py test`
+- You can also jump into the Mininet CLI by running `$ sudo ./examples/nat_topo.py`
+
+Feel free to look in `examples/nat_topo.py`:
+- The `NatTopo` class defines the network topology for Mininet 
+```
+                  ┌──────┐     ┌─────┐
+                  |      |-----│ in1 |
+    ┌──────┐      |      |     └─────┘
+    │ out0 |------| nat0 |
+    └──────┘      |      |     ┌─────┐
+                  |      |-----│ in2 |
+                  └──────┘     └─────┘
+```
+- The `createNetwork()` procedure instantiates the network topology and sets up
+  the hosts. It sets the default gateway for the internal hosts to nat0, and
+  disables ip_forwarding on nat0. It also creates firewall rules on each of the
+  interfaces on nat0 to drop all incoming traffic. This is so that only the NAT
+  process will respond to packets. Otherwise, the OS could reject or accept
+  connections that are intended for internal hosts.
+- The `run()` procedure provides a commandline-interface to the network.
+- The `test()` procedure creates a network, tests the NAT implementation by
+  creating a connection between in1 and out0, and then cleans up.
+
