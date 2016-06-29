@@ -149,13 +149,12 @@ Feel free to look in `examples/nat_topo.py`:
                   └──────┘     └─────┘
 ```
 - The `createNetwork()` procedure instantiates the network topology and sets up
-  the hosts. It sets the default gateway for the internal hosts to nat0, and
-  disables ip_forwarding on nat0.
-  
-  It also creates firewall rules on each of the
+  the hosts. It sets the default gateway for the internal hosts to nat0 and
+  creates firewall rules on each of the
   interfaces on nat0 to drop all incoming traffic. This is so that only the NAT
   process will respond to packets. Otherwise, the OS could reject or accept
-  connections that are intended for internal hosts.
+  connections that are intended for internal hosts. (Or unhelpfully forward
+  packets for us)
 
   Take special note that the MAC address of out0 is manually set. This is so because
   the NAT implementation currently requires the next hop to be hardcoded in the config.

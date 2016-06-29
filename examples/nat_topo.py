@@ -47,9 +47,6 @@ def createNetwork():
         print "Setting the gateway on %s to %s" % (h, nat0)
         runCmd(net, h, 'route add 192.168.1.1/32 dev %s-eth0' % h)
         runCmd(net, h, 'route add default gw 192.168.1.1 dev %s-eth0' % h)
-    
-    print "Disabling ip_forwarding on %s" % nat0
-    runCmd(net, nat0, "sysctl -w net.ipv4.ip_forward=0")
 
     print "Drop all incoming TCP traffic on nat0 so that Pax is effectively the middle-man"
     for i in range(0,n+1):
