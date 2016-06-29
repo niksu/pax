@@ -110,12 +110,32 @@ replacing `IF` with the interface you want to sniff on.
 
 # Testing the NAT with Mininet
 [Mininet](http://mininet.org/) is a tool for emulating networks on your local machine.
-This is quite handy, because we can run reproducible tests.
+This is quite handy because we can run reproducible tests and experiment with
+networks when we don't have the physical machines otherwise needed.
 
 To test the NAT implementation:
-- [Install](http://mininet.org/download/) Mininet - VM or otherwise is fine
+- [Install](http://mininet.org/download/) Mininet - it doesn't matter which way
 - cd into your cloned Pax directory and run `$ sudo ./examples/nat_topo.py test`
 - You can also jump into the Mininet CLI by running `$ sudo ./examples/nat_topo.py`
+
+You will find it very helpful to learn more about Mininet if you plan to do anything
+apart from run the automated test. The Mininet
+[walkthrough](http://mininet.org/walkthrough/) is a pretty good start.
+One very useful thing to know is to use `mininet> host command` in the CLI to run
+`command` on `host`. E.g. to run ifconfig on in1, use `mininet> in1 ifconfig`.
+
+The automated test could be done manually by running these commands:
+``` bash
+$ sudo ./examples/nat_topo.py
+mininet> out0 echo 'Hi from out0!' | netcat -l 12010 &
+mininet> in1 netcat out0 12010
+```
+Note that on line 3, we specify `out0` instead of the IP of out0. We can do this
+because the Mininet CLI replaces it with the IP. Be aware that this is the IP of the
+default interface, which is fine here because out0 only has one, but on nat0,
+it might not be the IP you were expecting.
+
+_
 
 Feel free to look in `examples/nat_topo.py`:
 - The `NatTopo` class defines the network topology for Mininet 
@@ -130,10 +150,16 @@ Feel free to look in `examples/nat_topo.py`:
 ```
 - The `createNetwork()` procedure instantiates the network topology and sets up
   the hosts. It sets the default gateway for the internal hosts to nat0, and
-  disables ip_forwarding on nat0. It also creates firewall rules on each of the
+  disables ip_forwarding on nat0.
+  
+  It also creates firewall rules on each of the
   interfaces on nat0 to drop all incoming traffic. This is so that only the NAT
   process will respond to packets. Otherwise, the OS could reject or accept
   connections that are intended for internal hosts.
+
+  Take special note that the MAC address of out0 is manually set. This is so because
+  the NAT implementation currently requires the next hop to be hardcoded in the config.
+  Without this, out0 would ignore packets from the NAT, because the MAC would be wrong.
 - The `run()` procedure provides a commandline-interface to the network.
 - The `test()` procedure creates a network, tests the NAT implementation by
   creating a connection between in1 and out0, and then cleans up.
