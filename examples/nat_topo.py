@@ -2,7 +2,7 @@
 # coding: latin-1
 
 """
-natnet.py: a mininet topology for testing the NAT implementation
+nat_topo.py: a mininet topology for testing the NAT implementation
 
 """
 
