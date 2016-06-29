@@ -272,7 +272,7 @@ namespace Pax
 
       // Get the constructor arguments for this type from the config
       IDictionary<string,string> arguments =
-        PaxConfig.configFile.handlers.Where(handler => type.Name.Equals(handler.class_name))
+        PaxConfig.configFile.handlers?.Where(handler => type.Name.Equals(handler.class_name))
                                       .Select(intf => intf.args)
                                       .SingleOrDefault();
       if (arguments == null) arguments = new Dictionary<string,string>();
