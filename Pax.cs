@@ -234,11 +234,8 @@ namespace Pax
             if (pp == null)
               pp = InstatiatePacketProcessor(type);
             if (pp == null)
-            {
               // If pp is still null, then we couldn't instantiate it.
-              Console.WriteLine("Couldn't instantiate {0}", type.FullName);
               break;
-            }
             subscribed.Add(idx);
             PaxConfig.interface_lead_handler_obj[idx] = pp;
           }
@@ -288,6 +285,8 @@ namespace Pax
 
       // Instantiate the packet processor
       PacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(type, arguments);
+      if (pp == null)
+        Console.WriteLine("Couldn't instantiate {0}", type.FullName);
       return pp;
     }
     private static void RegisterHandlers()

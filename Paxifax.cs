@@ -137,6 +137,7 @@ namespace Pax {
       }
 
       // If we reach this point, there were no constructors that we could use
+      Console.WriteLine("No suitable constructor could be found.");
       return null;
     }
   }
