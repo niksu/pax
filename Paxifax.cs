@@ -147,6 +147,18 @@ namespace Pax {
         // Convert to primitives + DateTime
         return ((IConvertible)s).ToType(ty, System.Globalization.CultureInfo.CurrentCulture); // NOTE throws InvalidCastException
     }
+    public static string ConstructorString(ConstructorInfo constructor, object[] arguments = null)
+    {
+      IEnumerable<string> parameters;
+      // Get the string representations of the parameters (or arguments if present)
+      if (arguments == null)
+        parameters = constructor.GetParameters()
+                                .Select(p => String.Format("{0}: {1}", p.Name, p.ParameterType.FullName));
+      else
+        parameters = arguments.Select(obj => obj.ToString());
+      // Format nicely so it looks like a constructor
+      return String.Format("{0}({1})", constructor.DeclaringType.Name, String.Join(", ", parameters));
+    }
     public static PacketProcessor InstantiatePacketProcessor(Type type, IDictionary<string, string> argsDict)
     {
       // Function determining if a parameter could be provided
@@ -172,7 +184,7 @@ namespace Pax {
                        .ToArray();
           // Invoke the constructor, instatiating the type
           #if MOREDEBUG
-          Console.WriteLine("Invoking new {0}({1})", type.Name, String.Join(", ", arguments));
+          Console.WriteLine("Invoking new {0}", ConstructorString(constructor, arguments));
           #endif
           PacketProcessor pp = (PacketProcessor)constructor.Invoke(arguments);
           return pp;

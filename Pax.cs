@@ -199,9 +199,10 @@ namespace Pax
       foreach (Type ty in PaxConfig.assembly.GetExportedTypes()
                                             .Where(typeof(PacketProcessor).IsAssignableFrom))
       {
-#if MOREDEBUG
+        #if MOREDEBUG
         Console.WriteLine("Trying to instantiate {0}", ty);
-#endif
+        #endif
+        
         IDictionary<string,string> environment =
           PaxConfig.config.Where(intf => ty.Name.Equals(intf.lead_handler)) // FIXME should non-port specific env be in a separate part of config?
                           .Select(intf => intf.environment)
@@ -209,18 +210,14 @@ namespace Pax
                           .SelectMany(dict => dict)
                           .ToLookup(pair => pair.Key, pair => pair.Value) // Allow multiple definitions of values
                           .ToDictionary(group => group.Key, group => group.First()); // FIXME resolve multiple definitions
-#if MOREDEBUG
+        #if MOREDEBUG
         Console.WriteLine("  Environment:");
         foreach (var pair in environment)
           Console.WriteLine("    {0} : {1}", pair.Key, pair.Value);
         Console.WriteLine("  Public constructors:");
         foreach (var ctor in ty.GetConstructors(BindingFlags.Instance | BindingFlags.Public))
-        {
-          var parameters = ctor.GetParameters()
-                               .Select(p => String.Format("{0}: {1}", p.Name, p.ParameterType.FullName));
-          Console.WriteLine("    {0}({1})", ty.Name, String.Join(", ", parameters));
-        }
-#endif
+          Console.WriteLine("    {0}", PacketProcessorHelper.ConstructorString(ctor));
+        #endif
         // Instantiate the packet processor
         PacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(ty, environment);
         if (pp == null)
