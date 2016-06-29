@@ -218,45 +218,27 @@ namespace Pax
       Console.ResetColor();
 
       // Inspect each type that implements PacketProcessor, trying to instantiate it for use
-      foreach (Type ty in PaxConfig.assembly.GetExportedTypes()
+      foreach (Type type in PaxConfig.assembly.GetExportedTypes()
                                             .Where(typeof(PacketProcessor).IsAssignableFrom))
       {
-        #if MOREDEBUG
-        Console.WriteLine("Trying to instantiate {0}", ty);
-        #endif
-
-        // Get the constructor arguments for this type from the config
-        IDictionary<string,string> arguments =
-          PaxConfig.configFile.handlers.Where(handler => ty.Name.Equals(handler.class_name))
-                                       .Select(intf => intf.args)
-                                       .SingleOrDefault();
-        if (arguments == null) arguments = new Dictionary<string,string>();
-
-        #if MOREDEBUG
-        Console.WriteLine("  Arguments:");
-        foreach (var pair in arguments)
-          Console.WriteLine("    {0} : {1}", pair.Key, pair.Value);
-        Console.WriteLine("  Public constructors:");
-        foreach (var ctor in ty.GetConstructors(BindingFlags.Instance | BindingFlags.Public))
-          Console.WriteLine("    {0}", PacketProcessorHelper.ConstructorString(ctor));
-        #endif
-
-        // Instantiate the packet processor
-        PacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(ty, arguments);
-        if (pp == null)
-        {
-          Console.WriteLine("Could not instantiate type {0} - no valid constructor found. Please check your config.", ty.FullName);
-          continue;
-        }
-
         // Find which network interfaces this class is handling
         List<int> subscribed = new List<int>();
+        PacketProcessor pp = null;
         for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
         {
           // Does this interface have this type specified as the lead handler?
           if ((!String.IsNullOrEmpty(PaxConfig.interface_lead_handler[idx])) &&
-              ty.Name == PaxConfig.interface_lead_handler[idx])
+              type.Name == PaxConfig.interface_lead_handler[idx])
           {
+            // Only instatiate pp if needed
+            if (pp == null)
+              pp = InstatiatePacketProcessor(type);
+            if (pp == null)
+            {
+              // If pp is still null, then we couldn't instantiate it.
+              Console.WriteLine("Couldn't instantiate {0}", type.FullName);
+              break;
+            }
             subscribed.Add(idx);
             PaxConfig.interface_lead_handler_obj[idx] = pp;
           }
@@ -266,7 +248,7 @@ namespace Pax
         var tmp = Console.ForegroundColor;
         Console.Write (indent);
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write (ty);
+        Console.Write (type);
         Console.ForegroundColor = ConsoleColor.Gray;
         Console.Write (" <- ");
         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -277,10 +259,36 @@ namespace Pax
         Console.ForegroundColor = ConsoleColor.Gray;
         Console.Write("  : ");
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine(String.Join(", ", PacketProcessorHelper.GetUsedPaxTypes(ty).Select(t => t.Name)));
+        Console.WriteLine(String.Join(", ", PacketProcessorHelper.GetUsedPaxTypes(type).Select(t => t.Name)));
         Console.ForegroundColor = tmp;
       }
       // FIXME add check to see if there's an interface that references a lead_handler that doesn't appear in the assembly. That should be flagged up to the user, and lead to termination of Pax.
+    }
+    private static PacketProcessor InstatiatePacketProcessor(Type type)
+    {
+      #if MOREDEBUG
+      Console.WriteLine("Trying to instantiate {0}", type);
+      #endif
+
+      // Get the constructor arguments for this type from the config
+      IDictionary<string,string> arguments =
+        PaxConfig.configFile.handlers.Where(handler => type.Name.Equals(handler.class_name))
+                                      .Select(intf => intf.args)
+                                      .SingleOrDefault();
+      if (arguments == null) arguments = new Dictionary<string,string>();
+
+      #if MOREDEBUG
+      Console.WriteLine("  Arguments:");
+      foreach (var pair in arguments)
+        Console.WriteLine("    {0} : {1}", pair.Key, pair.Value);
+      Console.WriteLine("  Public constructors:");
+      foreach (var ctor in type.GetConstructors(BindingFlags.Instance | BindingFlags.Public))
+        Console.WriteLine("    {0}", PacketProcessorHelper.ConstructorString(ctor));
+      #endif
+
+      // Instantiate the packet processor
+      PacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(type, arguments);
+      return pp;
     }
     private static void RegisterHandlers()
     {
