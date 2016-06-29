@@ -73,6 +73,33 @@ namespace Pax {
       // Format nicely so it looks like a constructor
       return String.Format("{0}({1})", constructor.DeclaringType.Name, String.Join(", ", parameters));
     }
+    public static IEnumerable<Type> GetUsedPaxTypes(Type type)
+    {
+      // Yield implemented Pax interfaces
+      foreach (Type intf in type.GetInterfaces())
+      {
+        if (intf.FullName.StartsWith("Pax."))
+          yield return intf;
+        else
+        {
+          // Check for interfaces lower down
+          foreach (Type subintf in GetUsedPaxTypes(intf))
+            yield return subintf;
+        }
+      }
+      
+      // Yield the highest-up extended Pax type
+      type = type.BaseType;
+      while (type != null)
+      {
+        if (type.FullName.StartsWith("Pax."))
+        {
+          yield return type;
+          yield break;
+        }
+        type = type.BaseType;
+      }
+    }
     public static PacketProcessor InstantiatePacketProcessor(Type type, IDictionary<string, string> argsDict)
     {
       // Predicate determining if a parameter could be provided
