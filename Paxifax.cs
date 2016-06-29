@@ -75,10 +75,10 @@ namespace Pax {
     }
     public static PacketProcessor InstantiatePacketProcessor(Type type, IDictionary<string, string> argsDict)
     {
-      // Function determining if a parameter could be provided
+      // Predicate determining if a parameter could be provided
       Func<ParameterInfo,bool> parameterIsAvailable = param =>
         argsDict.ContainsKey(param.Name) && IsAllowedConstructorParameterType(param.ParameterType);
-      // Function determining if a constructor can be called
+      // Predicate determining if a constructor can be called
       Func<ConstructorInfo,bool> constructorCanBeCalled = ctor =>
         ctor.GetParameters().All(parameterIsAvailable);
 

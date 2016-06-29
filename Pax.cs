@@ -217,6 +217,7 @@ namespace Pax
       print_heading("Scanning assembly");
       Console.ResetColor();
 
+      // Inspect each type that implements PacketProcessor, trying to instantiate it for use
       foreach (Type ty in PaxConfig.assembly.GetExportedTypes()
                                             .Where(typeof(PacketProcessor).IsAssignableFrom))
       {
@@ -224,6 +225,7 @@ namespace Pax
         Console.WriteLine("Trying to instantiate {0}", ty);
         #endif
 
+        // Get the constructor arguments for this type from the config
         IDictionary<string,string> arguments =
           PaxConfig.configFile.handlers.Where(handler => ty.Name.Equals(handler.class_name))
                                        .Select(intf => intf.args)
@@ -238,6 +240,7 @@ namespace Pax
         foreach (var ctor in ty.GetConstructors(BindingFlags.Instance | BindingFlags.Public))
           Console.WriteLine("    {0}", PacketProcessorHelper.ConstructorString(ctor));
         #endif
+
         // Instantiate the packet processor
         PacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(ty, arguments);
         if (pp == null)
@@ -248,9 +251,9 @@ namespace Pax
 
         // Find which network interfaces this class is handling
         List<int> subscribed = new List<int>();
-
         for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
         {
+          // Does this interface have this type specified as the lead handler?
           if ((!String.IsNullOrEmpty(PaxConfig.interface_lead_handler[idx])) &&
               ty.Name == PaxConfig.interface_lead_handler[idx])
           {
@@ -259,6 +262,7 @@ namespace Pax
           }
         }
 
+        // Print which interfaces this type is the handler for
         var tmp = Console.ForegroundColor;
         Console.Write (indent);
         Console.ForegroundColor = ConsoleColor.Green;
