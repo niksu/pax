@@ -11,6 +11,7 @@ from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.log import setLogLevel
 import time
+from pax_mininet_node import PaxNode
 
 # This class defines the topology we use for testing the Pax NAT implementation.
 # The parameter `n` defines the number of inside nodes created.
@@ -30,7 +31,7 @@ class NatTopo(Topo):
         Topo.__init__(self, **opts)
 
         # Create the node to host the NAT process:
-        nat = self.addNode("nat0") # FIXME use a PaxNode class? 
+        nat = self.addNode("nat0", cls=PaxNode)
 
         # Create the Outside host:
         # Use a hardcoded MAC address, because we provide the MAC to the NAT as next_hop
@@ -65,14 +66,7 @@ def createNetwork(n=2):
     for i in range(1,n+1):
         h = "in%d" % i
         print "Setting the gateway on %s to %s" % (h, nat0)
-        runCmd(net, h, 'route add 192.168.1.1/32 dev %s-eth0' % h)
-        runCmd(net, h, 'route add default gw 192.168.1.1 dev %s-eth0' % h)
-
-    # Because Pax only sniffs packets (it doesn't steal them), we need to drop the packets
-    #  to prevent the OS from handling them and responding. 
-    print "Drop all incoming TCP traffic on nat0 so that Pax is effectively the middle-man"
-    for i in range(0,n+1):
-        runCmd(net, nat0, "iptables -A INPUT -p tcp -i %s-eth%d -j DROP" % (nat0, i))
+        net.get(h).setDefaultRoute('via 192.168.1.1')
 
     return net
 
