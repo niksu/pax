@@ -143,3 +143,31 @@ public class Nested_NAT : PacketProcessor {
     }
   }
 }
+
+public class Tallyer : PacketProcessor {
+
+  // implicit default constructor
+
+  public void packetHandler (object sender, CaptureEventArgs e) {
+    Console.WriteLine("|");
+  }
+}
+public class Dinger : PacketProcessor {
+
+  // Constructor taking lots of interesting arguments
+  public Dinger(
+        Boolean _bool, Byte _byte, SByte _sbyte, UInt16 _ushort, Int16 _short,
+        UInt32 _uint, Int32 _int, UInt64 _ulong, Int64 _long, Decimal _decimal,
+        Single _float, Double _double, String _string, DateTime _DateTime,
+        TimeSpan _TimeSpan, System.Net.IPAddress _IPAddress, PhysicalAddress _PhysicalAddress)
+  {
+    // Just check the class types for null in the interest of brevity
+    if (_string == null) Console.WriteLine("_string == null");
+    if (_IPAddress == null) Console.WriteLine("_IPAddress == null");
+    if (_PhysicalAddress == null) Console.WriteLine("_PhysicalAddress == null");
+  } 
+
+  public void packetHandler (object sender, CaptureEventArgs e) {
+    Console.WriteLine("*ding*");
+  }
+}

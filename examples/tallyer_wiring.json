@@ -1,0 +1,11 @@
+{
+  "interfaces": [ 
+    { 
+      "interface_name" : "eth0", 
+      "lead_handler" : "Tallyer", 
+      "pcap_filter" : "", 
+      "environment" : {
+      }
+    }
+  ]
+}
