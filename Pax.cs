@@ -85,7 +85,38 @@ namespace Pax
         return -1;
       }
 
-      // FIXME break up Main() into separate functions. The following block could be put into its own void function, for instance.
+      PrintIntro();
+
+      PaxConfig.assembly = Assembly.LoadFile(PaxConfig.assembly_filename);
+
+      var devices = CaptureDeviceList.Instance;
+      Debug.Assert (devices.Count >= 0);
+      if (devices.Count == 0)
+      {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("No capture devices found");
+        return -1;
+      }
+
+      Configure(devices);
+
+      LoadExternalHandlersFromDll();
+      
+      RegisterHandlers();  
+
+      Console.ResetColor();
+      print_heading("Starting");
+      Console.ResetColor();
+
+      // FIXME accept a -j parameter to limit number of threads?
+      Parallel.ForEach(PaxConfig.deviceMap, device => device.Capture());
+
+      // FIXME am i right in thinking that this location is unreachable, since the threads won't terminate unless the whole process is being terminated.
+      return 0;
+    }
+
+    private static void PrintIntro()
+    {
       Console.ForegroundColor = ConsoleColor.White;
       Console.Write ("✌ ");
       Console.ForegroundColor = ConsoleColor.Cyan;
@@ -113,18 +144,9 @@ namespace Pax
                  true);
       print_kv ("Using configuration file: ", PaxConfig.config_filename);
       print_kv ("Using assembly file: ", PaxConfig.assembly_filename);
-
-      PaxConfig.assembly = Assembly.LoadFile(PaxConfig.assembly_filename);
-
-      var devices = CaptureDeviceList.Instance;
-      Debug.Assert (devices.Count >= 0);
-      if (devices.Count == 0)
-      {
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine("No capture devices found");
-        return -1;
-      }
-
+    }
+    private static void Configure(CaptureDeviceList devices)
+    {
       Console.ResetColor();
       print_heading("Configuration");
       Console.ResetColor();
@@ -179,7 +201,7 @@ namespace Pax
           {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("No match for '" + i.interface_name + "'");
-            return -1;
+            Environment.Exit(-1);
           } else {
             print_kv (indent + /*FIXME code style sucks*/ indent +
                      "Link layer type: ", PaxConfig.deviceMap[idx].LinkType.ToString());
@@ -188,8 +210,9 @@ namespace Pax
           idx++;
         }
       }
-
-
+    }
+    private static void LoadExternalHandlersFromDll()
+    {
       Console.ResetColor();
       print_heading("Scanning assembly");
       Console.ResetColor();
@@ -202,7 +225,7 @@ namespace Pax
         #if MOREDEBUG
         Console.WriteLine("Trying to instantiate {0}", ty);
         #endif
-        
+
         IDictionary<string,string> environment =
           PaxConfig.config.Where(intf => ty.Name.Equals(intf.lead_handler)) // FIXME should non-port specific env be in a separate part of config?
                           .Select(intf => intf.environment)
@@ -252,7 +275,9 @@ namespace Pax
         Console.ForegroundColor = tmp;
       }
       // FIXME add check to see if there's an interface that references a lead_handler that doesn't appear in the assembly. That should be flagged up to the user, and lead to termination of Pax.
-
+    }
+    private static void RegisterHandlers()
+    {
       Console.ForegroundColor = ConsoleColor.Gray;
 
       // Set up callbacks.
@@ -287,20 +312,9 @@ namespace Pax
           Console.WriteLine(")");
           Console.ForegroundColor = tmp;
           PaxConfig.deviceMap[idx].OnPacketArrival +=
-            // FIXME can use packet handler directly?
-            new PacketArrivalEventHandler(PaxConfig.interface_lead_handler_obj[idx].packetHandler);
+            PaxConfig.interface_lead_handler_obj[idx].packetHandler;
         }
       }
-
-      Console.ResetColor();
-      print_heading("Starting");
-      Console.ResetColor();
-
-      // FIXME accept a -j parameter to limit number of threads?
-      Parallel.ForEach(PaxConfig.deviceMap, device => device.Capture());
-
-      // FIXME am i right in thinking that this location is unreachable, since the threads won't terminate unless the whole process is being terminated.
-      return 0;
     }
 
     //Cleanup
