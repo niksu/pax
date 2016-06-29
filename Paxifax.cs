@@ -45,10 +45,6 @@ namespace Pax {
     }
     public static object ConvertConstructorParameter(Type ty, string s)
     {
-      // Get the underlying type if nullable (e.g. int?)
-      if (ty.IsGenericType && ty.GetGenericTypeDefinition() == typeof(Nullable<>))
-        ty = Nullable.GetUnderlyingType(ty);
-
       if (ty == typeof(string))
         return s;
       else if (ty == typeof(System.Net.IPAddress))
