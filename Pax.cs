@@ -221,25 +221,13 @@ namespace Pax
           Console.WriteLine("    {0}({1})", ty.Name, String.Join(", ", parameters));
         }
 #endif
-        // Get the most specific constructor we can call
-        var constructor = ty.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
-                            .Where(ctor => ctor.GetParameters()
-                                               .All(param => environment.ContainsKey(param.Name)
-                                                          && allowedParamType(param.ParameterType)))
-                            .OrderByDescending(ctor => ctor.GetParameters().Length)
-                            .FirstOrDefault();
-        if (constructor == null)
+        // Instantiate the packet processor
+        PacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(ty, environment);
+        if (pp == null)
         {
           Console.WriteLine("Could not instantiate type {0} - no valid constructor found. Please check your config.", ty.FullName);
           continue;
         }
-        var arguments = constructor.GetParameters()
-                                   .Select(param => convertArg(param.ParameterType, environment[param.Name]))
-                                   .ToArray();
-#if MOREDEBUG
-        Console.WriteLine("Invoking new {0}({1})", ty.Name, String.Join(", ", arguments));
-#endif
-        PacketProcessor pp = (PacketProcessor)constructor.Invoke(arguments);
 
         // Find which network interfaces this class is handling
         List<int> subscribed = new List<int>();

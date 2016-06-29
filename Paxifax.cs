@@ -147,6 +147,49 @@ namespace Pax {
         // Convert to primitives + DateTime
         return ((IConvertible)s).ToType(ty, System.Globalization.CultureInfo.CurrentCulture); // NOTE throws InvalidCastException
     }
+    public static PacketProcessor InstantiatePacketProcessor(Type type, IDictionary<string, string> argsDict)
+    {
+      // Function determining if a parameter could be provided
+      Func<ParameterInfo,bool> parameterIsAvailable = param =>
+        argsDict.ContainsKey(param.Name) && IsAllowedConstructorParameterType(param.ParameterType);
+      // Function determining if a constructor can be called
+      Func<ConstructorInfo,bool> constructorCanBeCalled = ctor =>
+        ctor.GetParameters().All(parameterIsAvailable);
+
+      // Get the constructors for this type that we could call with the given arguments:
+      var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
+                             .Where(constructorCanBeCalled);
+
+      // Try to instantiate the type, using the best constructor we can:
+      foreach (var constructor in constructors.OrderByDescending(ctor => ctor.GetParameters().Length))
+      {
+        try
+        {
+          // Get the arguments for the constructor, converted to the proper types
+          var arguments =
+            constructor.GetParameters()
+                       .Select(p => ConvertConstructorParameter(p.ParameterType, argsDict[p.Name]))
+                       .ToArray();
+          // Invoke the constructor, instatiating the type
+          #if MOREDEBUG
+          Console.WriteLine("Invoking new {0}({1})", type.Name, String.Join(", ", arguments));
+          #endif
+          PacketProcessor pp = (PacketProcessor)constructor.Invoke(arguments);
+          return pp;
+        }
+        catch (Exception ex) when (ex is InvalidCastException
+                                || ex is FormatException)
+        {
+          // If an exception is thrown, ignore it and try the next best constructor
+          // But log it first:
+          Debug.WriteLine("Constructor failed - {0}:", constructor.ToString());
+          Debug.WriteLine(ex);
+        }
+      }
+
+      // If we reach this point, there were no constructors that we could use
+      return null;
+    }
   }
 
   // Simple packet processor: it can only transform the given packet and forward it to at most one interface.
