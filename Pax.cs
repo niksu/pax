@@ -153,7 +153,7 @@ namespace Pax
 
       using (JsonTextReader r = new JsonTextReader(File.OpenText(PaxConfig.config_filename))) {
         JsonSerializer j = new JsonSerializer();
-        PaxConfig.config = j.Deserialize<List<NetworkInterfaceConfig>>(r);
+        PaxConfig.configFile = j.Deserialize<ConfigFile>(r);
         PaxConfig.no_interfaces = PaxConfig.config.Count;
         PaxConfig.deviceMap = new ICaptureDevice[PaxConfig.no_interfaces];
         PaxConfig.interface_lead_handler = new string[PaxConfig.no_interfaces];
@@ -217,8 +217,6 @@ namespace Pax
       print_heading("Scanning assembly");
       Console.ResetColor();
 
-      Predicate<Type> allowedParamType = PacketProcessorHelper.IsAllowedConstructorParameterType;
-      Func<Type, string, object> convertArg = PacketProcessorHelper.ConvertConstructorParameter;
       foreach (Type ty in PaxConfig.assembly.GetExportedTypes()
                                             .Where(typeof(PacketProcessor).IsAssignableFrom))
       {
@@ -226,23 +224,22 @@ namespace Pax
         Console.WriteLine("Trying to instantiate {0}", ty);
         #endif
 
-        IDictionary<string,string> environment =
-          PaxConfig.config.Where(intf => ty.Name.Equals(intf.lead_handler)) // FIXME should non-port specific env be in a separate part of config?
-                          .Select(intf => intf.environment)
-                          .Where(dict => dict != null)
-                          .SelectMany(dict => dict)
-                          .ToLookup(pair => pair.Key, pair => pair.Value) // Allow multiple definitions of values
-                          .ToDictionary(group => group.Key, group => group.First()); // FIXME resolve multiple definitions
+        IDictionary<string,string> arguments =
+          PaxConfig.configFile.handlers.Where(handler => ty.Name.Equals(handler.class_name))
+                                       .Select(intf => intf.args)
+                                       .SingleOrDefault();
+        if (arguments == null) arguments = new Dictionary<string,string>();
+
         #if MOREDEBUG
-        Console.WriteLine("  Environment:");
-        foreach (var pair in environment)
+        Console.WriteLine("  Arguments:");
+        foreach (var pair in arguments)
           Console.WriteLine("    {0} : {1}", pair.Key, pair.Value);
         Console.WriteLine("  Public constructors:");
         foreach (var ctor in ty.GetConstructors(BindingFlags.Instance | BindingFlags.Public))
           Console.WriteLine("    {0}", PacketProcessorHelper.ConstructorString(ctor));
         #endif
         // Instantiate the packet processor
-        PacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(ty, environment);
+        PacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(ty, arguments);
         if (pp == null)
         {
           Console.WriteLine("Could not instantiate type {0} - no valid constructor found. Please check your config.", ty.FullName);

@@ -8,6 +8,16 @@ using SharpPcap;
 namespace Pax
 {
 	// FIXME use javadoc-style comments to describe the API
+	public class ConfigFile
+	{
+		public List<PacketProcessorConfig> handlers { get; set; }
+		public List<NetworkInterfaceConfig> interfaces { get; set; }
+	}
+	public class PacketProcessorConfig
+	{
+		public string class_name { get; set; }
+		public IDictionary<string,string> args { get; set; }
+	}
   public class NetworkInterfaceConfig
   {
     // FIXME I no longer use this -- perhaps can erase.
@@ -52,7 +62,8 @@ namespace Pax
     public static string assembly_filename;
     public static Assembly assembly;
 
-    public static List<NetworkInterfaceConfig> config;
+    public static ConfigFile configFile;
+    public static List<NetworkInterfaceConfig> config { get { return configFile.interfaces; } }
 
     public static string resolve_config_parameter (int port_no, string key) {
       NetworkInterfaceConfig port_conf;
