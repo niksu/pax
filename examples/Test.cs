@@ -149,7 +149,12 @@ public class Tallyer : PacketProcessor {
   // implicit default constructor
 
   public void packetHandler (object sender, CaptureEventArgs e) {
-    Console.WriteLine("|");
+    int port = Array.IndexOf(PaxConfig.deviceMap, e.Device);
+    string tag = "";
+    if (PaxConfig.can_resolve_config_parameter(port, "tag"))
+      tag = PaxConfig.resolve_config_parameter(port, "tag");
+
+    Console.WriteLine("|" + tag);
   }
 }
 public class Dinger : PacketProcessor {
