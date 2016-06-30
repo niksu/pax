@@ -26,6 +26,10 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Paxifax.cs" />
     <Compile Include="Pax.cs" />
+    <None Include="lib/SharpPcap.dll.config">
+      <Link>SharpPcap.dll.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 <!--
   <Target Name="Build">
