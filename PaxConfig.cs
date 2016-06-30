@@ -7,17 +7,17 @@ using SharpPcap;
 
 namespace Pax
 {
-	// FIXME use javadoc-style comments to describe the API
-	public class ConfigFile
-	{
-		public List<PacketProcessorConfig> handlers { get; set; }
-		public List<NetworkInterfaceConfig> interfaces { get; set; }
-	}
-	public class PacketProcessorConfig
-	{
-		public string class_name { get; set; }
-		public IDictionary<string,string> args { get; set; }
-	}
+  // FIXME use javadoc-style comments to describe the API
+  public class ConfigFile
+  {
+    public List<PacketProcessorConfig> handlers { get; set; }
+    public List<NetworkInterfaceConfig> interfaces { get; set; }
+  }
+  public class PacketProcessorConfig
+  {
+    public string class_name { get; set; }
+    public IDictionary<string,string> args { get; set; }
+  }
   public class NetworkInterfaceConfig
   {
     // FIXME I no longer use this -- perhaps can erase.
