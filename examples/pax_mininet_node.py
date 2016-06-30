@@ -23,9 +23,9 @@ class PaxNode( Node ):
         for intf in self.intfList():
           self.cmd("iptables -A INPUT -p tcp -i %s -j DROP" % intf.name)
 
-    def terminate( self ):
+    def terminate(self):
         # Remove iptables rules
         for intf in self.intfList():
-          runCmd(net, nat0, "iptables -D INPUT -p tcp -i %s -j DROP" % intf.name)
+          self.cmd("iptables -D INPUT -p tcp -i %s -j DROP" % intf.name)
 
-        super( NAT, self ).terminate()
+        super(PaxNode, self).terminate()
