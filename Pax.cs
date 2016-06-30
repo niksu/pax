@@ -154,6 +154,7 @@ namespace Pax
 
       using (JsonTextReader r = new JsonTextReader(File.OpenText(PaxConfig.config_filename))) {
         JsonSerializer j = new JsonSerializer();
+        j.DefaultValueHandling = DefaultValueHandling.Populate;
         PaxConfig.configFile = j.Deserialize<ConfigFile>(r);
         PaxConfig.no_interfaces = PaxConfig.config.Count;
         PaxConfig.deviceMap = new ICaptureDevice[PaxConfig.no_interfaces];
@@ -185,7 +186,8 @@ namespace Pax
             {
               PaxConfig.deviceMap[idx] = device;
               PaxConfig.rdeviceMap.Add(device.Name, idx);
-              device.Open(DeviceMode.Normal, 100); // 100ms timeout
+              // Configure this device's read timeout
+              device.Open(DeviceMode.Normal, i.read_timeout);
 
               if (!String.IsNullOrEmpty(i.pcap_filter))
               {

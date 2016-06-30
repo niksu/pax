@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using SharpPcap;
 
@@ -35,6 +36,9 @@ namespace Pax
     public string interface_name {get; set;}
     // The function that is called when traffic arrives on this interface.
     public string lead_handler {get; set;}
+
+    [DefaultValue(100)]
+    public int read_timeout { get; set; }
 
     public IDictionary<string, string> environment {get; set;}
   }
