@@ -144,6 +144,11 @@ public class Nested_NAT : PacketProcessor {
   }
 }
 
+/// <summary>
+/// Tallyer prints `|[tag]` everytime a packet is received, where tag is a port-specific configurable string.
+/// The purpose of Tallyer is to demonstrate and test that default constructors can be used for automatic
+///  instantiation of PacketProcessors, as well as that port-specific configuration properties can be used.
+/// </summary>
 public class Tallyer : PacketProcessor {
 
   // implicit default constructor
@@ -157,6 +162,11 @@ public class Tallyer : PacketProcessor {
     Console.WriteLine("|" + tag);
   }
 }
+
+/// <summary>
+/// Dinger just writes `*ding*` everytime a packet is recieved.
+/// The purpose of Dinger is to demonstrate and test the types that can be used as constructor parameters.
+/// </summary>
 public class Dinger : PacketProcessor {
 
   // Constructor taking lots of interesting arguments
