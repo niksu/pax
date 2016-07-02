@@ -145,7 +145,7 @@ namespace Pax
       print_kv ("Using configuration file: ", PaxConfig.config_filename);
       print_kv ("Using assembly file: ", PaxConfig.assembly_filename);
     }
-    
+
     private static void Configure(CaptureDeviceList devices)
     {
       Console.ResetColor();
@@ -266,9 +266,9 @@ namespace Pax
 
     private static PacketProcessor InstantiatePacketProcessor(Type type)
     {
-      #if MOREDEBUG
+#if MOREDEBUG
       Console.WriteLine("Trying to instantiate {0}", type);
-      #endif
+#endif
 
       // Get the constructor arguments for this type from the config
       IDictionary<string,string> arguments =
@@ -277,14 +277,14 @@ namespace Pax
                                       .SingleOrDefault();
       if (arguments == null) arguments = new Dictionary<string,string>();
 
-      #if MOREDEBUG
+#if MOREDEBUG
       Console.WriteLine("  Arguments:");
       foreach (var pair in arguments)
         Console.WriteLine("    {0} : {1}", pair.Key, pair.Value);
       Console.WriteLine("  Public constructors:");
       foreach (var ctor in type.GetConstructors(BindingFlags.Instance | BindingFlags.Public))
         Console.WriteLine("    {0}", PacketProcessorHelper.ConstructorString(ctor));
-      #endif
+#endif
 
       // Instantiate the packet processor
       PacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(type, arguments);

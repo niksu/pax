@@ -100,7 +100,7 @@ namespace Pax {
         type = type.BaseType;
       }
     }
-    
+
     public static PacketProcessor InstantiatePacketProcessor(Type type, IDictionary<string, string> argsDict)
     {
       // Predicate determining if a parameter could be provided
@@ -125,9 +125,9 @@ namespace Pax {
                        .Select(p => ConvertConstructorParameter(p.ParameterType, argsDict[p.Name]))
                        .ToArray();
           // Invoke the constructor, instatiating the type
-          #if MOREDEBUG
+#if MOREDEBUG
           Console.WriteLine("Invoking new {0}", ConstructorString(constructor, arguments));
-          #endif
+#endif
           PacketProcessor pp = (PacketProcessor)constructor.Invoke(arguments);
           return pp;
         }
