@@ -145,6 +145,7 @@ namespace Pax
       print_kv ("Using configuration file: ", PaxConfig.config_filename);
       print_kv ("Using assembly file: ", PaxConfig.assembly_filename);
     }
+    
     private static void Configure(CaptureDeviceList devices)
     {
       Console.ResetColor();
@@ -211,6 +212,7 @@ namespace Pax
         }
       }
     }
+
     private static void LoadExternalHandlersFromDll()
     {
       Console.ResetColor();
@@ -261,6 +263,7 @@ namespace Pax
       }
       // FIXME add check to see if there's an interface that references a lead_handler that doesn't appear in the assembly. That should be flagged up to the user, and lead to termination of Pax.
     }
+
     private static PacketProcessor InstatiatePacketProcessor(Type type)
     {
       #if MOREDEBUG
@@ -289,6 +292,7 @@ namespace Pax
         Console.WriteLine("Couldn't instantiate {0}", type.FullName);
       return pp;
     }
+
     private static void RegisterHandlers()
     {
       Console.ForegroundColor = ConsoleColor.Gray;

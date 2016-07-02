@@ -36,6 +36,7 @@ namespace Pax {
         typeof(Single),   typeof(Double), typeof(String), typeof(DateTime),
         typeof(TimeSpan), typeof(System.Net.IPAddress), typeof(PhysicalAddress)
       };
+
     public static bool IsAllowedConstructorParameterType(Type ty)
     {
       // Allow nullable types
@@ -43,6 +44,7 @@ namespace Pax {
         ty = Nullable.GetUnderlyingType(ty);
       return AllowedConstructorParameterTypes.Contains(ty);
     }
+
     public static object ConvertConstructorParameter(Type ty, string s)
     {
       if (ty == typeof(string))
@@ -57,6 +59,7 @@ namespace Pax {
         // Convert to primitives + DateTime
         return ((IConvertible)s).ToType(ty, System.Globalization.CultureInfo.CurrentCulture); // NOTE throws InvalidCastException
     }
+
     public static string ConstructorString(ConstructorInfo constructor, object[] arguments = null)
     {
       IEnumerable<string> parameters;
@@ -69,6 +72,7 @@ namespace Pax {
       // Format nicely so it looks like a constructor
       return String.Format("{0}({1})", constructor.DeclaringType.Name, String.Join(", ", parameters));
     }
+
     public static IEnumerable<Type> GetUsedPaxTypes(Type type)
     {
       // Yield implemented Pax interfaces
@@ -96,6 +100,7 @@ namespace Pax {
         type = type.BaseType;
       }
     }
+    
     public static PacketProcessor InstantiatePacketProcessor(Type type, IDictionary<string, string> argsDict)
     {
       // Predicate determining if a parameter could be provided
