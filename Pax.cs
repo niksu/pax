@@ -234,7 +234,7 @@ namespace Pax
           {
             // Only instatiate pp if needed
             if (pp == null)
-              pp = InstatiatePacketProcessor(type);
+              pp = InstantiatePacketProcessor(type);
             if (pp == null)
               // If pp is still null, then we couldn't instantiate it.
               break;
@@ -264,7 +264,7 @@ namespace Pax
       // FIXME add check to see if there's an interface that references a lead_handler that doesn't appear in the assembly. That should be flagged up to the user, and lead to termination of Pax.
     }
 
-    private static PacketProcessor InstatiatePacketProcessor(Type type)
+    private static PacketProcessor InstantiatePacketProcessor(Type type)
     {
       #if MOREDEBUG
       Console.WriteLine("Trying to instantiate {0}", type);
