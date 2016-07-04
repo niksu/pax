@@ -21,11 +21,14 @@ class PaxNode( Node ):
         #  to prevent the OS from handling them and responding.
         print "Drop all incoming TCP traffic on nat0 so that Pax is effectively the middle-man"
         for intf in self.intfList():
-          self.cmd("iptables -A INPUT -p tcp -i %s -j DROP" % intf.name)
+            self.cmd("iptables -A INPUT -p tcp -i %s -j DROP" % intf.name)
+
+        # Disable ip_forward because otherwise this still happens, even with the above iptables rules
+        self.cmd("sysctl -w net.ipv4.ip_forward=0")
 
     def terminate(self):
         # Remove iptables rules
         for intf in self.intfList():
-          self.cmd("iptables -D INPUT -p tcp -i %s -j DROP" % intf.name)
+            self.cmd("iptables -D INPUT -p tcp -i %s -j DROP" % intf.name)
 
         super(PaxNode, self).terminate()
