@@ -1,5 +1,7 @@
 ![Pax](http://www.cl.cam.ac.uk/~ns441/pax/pax.png)
 
+# [Pax](https://en.wiktionary.org/wiki/pax#Latin) be upon packets
+
 System and network programming can be a magical mystery tour de force across
 several APIs and tools.  Pax aspires to be your peaceful
 [gesture](http://en.wikipedia.org/wiki/V_sign) at complexity, and seeks to
