@@ -118,34 +118,6 @@ public class Nested_Chained_Test2 : PacketProcessor {
   }
 }
 
-public class Nested_NAT : PacketProcessor {
-  // NOTE we use 0 below since we're interested in the information
-  //      related to the outside-facing port, which the NAT designates as being port 0.
-  const int outside_port = 0;
-  PacketProcessor pp = null;
-
-  public Nested_NAT () {
-    if (PaxConfig.can_resolve_config_parameter (outside_port, "my_address") &&
-        PaxConfig.can_resolve_config_parameter (outside_port, "next_port") &&
-        PaxConfig.can_resolve_config_parameter (outside_port, "next_hop_mac"))
-    {
-      pp = new NAT (IPAddress.Parse(PaxConfig.resolve_config_parameter (outside_port, "my_address")),
-          UInt16.Parse(PaxConfig.resolve_config_parameter (outside_port, "next_port")),
-          PhysicalAddress.Parse(PaxConfig.resolve_config_parameter(outside_port, "next_hop_mac").ToUpper().Replace(':', '-')));
-    } else {
-      pp = null;
-    }
-  }
-
-  public void packetHandler (object sender, CaptureEventArgs e) {
-    if (pp != null) {
-      pp.packetHandler (sender, e);
-    } else {
-      throw (new Exception ("The NAT nested in NestedNAT was not initialised."));
-    }
-  }
-}
-
 /// <summary>
 /// Tallyer prints `|[tag]` every time a packet is received, where tag is a port-specific configurable string.
 /// The purpose of Tallyer is to demonstrate and test that default constructors can be used for automatic
