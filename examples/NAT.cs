@@ -45,7 +45,7 @@ public class NAT : SimplePacketProcessor {
   private IPAddress my_address;
   private ushort next_port;
   private readonly object portLock = new object();
-  private readonly PhysicalAddress next_hop_mac;
+  private readonly PhysicalAddress next_outside_hop_mac;
 
   public NAT () {
     // FIXME raise an exception if this constructor was used, since currently only the other constructor initialises things properly.
@@ -54,7 +54,7 @@ public class NAT : SimplePacketProcessor {
   public NAT (IPAddress my_address, ushort next_port, PhysicalAddress next_hop_mac) {
     this.my_address = my_address;
     this.next_port = next_port;
-    this.next_hop_mac = next_hop_mac;
+    this.next_outside_hop_mac = next_hop_mac;
   }
 
   // We keep 2 dictionaries, one for queries related to packets crossing from the outside (O) to the inside (I), and
@@ -176,7 +176,7 @@ public class NAT : SimplePacketProcessor {
     ((IPv4Packet)p_ip).UpdateIPChecksum();
     p_tcp.UpdateTCPChecksum();
     // Update destination MAC address
-    p_eth.DestinationHwAddress = next_hop_mac;
+    p_eth.DestinationHwAddress = next_outside_hop_mac;
     return Port_Outside;
   }
 
