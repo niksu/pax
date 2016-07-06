@@ -77,11 +77,11 @@ public class NAT : SimplePacketProcessor {
         IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
         TcpPacket p_tcp = ((PacketDotNet.TcpPacket)(p_ip.PayloadPacket));
 
-        #if DEBUG
+#if DEBUG
         Console.WriteLine("RX {0}:{1} -> {2}:{3} on {4} [{5}]",
           p_ip.SourceAddress, p_tcp.SourcePort, p_ip.DestinationAddress, p_tcp.DestinationPort, in_port,
           p_tcp.Syn?"S":"");
-        #endif
+#endif
 
         int out_port = Port_Drop;
         if (in_port == Port_Outside)
@@ -89,7 +89,7 @@ public class NAT : SimplePacketProcessor {
         else
           out_port = inside_to_outside (p_eth, p_ip, p_tcp, in_port);
 
-        #if DEBUG
+#if DEBUG
         Console.WriteLine(" (------ Outside ------)  \t<->\t (------ Inside ------) ");
         foreach (var entry in NAT_MapToInside)
         {
@@ -101,7 +101,7 @@ public class NAT : SimplePacketProcessor {
         {
           Console.WriteLine("{0} \t<->\t {1}", entry.Key, entry.Value);
         }
-        #endif
+#endif
 
         return out_port;
       }
@@ -200,9 +200,9 @@ public class NAT : SimplePacketProcessor {
     public int NetworkPort { get { return _NetworkPort; } }
     public PhysicalAddress MacAddress { get { return _MacAddress; } }
     private readonly int hashCode;
-    #if DEBUG
+#if DEBUG
     private string asString;
-    #endif
+#endif
 
     public InternalNode(IPAddress address, ushort port, int networkPort, PhysicalAddress macAddress)
     {
@@ -215,9 +215,9 @@ public class NAT : SimplePacketProcessor {
       _MacAddress = macAddress;
       // FIXME computing hash at construction relies on address being immutable (addr.Scope can change)
       hashCode = new { Address, Port, NetworkPort }.GetHashCode();
-      #if DEBUG
+#if DEBUG
       asString = this.ToString();
-      #endif
+#endif
     }
 
     public static bool operator ==(InternalNode a, InternalNode b)
@@ -246,11 +246,11 @@ public class NAT : SimplePacketProcessor {
     public override int GetHashCode() { return hashCode; }
     public override string ToString()
     {
-      #if DEBUG
+#if DEBUG
       if (asString != null)
         return asString;
       else
-      #endif
+#endif
       return String.Format("{0}:{1} at {2} on port {3}",
         Address.ToString(), Port.ToString(), MacAddress.ToString(), NetworkPort.ToString());
     }
@@ -263,9 +263,9 @@ public class NAT : SimplePacketProcessor {
     public ushort SourcePort { get { return _SourcePort; } }
     public ushort ArrivalPort { get { return _ArrivalPort; } }
     private readonly int hashCode;
-    #if DEBUG
+#if DEBUG
     private string asString;
-    #endif
+#endif
 
     public MapToInside_Key(IPAddress sourceAddress, ushort sourcePort, ushort arrivalPort)
     {
@@ -276,9 +276,9 @@ public class NAT : SimplePacketProcessor {
       _ArrivalPort = arrivalPort;
       // FIXME computing hash at construction relies on address being immutable (addr.Scope can change)
       hashCode = new { SourceAddress, SourcePort, ArrivalPort }.GetHashCode();
-      #if DEBUG
+#if DEBUG
       asString = this.ToString();
-      #endif
+#endif
     }
 
     public static bool operator ==(MapToInside_Key a, MapToInside_Key b)
@@ -306,11 +306,11 @@ public class NAT : SimplePacketProcessor {
     public override int GetHashCode() { return hashCode; }
     public override string ToString()
     {
-      #if DEBUG
+#if DEBUG
       if (asString != null)
         return asString;
       else
-      #endif
+#endif
       return SourceAddress.ToString() + ":" + SourcePort.ToString() + " to :" + ArrivalPort.ToString();
     }
   }
@@ -324,9 +324,9 @@ public class NAT : SimplePacketProcessor {
     public IPAddress DestinationAddress { get { return _DestinationAddress; } }
     public ushort DestinationPort { get { return _DestinationPort; } }
     private readonly int hashCode;
-    #if DEBUG
+#if DEBUG
     private string asString;
-    #endif
+#endif
 
     public MapToOutside_Key(IPAddress sourceAddress, ushort sourcePort,
                             IPAddress destinationAddress, ushort destinationPort)
@@ -340,9 +340,9 @@ public class NAT : SimplePacketProcessor {
       _DestinationPort = destinationPort;
       // FIXME computing hash at construction relies on address being immutable (addr.Scope can change)
       hashCode = new { SourceAddress, SourcePort, DestinationAddress, DestinationPort }.GetHashCode();
-      #if DEBUG
+#if DEBUG
       asString = this.ToString();
-      #endif
+#endif
     }
 
     public static bool operator ==(MapToOutside_Key a, MapToOutside_Key b)
@@ -371,11 +371,11 @@ public class NAT : SimplePacketProcessor {
     public override int GetHashCode() { return hashCode; }
     public override string ToString()
     {
-      #if DEBUG
+#if DEBUG
       if (asString != null)
         return asString;
       else
-      #endif
+#endif
       return SourceAddress.ToString() + ":" + SourcePort.ToString() + " to "
         + DestinationAddress.ToString() + ":" + DestinationPort.ToString();
     }
