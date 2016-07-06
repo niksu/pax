@@ -51,10 +51,10 @@ public class NAT : SimplePacketProcessor {
     // FIXME raise an exception if this constructor was used, since currently only the other constructor initialises things properly.
   }
 
-  public NAT (IPAddress my_address, ushort next_port, PhysicalAddress next_hop_mac) {
+  public NAT (IPAddress my_address, ushort next_port, PhysicalAddress next_outside_hop_mac) {
     this.my_address = my_address;
     this.next_port = next_port;
-    this.next_outside_hop_mac = next_hop_mac;
+    this.next_outside_hop_mac = next_outside_hop_mac;
   }
 
   // We keep 2 dictionaries, one for queries related to packets crossing from the outside (O) to the inside (I), and

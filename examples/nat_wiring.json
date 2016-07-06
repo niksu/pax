@@ -5,7 +5,7 @@
       "args": {
         "my_address" : "10.0.0.3",
         "next_port" : "35000",
-        "next_hop_mac" : "00:00:00:00:00:09"
+        "next_outside_hop_mac" : "00:00:00:00:00:09"
       }
     }
   ],
