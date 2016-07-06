@@ -1,10 +1,12 @@
-[
-  {
-   "interface_name" : "eth0",
-   "lead_handler" : "Nested_Chained_Test2",
-   "pcap_filter" : "udp"},
-  {
-   "interface_name" : "lo"},
-  {
-   "interface_name" : "eth1"}
-]
+{
+  "interfaces": [
+    {
+      "interface_name" : "eth0",
+      "lead_handler" : "Nested_Chained_Test2",
+      "pcap_filter" : "udp"
+    },
+    {
+      "interface_name" : "lo"
+    }
+  ]
+}

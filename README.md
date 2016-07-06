@@ -25,11 +25,13 @@ languages. Some [example](https://github.com/niksu/pax/tree/master/examples) imp
 
 # Building
 ## Dependencies
-Other than a C# compiler and runtime, you need:
+Other than a C# (>=6.0) compiler and runtime, you need:
 * libpcap (on UNIXy systems) or winpcap.dll (on Windows)
 * [SharpPcap](https://github.com/chmorgan/sharppcap) and [PacketDotNet](https://github.com/chmorgan/packetnet)
 * Newtonsoft's JSON library (download one of the [releases](https://github.com/JamesNK/Newtonsoft.Json/releases))
-* On Ubuntu Linux (14.04) it's easiest to `apt-get install` the `mono-complete`
+* On Ubuntu Linux (14.04) it's easiest to follow Mono's
+[instructions](http://www.mono-project.com/docs/getting-started/install/linux/) to install the latest version,
+and `apt-get install` the `mono-complete`
 package. You might need to tweak Mono's config files (such as that in
 `/etc/mono/config`) in order to direct Mono's loader to the right location of
 libpcap on your system (by adding a

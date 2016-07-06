@@ -9,6 +9,7 @@ using System;
 using System.Net.NetworkInformation;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using PacketDotNet;
 using SharpPcap;
 using SharpPcap.LibPcap;
@@ -84,7 +85,38 @@ namespace Pax
         return -1;
       }
 
-      // FIXME break up Main() into separate functions. The following block could be put into its own void function, for instance.
+      PrintIntro();
+
+      PaxConfig.assembly = Assembly.LoadFile(PaxConfig.assembly_filename);
+
+      var devices = CaptureDeviceList.Instance;
+      Debug.Assert (devices.Count >= 0);
+      if (devices.Count == 0)
+      {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("No capture devices found");
+        return -1;
+      }
+
+      Configure(devices);
+
+      LoadExternalHandlersFromDll();
+      
+      RegisterHandlers();  
+
+      Console.ResetColor();
+      print_heading("Starting");
+      Console.ResetColor();
+
+      // FIXME accept a -j parameter to limit number of threads?
+      Parallel.ForEach(PaxConfig.deviceMap, device => device.Capture());
+
+      // FIXME am i right in thinking that this location is unreachable, since the threads won't terminate unless the whole process is being terminated.
+      return 0;
+    }
+
+    private static void PrintIntro()
+    {
       Console.ForegroundColor = ConsoleColor.White;
       Console.Write ("✌ ");
       Console.ForegroundColor = ConsoleColor.Cyan;
@@ -112,25 +144,17 @@ namespace Pax
                  true);
       print_kv ("Using configuration file: ", PaxConfig.config_filename);
       print_kv ("Using assembly file: ", PaxConfig.assembly_filename);
+    }
 
-      PaxConfig.assembly = Assembly.LoadFile(PaxConfig.assembly_filename);
-
-      var devices = CaptureDeviceList.Instance;
-      Debug.Assert (devices.Count >= 0);
-      if (devices.Count == 0)
-      {
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine("No capture devices found");
-        return -1;
-      }
-
+    private static void Configure(CaptureDeviceList devices)
+    {
       Console.ResetColor();
       print_heading("Configuration");
       Console.ResetColor();
 
       using (JsonTextReader r = new JsonTextReader(File.OpenText(PaxConfig.config_filename))) {
         JsonSerializer j = new JsonSerializer();
-        PaxConfig.config = j.Deserialize<List<NetworkInterfaceConfig>>(r);
+        PaxConfig.configFile = j.Deserialize<ConfigFile>(r);
         PaxConfig.no_interfaces = PaxConfig.config.Count;
         PaxConfig.deviceMap = new ICaptureDevice[PaxConfig.no_interfaces];
         PaxConfig.interface_lead_handler = new string[PaxConfig.no_interfaces];
@@ -178,7 +202,7 @@ namespace Pax
           {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("No match for '" + i.interface_name + "'");
-            return -1;
+            Environment.Exit(-1);
           } else {
             print_kv (indent + /*FIXME code style sucks*/ indent +
                      "Link layer type: ", PaxConfig.deviceMap[idx].LinkType.ToString());
@@ -187,49 +211,90 @@ namespace Pax
           idx++;
         }
       }
+    }
 
-
+    private static void LoadExternalHandlersFromDll()
+    {
       Console.ResetColor();
       print_heading("Scanning assembly");
       Console.ResetColor();
 
-      // FIXME currently assuming that the assembly only contains stuff that concerns
-      //       us. it would be best to filter by the implemented interfaces, and focus on
-      //       interfaces made available by Pax.
-      foreach (Type ty in PaxConfig.assembly.GetExportedTypes())
+      // Inspect each type that implements PacketProcessor, trying to instantiate it for use
+      foreach (Type type in PaxConfig.assembly.GetExportedTypes()
+                                            .Where(typeof(PacketProcessor).IsAssignableFrom))
       {
-#if MOREDEBUG
-        Console.WriteLine("Trying to instantiate {0}", ty);
-#endif
-        PacketProcessor pp = (PacketProcessor)Activator.CreateInstance(ty); // NOTE this means that we require "ty" to define a default constructor.
-
         // Find which network interfaces this class is handling
         List<int> subscribed = new List<int>();
-
+        PacketProcessor pp = null;
         for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
         {
+          // Does this interface have this type specified as the lead handler?
           if ((!String.IsNullOrEmpty(PaxConfig.interface_lead_handler[idx])) &&
-              ty.Name == PaxConfig.interface_lead_handler[idx])
+              type.Name == PaxConfig.interface_lead_handler[idx])
           {
+            // Only instatiate pp if needed
+            if (pp == null)
+              pp = InstantiatePacketProcessor(type);
+            if (pp == null)
+              // If pp is still null, then we couldn't instantiate it.
+              break;
             subscribed.Add(idx);
             PaxConfig.interface_lead_handler_obj[idx] = pp;
           }
         }
 
+        // Print which interfaces this type is the handler for
         var tmp = Console.ForegroundColor;
         Console.Write (indent);
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write (ty);
+        Console.Write (type);
         Console.ForegroundColor = ConsoleColor.Gray;
         Console.Write (" <- ");
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine(
            String.Join(", ", subscribed.ConvertAll<string>(ofs => PaxConfig.deviceMap[ofs].Name)));
-        // FIXME could also print type-related info of ty, such as which Pax interfaces it implements.
+
+        // List the Pax interfaces this type implements:
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.Write("  : ");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine(String.Join(", ", PacketProcessorHelper.GetUsedPaxTypes(type).Select(t => t.Name)));
         Console.ForegroundColor = tmp;
       }
       // FIXME add check to see if there's an interface that references a lead_handler that doesn't appear in the assembly. That should be flagged up to the user, and lead to termination of Pax.
+    }
 
+    private static PacketProcessor InstantiatePacketProcessor(Type type)
+    {
+#if MOREDEBUG
+      Console.WriteLine("Trying to instantiate {0}", type);
+#endif
+
+      // Get the constructor arguments for this type from the config
+      IDictionary<string,string> arguments =
+        PaxConfig.configFile.handlers?.Where(handler => type.Name.Equals(handler.class_name))
+                                      .Select(intf => intf.args)
+                                      .SingleOrDefault();
+      if (arguments == null) arguments = new Dictionary<string,string>();
+
+#if MOREDEBUG
+      Console.WriteLine("  Arguments:");
+      foreach (var pair in arguments)
+        Console.WriteLine("    {0} : {1}", pair.Key, pair.Value);
+      Console.WriteLine("  Public constructors:");
+      foreach (var ctor in type.GetConstructors(BindingFlags.Instance | BindingFlags.Public))
+        Console.WriteLine("    {0}", PacketProcessorHelper.ConstructorString(ctor));
+#endif
+
+      // Instantiate the packet processor
+      PacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(type, arguments);
+      if (pp == null)
+        Console.WriteLine("Couldn't instantiate {0}", type.FullName);
+      return pp;
+    }
+
+    private static void RegisterHandlers()
+    {
       Console.ForegroundColor = ConsoleColor.Gray;
 
       // Set up callbacks.
@@ -264,20 +329,9 @@ namespace Pax
           Console.WriteLine(")");
           Console.ForegroundColor = tmp;
           PaxConfig.deviceMap[idx].OnPacketArrival +=
-            // FIXME can use packet handler directly?
-            new PacketArrivalEventHandler(PaxConfig.interface_lead_handler_obj[idx].packetHandler);
+            PaxConfig.interface_lead_handler_obj[idx].packetHandler;
         }
       }
-
-      Console.ResetColor();
-      print_heading("Starting");
-      Console.ResetColor();
-
-      // FIXME accept a -j parameter to limit number of threads?
-      Parallel.ForEach(PaxConfig.deviceMap, device => device.Capture());
-
-      // FIXME am i right in thinking that this location is unreachable, since the threads won't terminate unless the whole process is being terminated.
-      return 0;
     }
 
     //Cleanup

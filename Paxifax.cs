@@ -23,94 +23,128 @@ using System.Linq;
 namespace Pax {
 
   // FIXME use javadoc-style comments to describe the API
-  public class NetworkInterfaceConfig
-  {
-    // FIXME I no longer use this -- perhaps can erase.
-    public string internal_name {get; set;}
-    // A pcap expression used to filter traffic that we see coming from this interface.
-    public string pcap_filter {get; set;}
-    // Either the system name (e.g., "eth0", etc), or an indicator of a file as follows:
-    // ">filename" writes to a pcap file
-    // "<filename" reads from a pcap file
-    // "<filename1;<filename2" reads from two pcap files in order TODO currently we can only have one of each file
-    // ">filename;<filename1" writes to a pcap file and reads from another.
-    // FIXME currently file input/output is not supported.
-    public string interface_name {get; set;}
-    // The function that is called when traffic arrives on this interface.
-    public string lead_handler {get; set;}
-
-    public IDictionary<string, string> environment {get; set;}
-  }
-
-  // FIXME crude design
-  public static class PaxConfig {
-    // This is the number of interfaces in the configuration file.
-    // This must be greater than 1.
-    // Note that no_interfaces may be larger than the number of interfaces to which a packet processor has
-    // been attached (i.e., interfaces that have a "lead_handler" defined in the configuration).
-    // But this is fine, because there might be interface for which we don't want to process
-    // their incoming packets, but we want to be able to forward packets to them nonetheless.
-    public static int no_interfaces;
-
-    // Array "maps" from device offset to the device object.
-    public static ICaptureDevice[] deviceMap;
-    // Map from device name (e.g., "eth1") to device offset.
-    public static Dictionary<string, int> rdeviceMap = new Dictionary<string, int>();
-    // Map from device offset to the name of its handler.
-    public static string[] interface_lead_handler;
-    public static PacketProcessor[] interface_lead_handler_obj;
-
-    // FIXME better to link to function (rather than have indirection) to speed things up at runtime.
-    // The file containing the catalogue of network interfaces.
-    public static string config_filename;
-    // The assembly containing the packet handlers that the user wishess to use.
-    public static string assembly_filename;
-    public static Assembly assembly;
-
-    public static List<NetworkInterfaceConfig> config;
-
-    public static string resolve_config_parameter (int port_no, string key) {
-      NetworkInterfaceConfig port_conf;
-      try {
-        port_conf = config[port_no];
-      } catch (ArgumentOutOfRangeException e) {
-        throw (new Exception ("resolve_config_parameter: port_no > config size, since " + port_no.ToString() + " > " +
-              config.Count.ToString()));
-      }
-
-      if (port_conf.environment == null)
-      {
-        throw (new Exception ("resolve_config_parameter: 'environment' has not been defined " +
-              "for port_no " + port_no.ToString() + ". Configuration is incomplete."));
-      }
-
-      if (port_conf.environment.ContainsKey(key)) {
-        return port_conf.environment[key];
-      } else {
-        throw (new Exception ("resolve_config_parameter: could not find key '" + key + "'" +
-              " (in 'environment') for port_no " + port_no.ToString() + ". Configuration is incomplete."));
-      }
-    }
-
-    public static bool can_resolve_config_parameter (int port_no, string key) {
-      NetworkInterfaceConfig port_conf;
-      if (port_no >= config.Count)
-      {
-        return false;
-      }
-
-      port_conf = config[port_no];
-      if (port_conf.environment == null)
-      {
-        return false;
-      }
-
-      return (port_conf.environment.ContainsKey(key));
-    }
-  }
-
   public interface PacketProcessor {
     void packetHandler (object sender, CaptureEventArgs e);
+  }
+
+  internal static class PacketProcessorHelper
+  {
+    public readonly static Type[] AllowedConstructorParameterTypes = new Type[]
+      {
+        typeof(Boolean),  typeof(Byte),   typeof(SByte),  typeof(UInt16),   typeof(Int16),
+        typeof(UInt32),   typeof(Int32),  typeof(UInt64), typeof(Int64),    typeof(Decimal),
+        typeof(Single),   typeof(Double), typeof(String), typeof(DateTime),
+        typeof(TimeSpan), typeof(System.Net.IPAddress), typeof(PhysicalAddress)
+      };
+
+    public static bool IsAllowedConstructorParameterType(Type ty)
+    {
+      // Allow nullable types
+      if (ty.IsGenericType && ty.GetGenericTypeDefinition() == typeof(Nullable<>))
+        ty = Nullable.GetUnderlyingType(ty);
+      return AllowedConstructorParameterTypes.Contains(ty);
+    }
+
+    public static object ConvertConstructorParameter(Type ty, string s)
+    {
+      if (ty == typeof(string))
+        return s;
+      else if (ty == typeof(System.Net.IPAddress))
+        return System.Net.IPAddress.Parse(s);
+      else if (ty == typeof(PhysicalAddress))
+        return PhysicalAddress.Parse(s.ToUpper().Replace(':', '-'));
+      else if (ty == typeof(TimeSpan))
+        return TimeSpan.Parse(s);
+      else
+        // Convert to primitives + DateTime
+        return ((IConvertible)s).ToType(ty, System.Globalization.CultureInfo.CurrentCulture); // NOTE throws InvalidCastException
+    }
+
+    public static string ConstructorString(ConstructorInfo constructor, object[] arguments = null)
+    {
+      IEnumerable<string> parameters;
+      // Get the string representations of the parameters (or arguments if present)
+      if (arguments == null)
+        parameters = constructor.GetParameters()
+                                .Select(p => String.Format("{0}: {1}", p.Name, p.ParameterType.FullName));
+      else
+        parameters = arguments.Select(obj => obj.ToString());
+      // Format nicely so it looks like a constructor
+      return String.Format("{0}({1})", constructor.DeclaringType.Name, String.Join(", ", parameters));
+    }
+
+    public static IEnumerable<Type> GetUsedPaxTypes(Type type)
+    {
+      // Yield implemented Pax interfaces
+      foreach (Type intf in type.GetInterfaces())
+      {
+        if (intf.FullName.StartsWith("Pax."))
+          yield return intf;
+        else
+        {
+          // Check for interfaces lower down
+          foreach (Type subintf in GetUsedPaxTypes(intf))
+            yield return subintf;
+        }
+      }
+      
+      // Yield the highest-up extended Pax type
+      type = type.BaseType;
+      while (type != null)
+      {
+        if (type.FullName.StartsWith("Pax."))
+        {
+          yield return type;
+          yield break;
+        }
+        type = type.BaseType;
+      }
+    }
+
+    public static PacketProcessor InstantiatePacketProcessor(Type type, IDictionary<string, string> argsDict)
+    {
+      // Predicate determining if a parameter could be provided
+      Func<ParameterInfo,bool> parameterIsAvailable = param =>
+        argsDict.ContainsKey(param.Name) && IsAllowedConstructorParameterType(param.ParameterType);
+      // Predicate determining if a constructor can be called
+      Func<ConstructorInfo,bool> constructorCanBeCalled = ctor =>
+        ctor.GetParameters().All(parameterIsAvailable);
+
+      // Get the constructors for this type that we could call with the given arguments:
+      var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
+                             .Where(constructorCanBeCalled);
+
+      // Try to instantiate the type, using the best constructor we can:
+      foreach (var constructor in constructors.OrderByDescending(ctor => ctor.GetParameters().Length))
+      {
+        try
+        {
+          // Get the arguments for the constructor, converted to the proper types
+          var arguments =
+            constructor.GetParameters()
+                       .Select(p => ConvertConstructorParameter(p.ParameterType, argsDict[p.Name]))
+                       .ToArray();
+          // Invoke the constructor, instatiating the type
+#if MOREDEBUG
+          Console.WriteLine("Invoking new {0}", ConstructorString(constructor, arguments));
+#endif
+          PacketProcessor pp = (PacketProcessor)constructor.Invoke(arguments);
+          return pp;
+        }
+        catch (Exception ex) when (ex is InvalidCastException
+                                || ex is FormatException)
+        {
+          // If an exception is thrown, ignore it and try the next best constructor
+          // But log it first:
+          Debug.WriteLine("Constructor failed - {0}:", constructor.ToString());
+          Debug.WriteLine(ex);
+        }
+      }
+
+      // If we reach this point, there were no constructors that we could use
+      Console.WriteLine("No suitable constructor could be found.");
+      return null;
+    }
   }
 
   // A packet monitor does not output anything onto the network, it simply
