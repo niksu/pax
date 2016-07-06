@@ -27,7 +27,7 @@ The configuration needs to specify three parameters to the NAT's constructor:
 
 * The IP address of the NAT. This will be used as the source address of packets crossing from the Inside to the Outside of the NAT.
 * The starting TCP port to use on the NAT, to proxy TCP connections crossing from the Inside to the Outside of the NAT.
-* The MAC address of the next hop, the node which the Out port (port 0) of the NAT is connected to.
+* The MAC address of the next hop to Outside; the address of the node which the Out port (port 0) of the NAT is connected to.
 
 These parameters are provided as part of the `args` map, as shown in the example NAT configuration below.
 
@@ -149,7 +149,7 @@ it might not be the IP you were expecting.
 
 _
 
-Feel free to look in `examples/nat_topo.py`:
+Feel free to look in [`examples/nat_topo.py`](nat_topo.py):
 - The `NatTopo` class defines the network topology for Mininet 
 ```
                   ┌──────┐     ┌─────┐
@@ -161,7 +161,7 @@ Feel free to look in `examples/nat_topo.py`:
                   └──────┘     └─────┘
 ```
 - You might notice that `nat0` is specified as being a node of type `PaxNode`. You can
-  look at the definition in `pax_mininet_node.py`. It is a host with firewall rules on
+  look at the definition in [`pax_mininet_node.py`](pax_mininet_node.py). It is a host with firewall rules on
   each of the interfaces on nat0 to drop all incoming traffic. This is so that only
   the NAT process will respond to packets. Otherwise, the OS could reject or accept
   connections that are intended for internal hosts. We also disable ip_forward so that
