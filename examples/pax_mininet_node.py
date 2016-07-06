@@ -22,7 +22,9 @@ class PaxNode( Node ):
         for intf in self.intfList():
             self.cmd("iptables -A INPUT -p tcp -i %s -j DROP" % intf.name)
 
-        # Disable ip_forward because otherwise this still happens, even with the above iptables rules
+        # Disable ip_forward because otherwise, even with the above iptables rules, the OS
+        #  will still forward packets that have a different IP on the other interfaces, which
+        #  is not the behaviour we want from an ideal node that only processes packets through Pax.
         self.cmd("sysctl -w net.ipv4.ip_forward=0")
 
     def terminate(self):
