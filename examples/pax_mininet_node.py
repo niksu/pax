@@ -19,7 +19,6 @@ class PaxNode( Node ):
         # Setup iptable rules to drop incoming packets on each interface:
         # Because Pax only sniffs packets (it doesn't steal them), we need to drop the packets
         #  to prevent the OS from handling them and responding.
-        print "Drop all incoming TCP traffic on nat0 so that Pax is effectively the middle-man"
         for intf in self.intfList():
             self.cmd("iptables -A INPUT -p tcp -i %s -j DROP" % intf.name)
 
