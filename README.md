@@ -36,7 +36,7 @@ package. You might need to tweak Mono's config files (such as that in
 `/etc/mono/config`) in order to direct Mono's loader to the right location of
 libpcap on your system (by adding a
 [dllmap](http://www.mono-project.com/docs/advanced/pinvoke/dllmap/) entry).
-* **Optional** Mininet for [testing](https://github.com/niksu/pax/tree/master/examples#testing-the-nat-with-mininet). We used Mininet 2.2.1 on Ubuntu 14.04 LTS.
+* **Optional** Mininet for [testing](examples#testing-the-nat-with-mininet). We used Mininet 2.2.1 on Ubuntu 14.04 LTS.
 
 Put the DLLs for Newtonsoft.Json, SharpPcap and PacketDotNet in Pax's `lib/` directory.
 
@@ -49,7 +49,7 @@ This will produce a single file (Pax.exe), called an *assembly* in .NET jargon. 
 # Writing for Pax
 Packet processers using Pax can be written in any [.NET language](https://en.wikipedia.org/wiki/List_of_CLI_languages).
 They use Pax's API and define one or more functions that handle incoming packets.
-The [examples](https://github.com/niksu/pax/tree/master/examples) included with Pax could help get you going.
+The [examples](examples) included with Pax could help get you going.
 The workflow is as follows:
 
 1. Write your packet processors and use a .NET compiler to produce a DLL. Your DLL may contain multiple packet processors -- it is the *configuration file* that specifies which processor you wish you bind with which network interface.
@@ -78,7 +78,7 @@ Then Pax activates the handlers, and your code takes it from there.
 
 
 # What does a Pax processor look like?
-The main handler function of our [NAT example](https://github.com/niksu/pax/blob/master/examples/NAT.cs) looks like this.
+The main handler function of our [NAT example](examples/NAT.cs) looks like this.
 The return value is the port over which to emit the (modified) packet. The
 actual network interface connected to that port is determined by the
 configuration file.
