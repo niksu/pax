@@ -36,6 +36,7 @@ package. You might need to tweak Mono's config files (such as that in
 `/etc/mono/config`) in order to direct Mono's loader to the right location of
 libpcap on your system (by adding a
 [dllmap](http://www.mono-project.com/docs/advanced/pinvoke/dllmap/) entry).
+* **Optional** Mininet for [testing](https://github.com/niksu/pax/tree/master/examples#testing-the-nat-with-mininet). We used Mininet 2.2.1 on Ubuntu 14.04 LTS.
 
 Put the DLLs for Newtonsoft.Json, SharpPcap and PacketDotNet in Pax's `lib/` directory.
 

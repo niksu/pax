@@ -126,7 +126,7 @@ This is quite handy because we can run reproducible tests and experiment with
 networks when we don't have the physical machines otherwise needed.
 
 To test the NAT implementation:
-- [Install](http://mininet.org/download/) Mininet - it doesn't matter which way
+- [Install](http://mininet.org/download/) Mininet - it doesn't matter which way. We used Mininet 2.2.1 on Ubuntu 14.04 LTS.
 - cd into your cloned Pax directory and run `$ sudo ./examples/nat_topo.py test`
 - You can also jump into the Mininet CLI by running `$ sudo ./examples/nat_topo.py`
 
