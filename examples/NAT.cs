@@ -64,14 +64,14 @@ public class NAT : SimplePacketProcessor {
 
   override public int handler (int in_port, ref Packet packet)
   {
-    if (packet is PacketDotNet.EthernetPacket)
+    if (packet is EthernetPacket)
     {
       if (packet.Encapsulates(typeof(IPv4Packet), typeof(TcpPacket)))
       {
         // Unencapsulate the packets, so we can read and change their fields more easily.
         EthernetPacket p_eth = (EthernetPacket)packet;
         IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
-        TcpPacket p_tcp = ((PacketDotNet.TcpPacket)(p_ip.PayloadPacket));
+        TcpPacket p_tcp = ((TcpPacket)(p_ip.PayloadPacket));
 
 #if DEBUG
         Console.WriteLine("RX {0}:{1} -> {2}:{3} on {4} [{5}]",
