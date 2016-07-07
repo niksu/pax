@@ -134,8 +134,8 @@ public class NAT : SimplePacketProcessor {
       p_tcp.UpdateTCPChecksum();
       // Update destination MAC address
       p_eth.DestinationHwAddress = destination.MacAddress;
-      // Forward on the mapped network port
-      return destination.NetworkPort;
+      // Forward on the mapped network interface
+      return destination.InterfaceNumber;
     }
     else
     {
@@ -193,28 +193,28 @@ public class NAT : SimplePacketProcessor {
   {
     private readonly IPAddress _Address; // FIXME we should really use immutable values since we are using a dictionary
     private readonly ushort _Port;
-    private readonly int _NetworkPort;
+    private readonly int _InterfaceNumber;
     private readonly PhysicalAddress _MacAddress;
     public IPAddress Address { get { return _Address; } }
     public ushort Port { get { return _Port; } }
-    public int NetworkPort { get { return _NetworkPort; } }
+    public int InterfaceNumber { get { return _InterfaceNumber; } }
     public PhysicalAddress MacAddress { get { return _MacAddress; } }
     private readonly int hashCode;
 #if DEBUG
     private string asString;
 #endif
 
-    public InternalNode(IPAddress address, ushort port, int networkPort, PhysicalAddress macAddress)
+    public InternalNode(IPAddress address, ushort port, int interfaceNumber, PhysicalAddress macAddress)
     {
       if (ReferenceEquals(null, address)) throw new ArgumentNullException("address");
       if (ReferenceEquals(null, macAddress)) throw new ArgumentNullException("macAddress");
 
       _Address = address;
       _Port = port;
-      _NetworkPort = networkPort;
+      _InterfaceNumber = interfaceNumber;
       _MacAddress = macAddress;
       // FIXME computing hash at construction relies on address being immutable (addr.Scope can change)
-      hashCode = new { Address, Port, NetworkPort }.GetHashCode();
+      hashCode = new { Address, Port, InterfaceNumber }.GetHashCode();
 #if DEBUG
       asString = this.ToString();
 #endif
@@ -240,7 +240,7 @@ public class NAT : SimplePacketProcessor {
       return !ReferenceEquals(null, other)
         && Address.Equals(other.Address)
         && Port.Equals(other.Port)
-        && NetworkPort.Equals(other.NetworkPort)
+        && InterfaceNumber.Equals(other.InterfaceNumber)
         && MacAddress.Equals(other.MacAddress);
     }
     public override int GetHashCode() { return hashCode; }
@@ -252,7 +252,7 @@ public class NAT : SimplePacketProcessor {
       else
 #endif
       return String.Format("{0}:{1} at {2} on port {3}",
-        Address.ToString(), Port.ToString(), MacAddress.ToString(), NetworkPort.ToString());
+        Address.ToString(), Port.ToString(), MacAddress.ToString(), InterfaceNumber.ToString());
     }
   }
   sealed class MapToInside_Key : IEquatable<MapToInside_Key>
