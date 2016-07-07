@@ -150,27 +150,27 @@ public class NAT : SimplePacketProcessor {
   {
     var out_key = new MapToOutside_Key(p_ip.SourceAddress, p_tcp.SourcePort,
                                        p_ip.DestinationAddress, p_tcp.DestinationPort);
-    ushort natPort;
+    ushort masqueradingPort;
     if (p_tcp.Syn)
     {
       // If a TCP SYN, then add a mapping for the new connection.
-      natPort = GetNATPort();
+      masqueradingPort = GetNewMasqueradingTcpPort();
       // Add to NAT_MapToOutside
-      NAT_MapToOutside[out_key] = natPort;
+      NAT_MapToOutside[out_key] = masqueradingPort;
       // Add to NAT_MapToInside
-      var in_key = new MapToInside_Key(p_ip.DestinationAddress, p_tcp.DestinationPort, natPort);
+      var in_key = new MapToInside_Key(p_ip.DestinationAddress, p_tcp.DestinationPort, masqueradingPort);
       var internalNode = new InternalNode(p_ip.SourceAddress, p_tcp.SourcePort, incomingPort, p_eth.SourceHwAddress);
       NAT_MapToInside[in_key] = internalNode;
       Console.WriteLine("Added mapping");
     }
-    else if (!NAT_MapToOutside.TryGetValue(out_key, out natPort))
+    else if (!NAT_MapToOutside.TryGetValue(out_key, out masqueradingPort))
     {
       // Not a SYN, and no existing connection, so drop.
       return Port_Drop;
     }
 
     // Rewrite the packet.
-    p_tcp.SourcePort = natPort;
+    p_tcp.SourcePort = masqueradingPort;
     p_ip.SourceAddress = my_address;
     // Update checksums. NOTE IP updated before TCP
     ((IPv4Packet)p_ip).UpdateIPChecksum();
@@ -180,7 +180,7 @@ public class NAT : SimplePacketProcessor {
     return Port_Outside;
   }
 
-  private ushort GetNATPort()
+  private ushort GetNewMasqueradingTcpPort()
   {
     lock(portLock)
     {
