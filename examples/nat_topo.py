@@ -96,7 +96,7 @@ def test():
     # Start it in a separate terminal so that we can see the output in real time.
     print "Starting Pax NAT process on %s:" % nat0
     runCmd(net, nat0,
-        'x-terminal-emulator -e sudo ~/pax/Bin/Pax.exe ~/pax/examples/nat_wiring.json ~/pax/examples/Bin/Examples.dll &')
+        'x-terminal-emulator -e sudo Bin/Pax.exe examples/nat_wiring.json examples/Bin/Examples.dll &')
     
     # Test the NAT by opening a connection between in1 and out0:
     print "Connecting from %s to %s:" % (in1, out0)
