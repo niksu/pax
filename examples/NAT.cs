@@ -129,9 +129,9 @@ public class NAT : SimplePacketProcessor {
       // Rewrite destination IP address and TCP port, and map to the appropriate Inside port.
       p_ip.DestinationAddress = destination.Address;
       p_tcp.DestinationPort = destination.Port;
-      // Update checksums. NOTE IP updated before TCP
-      ((IPv4Packet)p_ip).UpdateIPChecksum();
+      // Update checksums.
       p_tcp.UpdateTCPChecksum();
+      ((IPv4Packet)p_ip).UpdateIPChecksum();
       // Update destination MAC address
       p_eth.DestinationHwAddress = destination.MacAddress;
       // Forward on the mapped network interface
