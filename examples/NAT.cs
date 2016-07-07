@@ -144,7 +144,7 @@ public class NAT : SimplePacketProcessor {
   }
 
   /// <summary>
-  /// Rewrite packets coming from the Iside and forward on the Outside network port.
+  /// Rewrite packets coming from the Inside and forward on the Outside network port.
   /// </summary>
   private int inside_to_outside (EthernetPacket p_eth, IpPacket p_ip, TcpPacket p_tcp, int incomingPort)
   {
