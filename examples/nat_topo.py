@@ -11,7 +11,11 @@ from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.log import setLogLevel
 import time
+import thread
+import threading
 from pax_mininet_node import PaxNode
+
+config = None
 
 # This class defines the topology we use for testing the Pax NAT implementation.
 # The parameter `n` defines the number of inside nodes created.
@@ -95,8 +99,9 @@ def test():
     # Start the Pax NAT process on the NAT node:
     # Start it in a separate terminal so that we can see the output in real time.
     print "Starting Pax NAT process on %s:" % nat0
-    runCmd(net, nat0,
-        'x-terminal-emulator -e sudo Bin/Pax.exe examples/nat_wiring.json examples/Bin/Examples.dll &')
+    cmd = 'Bin/Pax.exe examples/nat_wiring.json examples/Bin/Examples.dll'
+    if config.X_windows: cmd = 'x-terminal-emulator -e %s &' & cmd
+    sendCmd(net, nat0, cmd)
     
     # Test the NAT by opening a connection between in1 and out0:
     print "Connecting from %s to %s:" % (in1, out0)
@@ -104,7 +109,10 @@ def test():
     data = "Hello, are you there?"
     runCmd(net, out0, 'echo %s | netcat -l 12001 &' % data)
     # Connect to out0 from in1 and get the data received:
-    result = runCmd(net, in1, 'netcat -n %s 12001' % ip(net, out0)).rstrip('\n').rstrip('\r')
+    # Timeout after 10 seconds if nothing happens
+    result = runCmd(net, in1, 'netcat -n %s 12001' % ip(net, out0), timeout=10.0)
+    if result is not None:
+        result = result.rstrip('\n').rstrip('\r')
     received(in1, result)
     # Check that the received data was correct:
     if (result != data):
@@ -112,35 +120,67 @@ def test():
     else:
         print "Correct data received"
 
+    # If we couldn't show the Pax output in a separate window, show it now.
+    if not config.X_windows:
+        print "Show Pax output? (Y/n)"
+        if (sys.stdin.read(1).upper() == "Y"):
+            sendInt(net, nat0)
+            print waitOutput(net, nat0, verbose=True)
+
 # List topologies defined in this file for Mininet
 topos = { 'nat': (lambda: NatTopo())}
 
 # Helper procedures
-def runCmd(net, name, cmd):
+def runCmd(net, name, cmd, timeout=None, **args):
     h = net.get(name)
     print "  %s> $ %s" % (name, cmd)
-    return h.cmd(cmd)
-def sendCmd(net, name, cmd):
+    if (timeout is None):
+        return h.cmd(cmd, **args)
+    else:
+        timer = threading.Timer(timeout, lambda: h.sendInt())
+        timer.start()
+        rv = h.cmd(cmd, **args)
+        timer.cancel()
+        return rv
+def sendCmd(net, name, cmd, **args):
     h = net.get(name)
     print "  %s> $ %s" % (name, cmd)
-    h.sendCmd(cmd)
-def waitOutput(net, name):
+    h.sendCmd(cmd, **args)
+def waitOutput(net, name, **args):
     h = net.get(name)
-    h.waitOutput()
+    h.waitOutput(**args)
 def received(name, result):
-    print "  %s> RCV: '%s'" % (name, result)
-def ip(net, name):
+    if result is None:
+        print "  %s> RCV: Nothing" % name
+    else:
+        print "  %s> RCV: '%s'" % (name, result)
+def ip(net, name, **args):
     h = net.get(name)
-    return h.IP()
+    return h.IP(**args)
+def sendInt(net, name, **args):
+    h = net.get(name)
+    h.sendInt(**args)
     
 
 # This code runs when the script is executed (e.g. $ sudo ./examples/nat_topo.py)
 import sys
+import argparse
 if __name__ == '__main__':
     setLogLevel('info')
-    if len(sys.argv) > 1 and sys.argv[1]=="test":
-        # The command was `$ nat_topo.py test`, so run the automated test:
+
+    ## Parse CLI arguments
+    # Set up the parser
+    parser = argparse.ArgumentParser(description="Test the Pax NAT implementation.")
+    parser.add_argument("action", choices=["run", "test"], nargs="?", default="run")
+    parser.add_argument("--no-X", help="don't launch additional windows'", action="store_false", dest="X_windows")
+
+    # Parse
+    config = parser.parse_args()
+
+    # Run
+    if config.action == "run":
+        run()
+    elif config.action == "test":
         test()
     else:
-        # No command argument wsa provided that we understand; start the CLI:
-        run()
+        print "Unknown action"
