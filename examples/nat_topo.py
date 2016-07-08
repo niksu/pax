@@ -100,8 +100,11 @@ def test():
     # Start it in a separate terminal so that we can see the output in real time.
     print "Starting Pax NAT process on %s:" % nat0
     cmd = 'Bin/Pax.exe examples/nat_wiring.json examples/Bin/Examples.dll'
-    if config.X_windows: cmd = 'x-terminal-emulator -e %s &' & cmd
-    sendCmd(net, nat0, cmd)
+    if config.X_windows:
+        cmd = 'x-terminal-emulator -e %s &' % cmd
+        runCmd(net, nat0, cmd)
+    else:
+        sendCmd(net, nat0, cmd)
     
     # Test the NAT by opening a connection between in1 and out0:
     print "Connecting from %s to %s:" % (in1, out0)
