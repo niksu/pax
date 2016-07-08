@@ -300,6 +300,19 @@ namespace Pax
       Console.ForegroundColor = ConsoleColor.Gray;
 
       // Set up callbacks.
+      Task.Factory.StartNew(() =>
+        {
+          while (true)
+          {
+            var key = Console.ReadKey();
+            // Shutdown on ^D
+            if ((key.Modifiers.HasFlag(ConsoleModifiers.Control) && key.Key == ConsoleKey.D)
+              || (int)key.KeyChar == 4)
+            {
+              shutdown(null, null);
+            }
+          }
+        });
       Console.CancelKeyPress += new ConsoleCancelEventHandler(shutdown);
       for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
       {

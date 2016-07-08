@@ -140,7 +140,7 @@ def runCmd(net, name, cmd, timeout=None, **args):
     if (timeout is None):
         return h.cmd(cmd, **args)
     else:
-        timer = threading.Timer(timeout, lambda: h.sendInt())
+        timer = threading.Timer(timeout, lambda: h.sendInt(chr(4)))
         timer.start()
         rv = h.cmd(cmd, **args)
         timer.cancel()
