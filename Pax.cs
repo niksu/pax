@@ -234,7 +234,7 @@ namespace Pax
           if ((!String.IsNullOrEmpty(PaxConfig.interface_lead_handler[idx])) &&
               type.Name == PaxConfig.interface_lead_handler[idx])
           {
-            // Only instatiate pp if needed
+            // Only instantiate pp if needed
             if (pp == null)
               pp = InstantiatePacketProcessor(type);
             if (pp == null)

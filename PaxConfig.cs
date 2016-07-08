@@ -68,7 +68,7 @@ namespace Pax
     // FIXME better to link to function (rather than have indirection) to speed things up at runtime.
     // The file containing the catalogue of network interfaces.
     public static string config_filename;
-    // The assembly containing the packet handlers that the user wishess to use.
+    // The assembly containing the packet handlers that the user wishes to use.
     public static string assembly_filename;
     public static Assembly assembly;
 

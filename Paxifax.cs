@@ -124,7 +124,7 @@ namespace Pax {
             constructor.GetParameters()
                        .Select(p => ConvertConstructorParameter(p.ParameterType, argsDict[p.Name]))
                        .ToArray();
-          // Invoke the constructor, instatiating the type
+          // Invoke the constructor, instantiating the type
 #if MOREDEBUG
           Console.WriteLine("Invoking new {0}", ConstructorString(constructor, arguments));
 #endif
