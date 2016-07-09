@@ -125,10 +125,12 @@ def test():
 
     # If we couldn't show the Pax output in a separate window, show it now.
     if not config.X_windows:
+        sendInt(net, nat0)
         print "Show Pax output? (Y/n)"
         if (sys.stdin.read(1).upper() == "Y"):
-            sendInt(net, nat0)
-            print waitOutput(net, nat0, verbose=True)
+            waitOutput(net, nat0, verbose=True) # Print output
+        else:
+            waitOutput(net, nat0) # Don't print, just wait
 
 # List topologies defined in this file for Mininet
 topos = { 'nat': (lambda: NatTopo())}
