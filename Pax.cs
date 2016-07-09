@@ -109,7 +109,8 @@ namespace Pax
       Console.ResetColor();
 
       // FIXME accept a -j parameter to limit number of threads?
-      Parallel.ForEach(PaxConfig.deviceMap, device => device.Capture());
+      foreach (var device in PaxConfig.deviceMap)
+        device.StartCapture();
 
       // FIXME am i right in thinking that this location is unreachable, since the threads won't terminate unless the whole process is being terminated.
       return 0;
@@ -352,10 +353,11 @@ namespace Pax
     //Cleanup
     private static void shutdown (object sender, ConsoleCancelEventArgs args)
     {
-      for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
+      foreach (var device in PaxConfig.deviceMap)
       {
-        PaxConfig.deviceMap[idx].Close();
-      }
+        device.StopCaptureTimeout = TimeSpan.FromSeconds(1);
+        device.Close();
+      } 
 
       Console.ResetColor();
       Console.WriteLine ("Terminating");
