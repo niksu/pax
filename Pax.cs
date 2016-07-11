@@ -355,7 +355,11 @@ namespace Pax
     {
       foreach (var device in PaxConfig.deviceMap)
       {
+        // Set the capture timeout, as without the program can hang indefinitely.
+        // Cause unknown, but setting any timeout seems to fix it. Even with timeout
+        //  of 1s, the program shuts down immediately.
         device.StopCaptureTimeout = TimeSpan.FromSeconds(1);
+        
         device.Close();
       } 
 
