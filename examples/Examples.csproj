@@ -32,8 +32,15 @@
     <Compile Include="Hub.cs" />
     <Compile Include="LearningSwitch.cs" />
     <Compile Include="Mirror.cs" />
-    <Compile Include="NAT.cs" />
     <Compile Include="Test.cs" />
+    <Compile Include="Nat\NAT.cs" />
+    <Compile Include="Nat\NatConnection.cs" />
+    <Compile Include="Nat\ConnectionKey.cs" />
+    <Compile Include="Nat\Node.cs" />
+    <Compile Include="Nat\ITransportAddress.cs" />
+    <Compile Include="Nat\PacketEncapsulation.cs" />
+    <Compile Include="Nat\ITransportState.cs" />
+    <Compile Include="Nat\TcpState.cs" />
   </ItemGroup>
 <!--
   <Target Name="Build">

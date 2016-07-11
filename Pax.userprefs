@@ -1,0 +1,15 @@
+﻿<Properties StartupItem="Pax.csproj" RefactoringSettings.EnableRefactorings="True">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="examples/Nat/NAT.cs">
+    <Files>
+      <File FileName="examples/Nat/NAT.cs" Line="56" Column="93" />
+      <File FileName="examples/Nat/NatConnection.cs" Line="10" Column="23" />
+      <File FileName="examples/Nat/IProtocolState.cs" Line="15" Column="12" />
+      <File FileName="examples/Nat/TcpProtocolState.cs" Line="12" Column="12" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
