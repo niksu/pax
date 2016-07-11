@@ -85,7 +85,7 @@ namespace Pax
       NetworkInterfaceConfig port_conf;
       try {
         port_conf = config[port_no];
-      } catch (ArgumentOutOfRangeException e) {
+      } catch (ArgumentOutOfRangeException) {
         throw (new Exception ("resolve_config_parameter: port_no > config size, since " + port_no.ToString() + " > " +
               config.Count.ToString()));
       }
