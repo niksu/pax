@@ -109,7 +109,8 @@ namespace Pax
       Console.ResetColor();
 
       // FIXME accept a -j parameter to limit number of threads?
-      Parallel.ForEach(PaxConfig.deviceMap, device => device.Capture());
+      foreach (var device in PaxConfig.deviceMap)
+        device.StartCapture();
 
       // FIXME am i right in thinking that this location is unreachable, since the threads won't terminate unless the whole process is being terminated.
       return 0;
@@ -154,6 +155,7 @@ namespace Pax
 
       using (JsonTextReader r = new JsonTextReader(File.OpenText(PaxConfig.config_filename))) {
         JsonSerializer j = new JsonSerializer();
+        j.DefaultValueHandling = DefaultValueHandling.Populate;
         PaxConfig.configFile = j.Deserialize<ConfigFile>(r);
         PaxConfig.no_interfaces = PaxConfig.config.Count;
         PaxConfig.deviceMap = new ICaptureDevice[PaxConfig.no_interfaces];
@@ -185,7 +187,8 @@ namespace Pax
             {
               PaxConfig.deviceMap[idx] = device;
               PaxConfig.rdeviceMap.Add(device.Name, idx);
-              device.Open();
+              // Configure this device's read timeout
+              device.Open(DeviceMode.Normal, i.read_timeout);
 
               if (!String.IsNullOrEmpty(i.pcap_filter))
               {
@@ -232,7 +235,7 @@ namespace Pax
           if ((!String.IsNullOrEmpty(PaxConfig.interface_lead_handler[idx])) &&
               type.Name == PaxConfig.interface_lead_handler[idx])
           {
-            // Only instatiate pp if needed
+            // Only instantiate pp if needed
             if (pp == null)
               pp = InstantiatePacketProcessor(type);
             if (pp == null)
@@ -298,6 +301,19 @@ namespace Pax
       Console.ForegroundColor = ConsoleColor.Gray;
 
       // Set up callbacks.
+      Task.Factory.StartNew(() =>
+        {
+          while (true)
+          {
+            var key = Console.ReadKey();
+            // Shutdown on ^D
+            if ((key.Modifiers.HasFlag(ConsoleModifiers.Control) && key.Key == ConsoleKey.D)
+              || (int)key.KeyChar == 4)
+            {
+              shutdown(null, null);
+            }
+          }
+        });
       Console.CancelKeyPress += new ConsoleCancelEventHandler(shutdown);
       for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
       {
@@ -337,10 +353,15 @@ namespace Pax
     //Cleanup
     private static void shutdown (object sender, ConsoleCancelEventArgs args)
     {
-      for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
+      foreach (var device in PaxConfig.deviceMap)
       {
-        PaxConfig.deviceMap[idx].Close();
-      }
+        // Set the capture timeout, as without the program can hang indefinitely.
+        // Cause unknown, but setting any timeout seems to fix it. Even with timeout
+        //  of 1s, the program shuts down immediately.
+        device.StopCaptureTimeout = TimeSpan.FromSeconds(1);
+        
+        device.Close();
+      } 
 
       Console.ResetColor();
       Console.WriteLine ("Terminating");

@@ -1,0 +1,32 @@
+{
+  "handlers": [
+    {
+      "class_name": "NAT",
+      "args": {
+        "my_address" : "10.0.0.3",
+        "next_port" : "35000",
+        "next_outside_hop_mac" : "00:00:00:00:00:09"
+      }
+    }
+  ],
+  "interfaces": [ 
+    { 
+      "interface_name" : "nat0-eth0", 
+      "lead_handler" : "NAT", 
+      "pcap_filter" : "tcp", 
+      "environment" : {
+        "outside_port": "true"
+      } 
+    },
+    { 
+      "interface_name" : "nat0-eth1", 
+      "lead_handler" : "NAT", 
+      "pcap_filter" : "tcp"
+    },
+    { 
+      "interface_name" : "nat0-eth2", 
+      "lead_handler" : "NAT", 
+      "pcap_filter" : "tcp"
+    }
+  ]
+}

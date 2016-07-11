@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using SharpPcap;
 
@@ -36,6 +37,13 @@ namespace Pax
     // The function that is called when traffic arrives on this interface.
     public string lead_handler {get; set;}
 
+    // We use a default timeout of 100ms as a compromise between latency and performance
+    //  for flows with very few packets.
+    // The default SharpPcap timeout is 1000ms, which can cause problems when very few
+    //  packets are being sent, as they aren't processed in a timely enough manner.  
+    [DefaultValue(100)]
+    public int read_timeout { get; set; }
+
     public IDictionary<string, string> environment {get; set;}
   }
 
@@ -60,7 +68,7 @@ namespace Pax
     // FIXME better to link to function (rather than have indirection) to speed things up at runtime.
     // The file containing the catalogue of network interfaces.
     public static string config_filename;
-    // The assembly containing the packet handlers that the user wishess to use.
+    // The assembly containing the packet handlers that the user wishes to use.
     public static string assembly_filename;
     public static Assembly assembly;
 

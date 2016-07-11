@@ -23,32 +23,44 @@ These examples are written in C#, but any [.NET language](https://en.wikipedia.o
 ## NAT example
 
 ### Configuration
-The configuration needs to specify two parameters to the NAT's port 0 (i.e., the port connected to "Outside"):
+The configuration needs to specify three parameters to the NAT's constructor:
 
 * The IP address of the NAT. This will be used as the source address of packets crossing from the Inside to the Outside of the NAT.
 * The starting TCP port to use on the NAT, to proxy TCP connections crossing from the Inside to the Outside of the NAT.
+* The MAC address of the next hop to Outside; the address of the node which the Out port (port 0) of the NAT is connected to.
 
-These parameters are provided as part of the `environment` map, as shown in the example NAT configuration below.
+These parameters are provided as part of the `args` map, as shown in the example NAT configuration below.
 
 ```javascript
-[
-  {
-   "interface_name" : "eth0",
-   "lead_handler" : "Nested_NAT",
-   "environment" : {
-      "my_address" : "192.168.3.3",
-      "next_port" : "6000",
-     }
-  },
-  {
-   "interface_name" : "eth1",
-   "lead_handler" : "Nested_NAT",
-  },
-  {
-   "interface_name" : "eth2",
-   "lead_handler" : "Nested_NAT",
-  },
-]
+{
+  "handlers": [
+    {
+      "class_name": "NAT",
+      "args": {
+        "my_address" : "10.0.0.3",
+        "next_port" : "35000",
+        "next_hop_mac" : "00:00:00:00:00:09"
+      }
+    }
+  ],
+  "interfaces": [
+    {
+      "interface_name" : "nat0-eth0",
+      "lead_handler" : "NAT",
+      "pcap_filter" : "tcp"
+    },
+    {
+      "interface_name" : "nat0-eth1",
+      "lead_handler" : "NAT",
+      "pcap_filter" : "tcp"
+    },
+    {
+      "interface_name" : "nat0-eth2",
+      "lead_handler" : "NAT",
+      "pcap_filter" : "tcp"
+    }
+  ]
+}
 ```
 
 ### Testing
@@ -107,3 +119,61 @@ through diagnostic messages it emits to the console, and through the packets
 sniffed up by tcpdump on recipient interfaces.
 I use `sudo tcpdump -vvvnXX -i IF` to see a detailed description of each packet,
 replacing `IF` with the interface you want to sniff on.
+
+# Testing the NAT with Mininet
+[Mininet](http://mininet.org/) is a tool for emulating networks on your local machine.
+This is quite handy because we can run reproducible tests and experiment with
+networks when we don't have the physical machines otherwise needed.
+
+To test the NAT implementation:
+- [Install](http://mininet.org/download/) Mininet - it doesn't matter which way. We used Mininet 2.2.1 on Ubuntu 14.04 LTS.
+- cd into your cloned Pax directory and run `$ sudo ./examples/nat_topo.py test`
+- You can also jump into the Mininet CLI by running `$ sudo ./examples/nat_topo.py`
+
+You will find it very helpful to learn more about Mininet if you plan to do anything
+apart from run the automated test. The Mininet
+[walkthrough](http://mininet.org/walkthrough/) is a pretty good start.
+One very useful thing to know is to use `mininet> host command` in the CLI to run
+`command` on `host`. E.g. to run ifconfig on in1, use `mininet> in1 ifconfig`.
+
+We could manually test the NAT by running these commands:
+``` bash
+$ sudo ./examples/nat_topo.py
+mininet> out0 echo 'Hi from out0!' | netcat -l 12010 &
+mininet> in1 netcat out0 12010
+```
+Note that on line 3, we specify `out0` instead of the IP of out0. We can do this
+because the Mininet CLI replaces it with the IP. Be aware that this is the IP of the
+default interface, which is fine here because out0 only has one, but on nat0
+it might not be the IP you were expecting.
+
+_
+
+Feel free to look in [`examples/nat_topo.py`](nat_topo.py):
+- The `NatTopo` class defines the network topology for Mininet 
+```
+                  ┌──────┐     ┌─────┐
+                  |      |-----│ in1 |
+    ┌──────┐      |      |     └─────┘
+    │ out0 |------| nat0 |
+    └──────┘      |      |     ┌─────┐
+                  |      |-----│ in2 |
+                  └──────┘     └─────┘
+```
+- You might notice that `nat0` is specified as being a node of type `PaxNode`. You can
+  look at the definition in [`pax_mininet_node.py`](pax_mininet_node.py). It is a host with firewall rules on
+  each of the interfaces on nat0 to drop all incoming traffic. This is so that only
+  the NAT process will respond to packets. Otherwise, the OS could reject or accept
+  connections that are intended for internal hosts. We also disable ip_forward so that
+  the OS doesn't forward packets that aren't addressed to it.
+- The `createNetwork()` procedure instantiates the network topology and sets up
+  the hosts. It sets the default gateway for the internal hosts to nat0 so that
+  connections to outside the subnet go through the NAT. 
+
+  Take special note that the MAC address of out0 is manually set. This is so because
+  the NAT implementation currently requires the next hop to be hardcoded in the config.
+  Without this, out0 would ignore packets from the NAT, because the MAC would be wrong.
+- The `run()` procedure provides a commandline-interface to the network.
+- The `test()` procedure creates a network, tests the NAT implementation by
+  creating a connection between in1 and out0, and then cleans up.
+

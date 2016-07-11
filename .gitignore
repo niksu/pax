@@ -1,0 +1,8 @@
+Bin/
+lib/
+!lib/SharpPcap.dll.config
+obj/
+*/obj/
+
+*.swp
+*.pyc

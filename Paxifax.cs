@@ -124,7 +124,7 @@ namespace Pax {
             constructor.GetParameters()
                        .Select(p => ConvertConstructorParameter(p.ParameterType, argsDict[p.Name]))
                        .ToArray();
-          // Invoke the constructor, instatiating the type
+          // Invoke the constructor, instantiating the type
 #if MOREDEBUG
           Console.WriteLine("Invoking new {0}", ConstructorString(constructor, arguments));
 #endif
@@ -185,11 +185,14 @@ namespace Pax {
 #endif
       if (out_port > -1)
       {
-        PaxConfig.deviceMap[out_port].SendPacket(packet);
+        var device = PaxConfig.deviceMap[out_port];
+        if (packet is EthernetPacket)
+          ((EthernetPacket)packet).SourceHwAddress = device.MacAddress;
+        device.SendPacket(packet);
 #if DEBUG
         Debug.WriteLine(PaxConfig.deviceMap[out_port].Name);
       } else {
-        Debug.WriteLine("");
+        Debug.WriteLine("<dropped>");
 #endif
       }
     }

@@ -126,10 +126,12 @@ public class Nested_NAT : PacketProcessor {
 
   public Nested_NAT () {
     if (PaxConfig.can_resolve_config_parameter (outside_port, "my_address") &&
-        PaxConfig.can_resolve_config_parameter (outside_port, "next_port"))
+        PaxConfig.can_resolve_config_parameter (outside_port, "next_port") &&
+        PaxConfig.can_resolve_config_parameter (outside_port, "next_hop_mac"))
     {
       pp = new NAT (IPAddress.Parse(PaxConfig.resolve_config_parameter (outside_port, "my_address")),
-          UInt16.Parse(PaxConfig.resolve_config_parameter (outside_port, "next_port")));
+          UInt16.Parse(PaxConfig.resolve_config_parameter (outside_port, "next_port")),
+          PhysicalAddress.Parse(PaxConfig.resolve_config_parameter(outside_port, "next_hop_mac").ToUpper().Replace(':', '-')));
     } else {
       pp = null;
     }
@@ -145,7 +147,7 @@ public class Nested_NAT : PacketProcessor {
 }
 
 /// <summary>
-/// Tallyer prints `|[tag]` everytime a packet is received, where tag is a port-specific configurable string.
+/// Tallyer prints `|[tag]` every time a packet is received, where tag is a port-specific configurable string.
 /// The purpose of Tallyer is to demonstrate and test that default constructors can be used for automatic
 ///  instantiation of PacketProcessors, as well as that port-specific configuration properties can be used.
 /// </summary>
@@ -164,7 +166,7 @@ public class Tallyer : PacketProcessor {
 }
 
 /// <summary>
-/// Dinger just writes `*ding*` everytime a packet is recieved.
+/// Dinger just writes `*ding*` every time a packet is received.
 /// The purpose of Dinger is to demonstrate and test the types that can be used as constructor parameters.
 /// </summary>
 public class Dinger : PacketProcessor {
