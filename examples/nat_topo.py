@@ -126,7 +126,7 @@ def test():
     # If we couldn't show the Pax output in a separate window, show it now.
     if not config.X_windows:
         sendInt(net, nat0)
-        print "Show Pax output? (Y/n)"
+        print "Show Pax output? (y/N)"
         if (sys.stdin.read(1).upper() == "Y"):
             waitOutput(net, nat0, verbose=True) # Print output
         else:
