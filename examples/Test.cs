@@ -36,7 +36,6 @@ public class Test1 : SimplePacketProcessor {
 
   override public int handler (int in_port, ref Packet packet)
   {
-//    Console.Write("!");
     Console.Write("{0}({1}/{2}) ", in_port, Interlocked.Increment(ref count), PaxConfig.no_interfaces);
     return 1; // This behaves like a static switch: it forwards everything to port 1.
   }
@@ -52,12 +51,16 @@ public class Test2 : SimplePacketProcessor {
 }
 
 public class Test3 : MultiInterface_SimplePacketProcessor {
+#if DEBUG
   private int count = 0;
+#endif
 
   override public int[] handler (int in_port, ref Packet packet)
   {
-//    Console.Write("!");
-//    Console.Write("{0}({1}/{2}) ", in_port, count++, PaxConfig.no_interfaces);
+#if DEBUG
+    Console.Write("!");
+    Console.Write("{0}({1}/{2}) ", in_port, Interlocked.Increment(ref count), PaxConfig.no_interfaces);
+#endif
     return (MultiInterface_SimplePacketProcessor.broadcast(in_port));
   }
 }
@@ -100,7 +103,7 @@ public class Nested_Chained_Test2 : PacketProcessor {
     Debug.Assert(PaxConfig.no_interfaces >= 3);
     mirror_cfg[0] = 2; // Mirror port 0 to port 2
 
-    PacketProcessor pp =
+    this.pp =
       new PacketProcessor_Chain(new List<PacketProcessor>()
           {
   /* FIXME would be tidier to use this
