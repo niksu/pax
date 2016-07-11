@@ -88,7 +88,7 @@ namespace Pax {
             yield return subintf;
         }
       }
-      
+
       // Yield the highest-up extended Pax type
       type = type.BaseType;
       while (type != null)
