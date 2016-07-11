@@ -315,6 +315,7 @@ namespace Pax
             }
           }
         });
+      // Shutdown on ^C -- FIXME remove handling of ^C or ^D?
       Console.CancelKeyPress += new ConsoleCancelEventHandler(shutdown);
       for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
       {
