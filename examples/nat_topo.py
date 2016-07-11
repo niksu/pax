@@ -132,11 +132,43 @@ def test():
         else:
             waitOutput(net, nat0) # Don't print, just wait
 
+    # Run scapy test #1
+    print ""
+    print "Scapy test #1"
+    sendCmd(net, out0, "examples/nat_scapy_tests.py server", xterm=True)
+    runCmd(net, in1, "sleep 1")
+    runCmd(net, in1, "examples/nat_scapy_tests.py client", xterm=True)
+    waitOutput(net, out0)
+    out0_exitcode = int(runCmd(net, out0, "echo $?").rstrip('\n').rstrip('/r'))
+    in1_exitcode = int(runCmd(net, in1, "echo $?").rstrip('\n').rstrip('/r'))
+    if (out0_exitcode != 0 or in1_exitcode != 0):
+        print "WARNING scapy test #1 failed."
+    else:
+        print "Scapy test #1 passed"
+
+    # Run scapy test #2
+    print ""
+    print "Scapy test #2"
+    sendCmd(net, out0, "examples/nat_scapy_tests.py server2", xterm=True)
+    runCmd(net, in1, "sleep 1")
+    runCmd(net, in1, "examples/nat_scapy_tests.py client2", xterm=True)
+    waitOutput(net, out0)
+    exitcode = int(runCmd(net, in1, "echo $?").rstrip('\n').rstrip('/r'))
+    if (exitcode != 0):
+        print "WARNING scapy test #2 failed. %d" % exitcode
+    else:
+        print "Scapy test #2 passed"
+
+    net.stop()
+
 # List topologies defined in this file for Mininet
 topos = { 'nat': (lambda: NatTopo())}
 
 # Helper procedures
-def runCmd(net, name, cmd, timeout=None, **args):
+def runCmd(net, name, cmd, timeout=None, xterm=False, **args):
+    if xterm and config.X_windows:
+        cmd = "xterm -e %s" % cmd
+
     h = net.get(name)
     print "  %s> $ %s" % (name, cmd)
     if (timeout is None):
@@ -147,7 +179,10 @@ def runCmd(net, name, cmd, timeout=None, **args):
         rv = h.cmd(cmd, **args)
         timer.cancel()
         return rv
-def sendCmd(net, name, cmd, **args):
+def sendCmd(net, name, cmd, xterm=False, **args):
+    if xterm and config.X_windows:
+        cmd = "xterm -e %s" % cmd
+
     h = net.get(name)
     print "  %s> $ %s" % (name, cmd)
     h.sendCmd(cmd, **args)
