@@ -46,20 +46,18 @@ namespace Pax
     }
 
     private static void print_heading (string s) {
-      var tmp_fore = Console.ForegroundColor;
-      var tmp_back = Console.BackgroundColor;
       Console.ForegroundColor = ConsoleColor.Black;
       Console.BackgroundColor = ConsoleColor.White;
       Console.Write(s);
       Console.ResetColor();
-      Console.ForegroundColor = tmp_fore;
-      Console.BackgroundColor = tmp_back;
       Console.WriteLine();
     }
 
     private const string indent = "  ";
 
     public static int Main (string[] args) {
+      Console.ResetColor();
+
       // FIXME when we load the DLL and wiring.cfg, check them against each other (e.g., that all handlers exist)
       //       we can resolve all the "links" (by looking at return statements) and draw a wiring diagram. -- this can be a script.
 
@@ -102,12 +100,10 @@ namespace Pax
       Configure(devices);
 
       LoadExternalHandlersFromDll();
-      
-      RegisterHandlers();  
 
-      Console.ResetColor();
+      RegisterHandlers();
+
       print_heading("Starting");
-      Console.ResetColor();
 
       // FIXME accept a -j parameter to limit number of threads?
       foreach (var device in PaxConfig.deviceMap)
@@ -150,9 +146,7 @@ namespace Pax
 
     private static void Configure(CaptureDeviceList devices)
     {
-      Console.ResetColor();
       print_heading("Configuration");
-      Console.ResetColor();
 
       using (JsonTextReader r = new JsonTextReader(File.OpenText(PaxConfig.config_filename))) {
         JsonSerializer j = new JsonSerializer();
@@ -219,9 +213,7 @@ namespace Pax
 
     private static void LoadExternalHandlersFromDll()
     {
-      Console.ResetColor();
       print_heading("Scanning assembly");
-      Console.ResetColor();
 
       // Inspect each type that implements PacketProcessor, trying to instantiate it for use
       foreach (Type type in PaxConfig.assembly.GetExportedTypes()
@@ -247,23 +239,26 @@ namespace Pax
           }
         }
 
-        // Print which interfaces this type is the handler for
-        var tmp = Console.ForegroundColor;
         Console.Write (indent);
         Console.ForegroundColor = ConsoleColor.Green;
         Console.Write (type);
-        Console.ForegroundColor = ConsoleColor.Gray;
-        Console.Write (" <- ");
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine(
-           String.Join(", ", subscribed.ConvertAll<string>(ofs => PaxConfig.deviceMap[ofs].Name)));
 
         // List the Pax interfaces this type implements:
         Console.ForegroundColor = ConsoleColor.Gray;
-        Console.Write("  : ");
+        Console.Write(" : ");
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine(String.Join(", ", PacketProcessorHelper.GetUsedPaxTypes(type).Select(t => t.Name)));
-        Console.ForegroundColor = tmp;
+        Console.Write(String.Join(", ", PacketProcessorHelper.GetUsedPaxTypes(type).Select(t => t.Name)));
+
+        // Print which interfaces this type is the handler for
+        if (subscribed.Count != 0) {
+          Console.ForegroundColor = ConsoleColor.Gray;
+          Console.Write (" <- ");
+          Console.ForegroundColor = ConsoleColor.Yellow;
+          Console.Write(
+             String.Join(", ", subscribed.ConvertAll<string>(ofs => PaxConfig.deviceMap[ofs].Name)));
+        }
+
+        Console.WriteLine("");
       }
       // FIXME add check to see if there's an interface that references a lead_handler that doesn't appear in the assembly. That should be flagged up to the user, and lead to termination of Pax.
     }
