@@ -4,6 +4,10 @@ using PacketDotNet;
 
 namespace Pax.Examples.Nat
 {
+  /// <summary>
+  /// Lookup key for maps mapping Packets from the inside to the outside of a NAT or vice versa.
+  /// </summary>
+  /// <typeparam name="T">The type of packet this key is for.</typeparam>
   internal class ConnectionKey<T> : IEquatable<ConnectionKey<T>> where T : Packet
   {
     public Node<T> Source { get; }

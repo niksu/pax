@@ -3,12 +3,27 @@ using PacketDotNet;
 
 namespace Pax.Examples.Nat
 {
+  /// <summary>
+  /// Represents the state of a TCP connection.
+  /// </summary>
   internal class TcpState : ITransportState<TcpPacket>
   {
     private TcpDirectionalState InOutConnection = TcpDirectionalState.None;
     private TcpDirectionalState OutInConnection = TcpDirectionalState.None;
+
+    /// <summary>
+    /// Gets a value indicating if the TCP connection from the inside to the outside is closed.
+    /// </summary>
     public bool ClosedFromInside { get { return InOutConnection == TcpDirectionalState.None || InOutConnection == TcpDirectionalState.FinAck; } }
+
+    /// <summary>
+    /// Gets a value indicating if the TCP connection from the outside to the inside is closed.
+    /// </summary>
     public bool ClosedFromOutside { get { return OutInConnection == TcpDirectionalState.None || OutInConnection == TcpDirectionalState.FinAck; } }
+
+    /// <summary>
+    /// Gets a value indicating if the TCP connections in both directions are closed, determining if the connection can be removed before the timeout elapses.
+    /// </summary>
     public bool CanBeClosed { get { return ClosedFromInside && ClosedFromOutside; } }
 
     public void UpdateState(TcpPacket packet, bool packetFromInside)

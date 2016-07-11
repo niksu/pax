@@ -3,18 +3,57 @@ using PacketDotNet;
 
 namespace Pax.Examples.Nat
 {
+  /// <summary>
+  /// Provides typed access to Transport layer addresses, such as TCP ports.
+  /// </summary>
+  /// <typeparam name="T">The type of packet.</typeparam>
   internal interface ITransportAddress<T> : IEquatable<ITransportAddress<T>> where T : Packet
   {
+    /// <summary>
+    /// Determines if the packet claims to originate from this Transport-layer address.
+    /// </summary>
+    /// <param name="packet">The packet to check</param>
+    /// <returns>True if the packet claims to come from this address.</returns>
     bool IsSourceOf(T packet);
+
+    /// <summary>
+    /// Rewrites the Transport-layer source address of the packet to this address.
+    /// </summary>
+    /// <param name="packet">The packet to rewrite</param>
     void SetAsSourceOf(T packet);
+
+    /// <summary>
+    /// Determines if the packet is intended for this Transport-layer address.
+    /// </summary>
+    /// <param name="packet">The packet to check</param>
+    /// <returns>True if the packet is intended for this address.</returns>
     bool IsDestinationOf(T packet);
+
+    /// <summary>
+    /// Rewrites the Transport-layer destination address of the packet to this address.
+    /// </summary>
+    /// <param name="packet">The packet to rewrite</param>
     void SetAsDestinationOf(T packet);
+
+    /// <summary>
+    /// Gets the next potentially free Transport-layer address for use as the masqueraded address by the NAT.
+    /// </summary>
+    /// <param name="current">The current address</param>
+    /// <returns>A potential address for use by the NAT.</returns>
     ITransportAddress<T> GetNextMasqueradingAddress(ITransportAddress<T> current);
+
+    /// <summary>
+    /// Gets an initial state for this Transport-layer protocol.
+    /// </summary>
+    /// <returns>An initial state.</returns>
     ITransportState<T> InitialState();
   }
 
   internal sealed class NoTransportAddress<T> : ITransportAddress<T>, IEquatable<NoTransportAddress<T>> where T : Packet
   {
+    /// <summary>
+    /// A value indicating that there is no Transport-layer addressing for this type of packet.
+    /// </summary>
     public static NoTransportAddress<T> Instance { get; } = new NoTransportAddress<T>();
 
     private NoTransportAddress() { }
@@ -76,6 +115,9 @@ namespace Pax.Examples.Nat
     }
   }
 
+  /// <summary>
+  /// A class representing the addressing of TCP: TCP ports.
+  /// </summary>
   internal class TcpPort : ITransportAddress<TcpPacket>, IEquatable<TcpPort>
   {
     public ushort Port { get; }
@@ -152,6 +194,9 @@ namespace Pax.Examples.Nat
     }
   }
 
+  /// <summary>
+  /// A class representing the addressing of UDP: UDP ports.
+  /// </summary>
   internal class UdpPort : ITransportAddress<UdpPacket>, IEquatable<UdpPort>
   {
     public ushort Port { get; }

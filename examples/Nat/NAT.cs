@@ -42,17 +42,39 @@ using System.Collections.Generic;
 
 namespace Pax.Examples.Nat
 {
+  /// <summary>
+  /// A packet processor that performs Network Address Translation (a NAT).
+  /// </summary>
   public sealed class NAT : SimplePacketProcessor
   {
+    /// <summary>
+    /// A value indicating the packet should be dropped.
+    /// </summary>
     public const int Port_Drop = -1;
+    /// <summary>
+    /// A value representing the network interface that faces outside.
+    /// </summary>
     public const int Port_Outside = 0;
 
     private readonly IPAddress my_address;
     private readonly PhysicalAddress next_outside_hop_mac;
     private readonly TimeSpan connection_timeout;
     private readonly Timer gcTimer;
+    
+    // Use a separate namespace for each transport protocol
+    private SpecialisedNAT<TcpPacket> tcpNat;
+    private SpecialisedNAT<UdpPacket> udpNat;
 
-    public NAT (IPAddress my_address, PhysicalAddress next_outside_hop_mac, ushort tcp_start_port, ushort udp_start_port, TimeSpan? connection_timeout = null) {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="my_address">The public IP address of the NAT</param>
+    /// <param name="next_outside_hop_mac">The MAC address of the next hop on the outside-facing port.</param>
+    /// <param name="tcp_start_port">The start of the range of TCP ports to use.</param>
+    /// <param name="udp_start_port">The start of the range of UDP ports to use.</param>
+    /// <param name="connection_timeout">The time that can elapse before a connection with no activity should be removed.</param>
+    public NAT (IPAddress my_address, PhysicalAddress next_outside_hop_mac, ushort tcp_start_port, ushort udp_start_port, TimeSpan? connection_timeout = null)
+    {
       this.my_address = my_address;
       this.next_outside_hop_mac = next_outside_hop_mac;
       this.connection_timeout = connection_timeout ?? new TimeSpan(30L * TimeSpan.TicksPerSecond);
@@ -68,34 +90,38 @@ namespace Pax.Examples.Nat
       gcTimer.Start();
     }
 
-    // Use a separate namespace for each transport protocol
-    SpecialisedNAT<TcpPacket> tcpNat;
-    SpecialisedNAT<UdpPacket> udpNat;
-
-    override public int handler (int in_port, ref Packet packet)
+    /// <summary>
+    /// Handle an observed packet. Determines the type of packet and passes it to the relevant specialised handler.
+    /// </summary>
+    /// <param name="incomingNetworkInterface">The number representing network interface the packet arrived on.</param>
+    /// <param name="packet">The observed packet.</param>
+    /// <returns>A integer representing the network interface to forward the (potentially modified) packet on, or -1 if it should be dropped.</returns>
+    override public int handler (int incomingNetworkInterface, ref Packet packet)
     {
       if (packet is EthernetPacket)
       {
         if (packet.PayloadPacket is IpPacket)
         {
-          if (packet.PayloadPacket.PayloadPacket is TcpPacket)
+          // Case on the type of the transport-layer packet:
+          Packet transportLayerPacket = packet.PayloadPacket.PayloadPacket;
+          if (transportLayerPacket is TcpPacket)
           {
             var tcp = new TcpPacketEncapsulation(packet);
 #if DEBUG
             Console.WriteLine("RX TCP {0}:{1} -> {2}:{3} on {4} [{5}{6}{7}{8}]",
-              tcp.NetworkPacket.SourceAddress, tcp.TransportPacket.SourcePort, tcp.NetworkPacket.DestinationAddress, tcp.TransportPacket.DestinationPort, in_port,
+              tcp.NetworkPacket.SourceAddress, tcp.TransportPacket.SourcePort, tcp.NetworkPacket.DestinationAddress, tcp.TransportPacket.DestinationPort, incomingNetworkInterface,
               tcp.TransportPacket.Syn ? "S" : "", tcp.TransportPacket.Fin ? "F" : "", tcp.TransportPacket.Rst ? "R" : "", tcp.TransportPacket.Ack ? "." : "");
 #endif
-            return tcpNat.handlePacket(tcp, in_port);
+            return tcpNat.handlePacket(tcp, incomingNetworkInterface);
           }
-          else if (packet.PayloadPacket.PayloadPacket is UdpPacket)
+          else if (transportLayerPacket is UdpPacket)
           {
             var udp = new UdpPacketEncapsulation(packet);
 #if DEBUG
             Console.WriteLine("RX UDP {0}:{1} -> {2}:{3} on {4}",
-              udp.NetworkPacket.SourceAddress, udp.TransportPacket.SourcePort, udp.NetworkPacket.DestinationAddress, udp.TransportPacket.DestinationPort, in_port);
+              udp.NetworkPacket.SourceAddress, udp.TransportPacket.SourcePort, udp.NetworkPacket.DestinationAddress, udp.TransportPacket.DestinationPort, incomingNetworkInterface);
 #endif
-            return udpNat.handlePacket(new UdpPacketEncapsulation(packet), in_port);
+            return udpNat.handlePacket(new UdpPacketEncapsulation(packet), incomingNetworkInterface);
           }
         }
       }
@@ -104,6 +130,9 @@ namespace Pax.Examples.Nat
       return Port_Drop;
     }
 
+    /// <summary>
+    /// Remove any eligible connections from each of the specialised NATs.
+    /// </summary>
     private void GarbageCollectConnections(object sender, ElapsedEventArgs e)
     {
       Console.WriteLine("GC");
@@ -133,14 +162,20 @@ namespace Pax.Examples.Nat
         currentMasqueradeAddress = initialMasqueradeAddress;
       }
 
-      public int handlePacket(PacketEncapsulation<T> packet, int in_port)
+      /// <summary>
+      /// Handles an observed packet of this type.
+      /// </summary>
+      /// <param name="packet">The observed packet.</param>
+      /// <param name="incomingNetworkInterface">The number of the network interface the packet arrived on.</param>
+      /// <returns>A number representing the network interface the packet should be forwarded on, or -1 if it should be dropped.</returns>
+      public int handlePacket(PacketEncapsulation<T> packet, int incomingNetworkInterface)
       {
         // Get the mapped destination port
         int outPort;
-        if (in_port == Port_Outside)
+        if (incomingNetworkInterface == Port_Outside)
           outPort = outside_to_inside(packet);
         else
-          outPort = inside_to_outside(packet, in_port);
+          outPort = inside_to_outside(packet, incomingNetworkInterface);
 
         return outPort;
       }
@@ -148,6 +183,7 @@ namespace Pax.Examples.Nat
       /// <summary>
       /// Rewrite packets coming from the Outside and forward on the relevant Inside network port.
       /// </summary>
+      /// <param name="packet">The incoming packet.</param>
       private int outside_to_inside(PacketEncapsulation<T> packet)
       {
         // Retrieve the mapping. If a mapping doesn't exist, then it means that we're not
@@ -179,6 +215,7 @@ namespace Pax.Examples.Nat
       /// <summary>
       /// Rewrite packets coming from the Inside and forward on the Outside network port.
       /// </summary>
+      /// <param name="packet">The outgoing packet.</param>
       private int inside_to_outside(PacketEncapsulation<T> packet, int incomingInterfaceNumber)
       {
         // Get the mapping key, providing the interface numbers and mac in case we need to add a mapping
@@ -217,6 +254,10 @@ namespace Pax.Examples.Nat
         return connection.OutsideNode.InterfaceNumber;
       }
 
+      /// <summary>
+      /// Remove connections that have timed out or are closed.
+      /// </summary>
+      /// <param name="connectionTimeout"></param>
       public void GarbageCollectConnections(TimeSpan connectionTimeout)
       {
         bool removedAny = false;

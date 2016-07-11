@@ -5,12 +5,32 @@ using PacketDotNet;
 
 namespace Pax.Examples.Nat
 {
+  /// <summary>
+  /// A class representing a node on the network with an IP address and transport-layer address. It also stores a network interface number and MAC address for the node.
+  /// </summary>
+  /// <typeparam name="T">The type of packet</typeparam>
   internal sealed class Node<T> : IEquatable<Node<T>> where T : Packet
   {
+    /// <summary>
+    /// Gets the IP address of the node.
+    /// </summary>
     public IPAddress Address { get; } // FIXME we should really use immutable values since we are using a dictionary
+
+    /// <summary>
+    /// Gets the transport-layer address of the node.
+    /// </summary>
     public ITransportAddress<T> TransportAddress { get; }
+
+    /// <summary>
+    /// Gets the number of the network interface this node is connected to.
+    /// </summary>
     public int InterfaceNumber { get; }
+
+    /// <summary>
+    /// Gets the MAC address of the node, or at least of the next hop to reach that node.
+    /// </summary>
     public PhysicalAddress MacAddress { get; }
+
   	private readonly int hashCode;
 #if DEBUG
   	private string asString;
@@ -33,6 +53,10 @@ namespace Pax.Examples.Nat
 #endif
   	}
 
+    /// <summary>
+    /// Rewrites the packet to appear to originate from this node.
+    /// </summary>
+    /// <param name="packet">The packet to rewrite</param>
     public void RewritePacketSource(PacketEncapsulation<T> packet)
     {
       // Rewrite the MAC address
@@ -45,6 +69,10 @@ namespace Pax.Examples.Nat
       TransportAddress.SetAsSourceOf(packet.TransportPacket);
     }
 
+    /// <summary>
+    /// Rewrites the packet so that the destination is this node.
+    /// </summary>
+    /// <param name="packet"></param>
     public void RewritePacketDestination(PacketEncapsulation<T> packet)
     {
       // Rewrite the MAC address
