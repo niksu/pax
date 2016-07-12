@@ -69,7 +69,7 @@ namespace Pax
     public static Dictionary<string, int> rdeviceMap = new Dictionary<string, int>();
     // Map from device offset to the name of its handler.
     public static string[] interface_lead_handler;
-    public static PacketProcessor[] interface_lead_handler_obj;
+    public static IPacketProcessor[] interface_lead_handler_obj;
 
     // FIXME better to link to function (rather than have indirection) to speed things up at runtime.
     // The file containing the catalogue of network interfaces.

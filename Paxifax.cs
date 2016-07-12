@@ -25,11 +25,11 @@ using System.Linq;
 namespace Pax {
 
   // A more abstract interface to packet processors.
-  public interface Abstract_PacketProcessor {
+  public interface IAbstract_PacketProcessor {
     ForwardingDecision process_packet (int in_port, ref Packet packet);
   }
 
-/* Rather than the sort of specification above, I'd much rather be able to
+/* FIXME Rather than the sort of specification above, I'd much rather be able to
    subtype derivatives of Abstract_PacketProcessor by specialising the
    ForwardingDecision result of process_packet. One idea is to use the
    following spec (but note that this would add lots of complications
@@ -50,18 +50,18 @@ namespace Pax {
   i.e., we'd use C#'s type checker instead of the silly "is" checks at runtime.
 */
 
-  public interface Hostbased_PacketProcessor {
+  public interface IHostbased_PacketProcessor {
     void packetHandler (object sender, CaptureEventArgs e);
   }
 
-  public interface PacketProcessor : Abstract_PacketProcessor, Hostbased_PacketProcessor {}
+  public interface IPacketProcessor : IAbstract_PacketProcessor, IHostbased_PacketProcessor {}
 
   // A packet monitor does not output anything onto the network, it simply
   // accumulates state based on what it observes happening on the network.
   // It might produce output on side-channels, through side-effects.
   // This could be used for diagnosis, to observe network activity and print
   // digests to the console or log.
-  public abstract class PacketMonitor : PacketProcessor {
+  public abstract class PacketMonitor : IPacketProcessor {
     abstract public ForwardingDecision process_packet (int in_port, ref Packet packet);
 
     public void packetHandler (object sender, CaptureEventArgs e)
@@ -79,7 +79,7 @@ namespace Pax {
   }
 
   // Simple packet processor: it can only transform the given packet and forward it to at most one interface.
-  public abstract class SimplePacketProcessor : PacketProcessor {
+  public abstract class SimplePacketProcessor : IPacketProcessor {
     // Return the offset of network interface that "packet" is to be forwarded to.
     abstract public ForwardingDecision process_packet (int in_port, ref Packet packet);
 
@@ -117,7 +117,7 @@ namespace Pax {
 
   // Simple packet processor that can forward to multiple interfaces. It is "simple" because
   // it can only transform the given packet, and cannot generate new ones.
-  public abstract class MultiInterface_SimplePacketProcessor : PacketProcessor {
+  public abstract class MultiInterface_SimplePacketProcessor : IPacketProcessor {
     // Return the offsets of network interfaces that "packet" is to be forwarded to.
     abstract public ForwardingDecision process_packet (int in_port, ref Packet packet);
 
@@ -174,15 +174,15 @@ namespace Pax {
     }
   }
 
-  public class PacketProcessor_Chain : PacketProcessor {
-    List<PacketProcessor> chain;
+  public class PacketProcessor_Chain : IPacketProcessor {
+    List<IPacketProcessor> chain;
 
-    public PacketProcessor_Chain (List<PacketProcessor> chain) {
+    public PacketProcessor_Chain (List<IPacketProcessor> chain) {
       this.chain = chain;
     }
 
     public void packetHandler (object sender, CaptureEventArgs e) {
-      foreach (PacketProcessor pp in chain) {
+      foreach (IPacketProcessor pp in chain) {
         pp.packetHandler (sender, e);
       }
     }
@@ -192,7 +192,7 @@ namespace Pax {
       ForwardingDecision fd = null;
 
       //We return the ForwardingDecision made by the last element in the chain.
-      foreach (PacketProcessor pp in chain) {
+      foreach (IPacketProcessor pp in chain) {
         fd = pp.process_packet (in_port, ref packet);
       }
 
@@ -275,7 +275,7 @@ namespace Pax {
       }
     }
 
-    public static PacketProcessor InstantiatePacketProcessor(Type type, IDictionary<string, string> argsDict)
+    public static IPacketProcessor InstantiatePacketProcessor(Type type, IDictionary<string, string> argsDict)
     {
       // Predicate determining if a parameter could be provided
       Func<ParameterInfo,bool> parameterIsAvailable = param =>
@@ -302,7 +302,7 @@ namespace Pax {
 #if MOREDEBUG
           Console.WriteLine("Invoking new {0}", ConstructorString(constructor, arguments));
 #endif
-          PacketProcessor pp = (PacketProcessor)constructor.Invoke(arguments);
+          IPacketProcessor pp = (IPacketProcessor)constructor.Invoke(arguments);
           return pp;
         }
         catch (Exception ex) when (ex is InvalidCastException

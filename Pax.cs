@@ -155,7 +155,7 @@ namespace Pax
         PaxConfig.no_interfaces = PaxConfig.config.Count;
         PaxConfig.deviceMap = new ICaptureDevice[PaxConfig.no_interfaces];
         PaxConfig.interface_lead_handler = new string[PaxConfig.no_interfaces];
-        PaxConfig.interface_lead_handler_obj = new PacketProcessor[PaxConfig.no_interfaces];
+        PaxConfig.interface_lead_handler_obj = new IPacketProcessor[PaxConfig.no_interfaces];
 
         int idx = 0;
         foreach (var i in PaxConfig.config) {
@@ -217,11 +217,11 @@ namespace Pax
 
       // Inspect each type that implements PacketProcessor, trying to instantiate it for use
       foreach (Type type in PaxConfig.assembly.GetExportedTypes()
-                                            .Where(typeof(PacketProcessor).IsAssignableFrom))
+                                            .Where(typeof(IPacketProcessor).IsAssignableFrom))
       {
         // Find which network interfaces this class is handling
         List<int> subscribed = new List<int>();
-        PacketProcessor pp = null;
+        IPacketProcessor pp = null;
         for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
         {
           // Does this interface have this type specified as the lead handler?
@@ -263,7 +263,7 @@ namespace Pax
       // FIXME add check to see if there's an interface that references a lead_handler that doesn't appear in the assembly. That should be flagged up to the user, and lead to termination of Pax.
     }
 
-    private static PacketProcessor InstantiatePacketProcessor(Type type)
+    private static IPacketProcessor InstantiatePacketProcessor(Type type)
     {
 #if MOREDEBUG
       Console.WriteLine("Trying to instantiate {0}", type);
@@ -286,7 +286,7 @@ namespace Pax
 #endif
 
       // Instantiate the packet processor
-      PacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(type, arguments);
+      IPacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(type, arguments);
       if (pp == null)
         Console.WriteLine("Couldn't instantiate {0}", type.FullName);
       return pp;
