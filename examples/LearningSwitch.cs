@@ -20,7 +20,7 @@ public class LearningSwitch : MultiInterface_SimplePacketProcessor {
   //    we're in a forwarding loop.
   ConcurrentDictionary<PhysicalAddress,int> forwarding_table = new ConcurrentDictionary<PhysicalAddress,int>();
 
-  override public int[] handler (int in_port, ref Packet packet)
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
     int[] out_ports;
 
@@ -78,6 +78,6 @@ public class LearningSwitch : MultiInterface_SimplePacketProcessor {
       out_ports = new int[0];
     }
 
-    return out_ports;
+    return (new ForwardingDecision.MultiPortForward(out_ports));
   }
 }

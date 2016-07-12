@@ -12,11 +12,12 @@ using PacketDotNet;
 using System.Diagnostics;
 using Pax;
 
-// We follow a mapping of ports (stored as an array) to map packets between ports.
+// We follow a mapping of forwarding decisions (stored as an array) to map packets between ports.
+// NOTE that we can mirror to several ports simultaneously, using ForwardingDecision.MultiPortForward.
 // I expect Mirror to be chained to other network elements, such as a switch.
 public class Mirror : SimplePacketProcessor {
   bool instantiated = false;
-  int[] mirror;
+  ForwardingDecision[] mirror;
 
   public Mirror () {
     // NOTE Mirror needs to be instantiated by being given a mirror configuration.
@@ -25,13 +26,13 @@ public class Mirror : SimplePacketProcessor {
     instantiated = false;
   }
 
-  public Mirror (int[] mirror) {
+  public Mirror (ForwardingDecision[] mirror) {
     instantiated = true;
     Debug.Assert(mirror.Length == PaxConfig.no_interfaces);
     this.mirror = mirror;
   }
 
-  override public int handler (int in_port, ref Packet packet)
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
     if (!instantiated)
     {
@@ -41,15 +42,16 @@ public class Mirror : SimplePacketProcessor {
     return mirror[in_port];
   }
 
-  public static int[] InitialConfig (int size)
+  public static ForwardingDecision[] InitialConfig (int size)
   {
-    int[] cfg = new int[size];
+    ForwardingDecision[] cfg = new ForwardingDecision[size];
+    ForwardingDecision drop = new ForwardingDecision.Drop();
 
     for (int i = 0; i < cfg.Length; i++)
     {
       // The default configuration is for the mirror to do nothing.
       // This won't get in the way of chained elements transforming or forwarding the packet.
-      cfg[i] = -1;
+      cfg[i] = drop;
     }
 
     return cfg;

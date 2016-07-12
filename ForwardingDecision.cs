@@ -19,6 +19,7 @@ namespace Pax {
   public abstract class ForwardingDecision {
     private ForwardingDecision() {}
 
+    // FIXME can use singleton to avoid multiple allocations of this?
     public sealed class Drop : ForwardingDecision {
       public Drop () {}
     }

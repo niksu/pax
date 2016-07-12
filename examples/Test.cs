@@ -34,19 +34,19 @@ using Pax;
 public class Test1 : SimplePacketProcessor {
   private int count = 0;
 
-  override public int handler (int in_port, ref Packet packet)
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
     Console.Write("{0}({1}/{2}) ", in_port, Interlocked.Increment(ref count), PaxConfig.no_interfaces);
-    return 1; // This behaves like a static switch: it forwards everything to port 1.
+    return (new ForwardingDecision.SinglePortForward(1)); // This behaves like a static switch: it forwards everything to port 1.
   }
 }
 
 public class Test2 : SimplePacketProcessor {
 
-  override public int handler (int in_port, ref Packet packet)
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
     Console.Write("?");
-    return -1; // i.e., drop packet, since it's not being forwarded to any interface.
+    return (new ForwardingDecision.Drop());
   }
 }
 
@@ -55,13 +55,14 @@ public class Test3 : MultiInterface_SimplePacketProcessor {
   private int count = 0;
 #endif
 
-  override public int[] handler (int in_port, ref Packet packet)
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
 #if DEBUG
     Console.Write("!");
     Console.Write("{0}({1}/{2}) ", in_port, Interlocked.Increment(ref count), PaxConfig.no_interfaces);
 #endif
-    return (MultiInterface_SimplePacketProcessor.broadcast(in_port));
+    int[] target_ports = MultiInterface_SimplePacketProcessor.broadcast(in_port);
+    return (new ForwardingDecision.MultiPortForward(target_ports));
   }
 }
 
@@ -105,13 +106,13 @@ public class Nested_Chained_Test : PacketProcessor {
 }
 
 public class Nested_Chained_Test2 : PacketProcessor {
-  int[] mirror_cfg;
+  ForwardingDecision[] mirror_cfg;
   PacketProcessor pp;
 
   public Nested_Chained_Test2 () {
     mirror_cfg = Mirror.InitialConfig(PaxConfig.no_interfaces);
     Debug.Assert(PaxConfig.no_interfaces >= 3);
-    mirror_cfg[0] = 2; // Mirror port 0 to port 2
+    mirror_cfg[0] = new ForwardingDecision.SinglePortForward(2); // Mirror port 0 to port 2
 
     this.pp =
       new PacketProcessor_Chain(new List<PacketProcessor>()
