@@ -46,7 +46,7 @@ public class Test2 : SimplePacketProcessor {
   override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
     Console.Write("?");
-    return (new ForwardingDecision.Drop());
+    return ForwardingDecision.Drop.instance();
   }
 }
 
@@ -82,7 +82,7 @@ public class Printer : IPacketProcessor {
 
   public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
-    return (new ForwardingDecision.Drop());
+    return ForwardingDecision.Drop.instance();
   }
 }
 
@@ -191,7 +191,7 @@ public class Tallyer : IPacketProcessor {
 
   public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
-    return (new ForwardingDecision.Drop());
+    return ForwardingDecision.Drop.instance();
   }
 }
 
@@ -220,6 +220,6 @@ public class Dinger : IPacketProcessor {
 
   public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
-    return (new ForwardingDecision.Drop());
+    return ForwardingDecision.Drop.instance();
   }
 }

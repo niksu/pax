@@ -79,7 +79,7 @@ public class NAT : SimplePacketProcessor {
           p_tcp.Syn?"S":"");
 #endif
 
-        ForwardingDecision des = new ForwardingDecision.Drop();
+        ForwardingDecision des = ForwardingDecision.Drop.instance();
         if (in_port == Port_Outside)
           des = outside_to_inside (p_eth, p_ip, p_tcp);
         else
@@ -104,7 +104,7 @@ public class NAT : SimplePacketProcessor {
     }
 
     // Drop packets that aren't handled
-    return (new ForwardingDecision.Drop());
+    return ForwardingDecision.Drop.instance();
   }
 
   /// <summary>
@@ -114,7 +114,7 @@ public class NAT : SimplePacketProcessor {
   {
     // p_ip.DestinationAddress should be my_address
     if (!p_ip.DestinationAddress.Equals(my_address))
-      return (new ForwardingDecision.Drop());
+      return ForwardingDecision.Drop.instance();
 
     // Retrieve the mapping. If a mapping doesn't exist, then it means that we're not
     // aware of a session to which the packet belongs: so drop the packet.
@@ -135,7 +135,7 @@ public class NAT : SimplePacketProcessor {
     }
     else
     {
-      return (new ForwardingDecision.Drop());
+      return ForwardingDecision.Drop.instance();
     }
   }
 
@@ -162,7 +162,7 @@ public class NAT : SimplePacketProcessor {
     else if (!NAT_MapToOutside.TryGetValue(out_key, out masqueradingPort))
     {
       // Not a SYN, and no existing connection, so drop.
-      return (new ForwardingDecision.Drop());
+      return ForwardingDecision.Drop.instance();
     }
 
     // Rewrite the packet.

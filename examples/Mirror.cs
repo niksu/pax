@@ -45,13 +45,12 @@ public class Mirror : SimplePacketProcessor {
   public static ForwardingDecision[] InitialConfig (int size)
   {
     ForwardingDecision[] cfg = new ForwardingDecision[size];
-    ForwardingDecision drop = new ForwardingDecision.Drop();
 
     for (int i = 0; i < cfg.Length; i++)
     {
       // The default configuration is for the mirror to do nothing.
       // This won't get in the way of chained elements transforming or forwarding the packet.
-      cfg[i] = drop;
+      cfg[i] = ForwardingDecision.Drop.instance();
     }
 
     return cfg;
