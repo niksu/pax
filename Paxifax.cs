@@ -141,7 +141,7 @@ namespace Pax {
       {
         out_ports = ((ForwardingDecision.MultiPortForward)des).target_ports;
       } else {
-        throw (new Exception ("Expected SinglePortForward"));
+        throw (new Exception ("Expected MultiPortForward"));
       }
 
 #if DEBUG
