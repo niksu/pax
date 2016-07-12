@@ -20,6 +20,12 @@ namespace Pax {
   /// NOTE this idiom simulates using algebraic types in C#. It's values are
   ///      analysed using the Visitor pattern.
   /// </remark>
+  /// <remark>
+  /// Note that there is a hierarchy between forwarding decisions: Drop is
+  /// subsumed by SinglePortForward (which allows forwarding to at most one
+  /// port), which is subsumed by MultiPortForward (which allows forwarding to
+  /// any number of ports, including one port, or none).
+  /// </remark>
   public abstract class ForwardingDecision {
     private ForwardingDecision() {}
 
