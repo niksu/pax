@@ -35,6 +35,10 @@ namespace Pax.Examples.Nat
 
     public void UpdateState(TcpPacket packet, bool packetFromInside)
     {
+      // NOTE we don't handle RST packets because we don't want to worry about validity,
+      //      e.g. is it in the window. Instead we just wait for the traffic to drop to
+      //      zero and remove the entry because of lack of activity.
+      
       if (packetFromInside)
       {
         InOutConnection = TransitionState(InOutConnection, packet.Syn, packet.Fin);
@@ -74,12 +78,16 @@ namespace Pax.Examples.Nat
     {
       /// <summary> This connection has no state. </summary>
       None,
+
       /// <summary> The connection has received a Syn, but has not replied with an Ack. </summary>
       Syn,
+
       /// <summary> The connection has received a Syn and replied with an Ack. </summary>
       SynAck,
+
       /// <summary> The connection has received a Fin, but has not replied with an Ack. </summary>
       Fin,
+
       /// <summary> The connection has received a Fin and replied with an Ack. </summary>
       FinAck
     }
