@@ -1,4 +1,11 @@
-﻿using System;
+﻿/*
+Pax : tool support for prototyping packet processors
+Jonny Shipton, Cambridge University Computer Lab, July 2016
+
+Use of this source code is governed by the Apache 2.0 license; see LICENSE.
+*/
+
+using System;
 using System.Net;
 using PacketDotNet;
 
