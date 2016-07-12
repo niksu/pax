@@ -31,7 +31,7 @@ namespace Pax {
 
     // FIXME can use singleton to avoid multiple allocations of this?
     /// <summary>
-    /// The forwarding decision to drop the packet.
+    /// The decision to drop the packet.
     /// </summary>
     public sealed class Drop : ForwardingDecision {
       // We only need to keep a single instance of Drop, so we use a singleton pattern.
@@ -46,7 +46,12 @@ namespace Pax {
     }
 
     /// <summary>
-    /// The forwarding decision to forward the packet to a single port.
+    /// The decision to forward the packet to *at most* a single port.
+    /// Note that a processor that forwards to a single port might still
+    /// decide to drop packets, even if it returns a <c>ForwardingDecision</c>
+    /// of type <c>SinglePortForward</c>. A drop decision within
+    /// <c>SinglePortForward</c> is communicated by having a negative
+    /// "target_port" parameter to the constructor.
     /// </summary>
     public sealed class SinglePortForward : ForwardingDecision {
       public readonly int target_port;
@@ -57,7 +62,11 @@ namespace Pax {
     }
 
     /// <summary>
-    /// The forwarding decision to forward the packet to several ports.
+    /// The decision to forward the packet to any number of ports.
+    /// Note that a processor typed <c>MultiPortForward</c> may still
+    /// decide to drop packets. A drop decision within
+    /// <c>MultiPortForward</c> is communicated by having an empty
+    /// "target_ports" parameter to the constructor.
     /// </summary>
     public sealed class MultiPortForward : ForwardingDecision {
       public readonly int[] target_ports;
