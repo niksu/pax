@@ -26,7 +26,7 @@ needed (because of a FIN-shutdown or RST) or because an activity timer has
 expired. As long as it has an entry, it maps TCP segments from non-zero to
 zero ports, masquerading the client.
 
-FIXME currently we don't remove entries
+FIXME currently we don't remove entries because of RST
 NOTE could improve the implementation by having configurable "forwarding ports"
      that enable you to run servers on non-zero network ports.
 */
