@@ -15,8 +15,11 @@ namespace Pax.Examples.Nat
   /// </summary>
   internal class TcpState : ITransportState<TcpPacket>
   {
+    private readonly TimeSpan TIME_WAIT = TimeSpan.FromMinutes(4); // FIXME make TIME_WAIT configurable
+
     private TcpDirectionalState InOutConnection = TcpDirectionalState.None;
     private TcpDirectionalState OutInConnection = TcpDirectionalState.None;
+    private DateTime? CloseTime = null;
 
     /// <summary>
     /// Gets a value indicating if the TCP connection from the inside to the outside is closed.
@@ -27,11 +30,13 @@ namespace Pax.Examples.Nat
     /// Gets a value indicating if the TCP connection from the outside to the inside is closed.
     /// </summary>
     public bool ClosedFromOutside { get { return OutInConnection == TcpDirectionalState.None || OutInConnection == TcpDirectionalState.FinAck; } }
+    
+    public bool InTimeWait { get { return CloseTime.HasValue && DateTime.Now - CloseTime < TIME_WAIT; } }
 
     /// <summary>
     /// Gets a value indicating if the TCP connections in both directions are closed, determining if the connection can be removed before the timeout elapses.
     /// </summary>
-    public bool CanBeClosed { get { return ClosedFromInside && ClosedFromOutside; } }
+    public bool CanBeClosed { get { return ClosedFromInside && ClosedFromOutside && !InTimeWait; } }
 
     public void UpdateState(TcpPacket packet, bool packetFromInside)
     {
@@ -41,34 +46,33 @@ namespace Pax.Examples.Nat
       
       if (packetFromInside)
       {
-        InOutConnection = TransitionState(InOutConnection, packet.Syn, packet.Fin);
-        OutInConnection = TransitionState(OutInConnection, packet.Ack);
+        TransitionState(ref InOutConnection, packet.Syn, packet.Fin);
+        TransitionState(ref OutInConnection, packet.Ack);
       }
       else
       {
-        OutInConnection = TransitionState(OutInConnection, packet.Syn, packet.Fin);
-        InOutConnection = TransitionState(InOutConnection, packet.Ack);
+        TransitionState(ref OutInConnection, packet.Syn, packet.Fin);
+        TransitionState(ref InOutConnection, packet.Ack);
       }
     }
 
-    private static TcpDirectionalState TransitionState(TcpDirectionalState state, bool syn, bool fin)
+    private void TransitionState(ref TcpDirectionalState state, bool syn, bool fin)
     {
       if (fin)
-        return TcpDirectionalState.Fin;
+        state = TcpDirectionalState.Fin;
       else if (state == TcpDirectionalState.None && syn)
-        return TcpDirectionalState.Syn;
-      else
-        return state;
+        state = TcpDirectionalState.Syn;
     }
 
-    private static TcpDirectionalState TransitionState(TcpDirectionalState state, bool ack)
+    private void TransitionState(ref TcpDirectionalState state, bool ack)
     {
       if (state == TcpDirectionalState.Syn)
-        return TcpDirectionalState.SynAck;
+        state = TcpDirectionalState.SynAck;
       else if (state == TcpDirectionalState.Fin)
-        return TcpDirectionalState.FinAck;
-      else
-        return state;
+      {
+        CloseTime = DateTime.Now;
+        state = TcpDirectionalState.FinAck;
+      }
     }
 
     /// <summary>
