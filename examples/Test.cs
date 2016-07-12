@@ -78,6 +78,11 @@ public class Printer : PacketProcessor {
   public void packetHandler (object sender, CaptureEventArgs e) {
     Console.WriteLine(id);
   }
+
+  public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    return (new ForwardingDecision.Drop());
+  }
 }
 
 // Nested packet processor -- it contains a sequence of chained processors.
@@ -91,6 +96,11 @@ public class Nested_Chained_Test : PacketProcessor {
 
   public void packetHandler (object sender, CaptureEventArgs e) {
     pp.packetHandler (sender, e);
+  }
+
+  public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    return (pp.process_packet (in_port, ref packet));
   }
 }
 
@@ -120,6 +130,11 @@ public class Nested_Chained_Test2 : PacketProcessor {
   public void packetHandler (object sender, CaptureEventArgs e) {
     pp.packetHandler (sender, e);
   }
+
+  public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    return (pp.process_packet (in_port, ref packet));
+  }
 }
 
 public class Nested_NAT : PacketProcessor {
@@ -148,6 +163,11 @@ public class Nested_NAT : PacketProcessor {
       throw (new Exception ("The NAT nested in NestedNAT was not initialised."));
     }
   }
+
+  public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    return (pp.process_packet (in_port, ref packet));
+  }
 }
 
 /// <summary>
@@ -166,6 +186,11 @@ public class Tallyer : PacketProcessor {
       tag = PaxConfig.resolve_config_parameter(port, "tag");
 
     Console.WriteLine("|" + tag);
+  }
+
+  public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    return (new ForwardingDecision.Drop());
   }
 }
 
@@ -186,9 +211,14 @@ public class Dinger : PacketProcessor {
     if (_string == null) Console.WriteLine("_string == null");
     if (_IPAddress == null) Console.WriteLine("_IPAddress == null");
     if (_PhysicalAddress == null) Console.WriteLine("_PhysicalAddress == null");
-  } 
+  }
 
   public void packetHandler (object sender, CaptureEventArgs e) {
     Console.WriteLine("*ding*");
+  }
+
+  public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    return (new ForwardingDecision.Drop());
   }
 }

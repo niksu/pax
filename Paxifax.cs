@@ -23,8 +23,15 @@ using System.Linq;
 
 namespace Pax {
 
+  // A more abstract interface to packet processors.
+  // NOTE this can be specialised by specialising ForwardingDecision to specific
+  //      kinds of decisions.
+  public interface PacketProcessor_Improved {
+    ForwardingDecision process_packet (int in_port, ref Packet packet);
+  }
+
   // FIXME use javadoc-style comments to describe the API
-  public interface PacketProcessor {
+  public interface PacketProcessor : PacketProcessor_Improved {
     void packetHandler (object sender, CaptureEventArgs e);
   }
 
@@ -168,6 +175,12 @@ namespace Pax {
       Debug.Write(PaxConfig.deviceMap[in_port].Name + " -|");
 #endif
     }
+
+    public ForwardingDecision process_packet (int in_port, ref Packet packet)
+    {
+      handler (in_port, packet);
+      return (new ForwardingDecision.Drop());
+    }
   }
 
   // Simple packet processor: it can only transform the given packet and forward it to at most one interface.
@@ -196,6 +209,12 @@ namespace Pax {
         Debug.WriteLine("<dropped>");
 #endif
       }
+    }
+
+    public ForwardingDecision process_packet (int in_port, ref Packet packet)
+    {
+      //FIXME update type of handler to return a ForwardingDecision directly
+      return (new ForwardingDecision.SinglePortForward(handler (in_port, ref packet)));
     }
   }
 
@@ -248,6 +267,12 @@ namespace Pax {
       Debug.WriteLine("");
 #endif
     }
+
+    public ForwardingDecision process_packet (int in_port, ref Packet packet)
+    {
+      //FIXME update type of handler to return a ForwardingDecision directly
+      return (new ForwardingDecision.MultiPortForward(handler (in_port, ref packet)));
+    }
   }
 
   public class PacketProcessor_Chain : PacketProcessor {
@@ -261,6 +286,18 @@ namespace Pax {
       foreach (PacketProcessor pp in chain) {
         pp.packetHandler (sender, e);
       }
+    }
+
+    public ForwardingDecision process_packet (int in_port, ref Packet packet)
+    {
+      ForwardingDecision fd = null;
+
+      //We return the ForwardingDecision made by the last element in the chain.
+      foreach (PacketProcessor pp in chain) {
+        fd = pp.process_packet (in_port, ref packet);
+      }
+
+      return fd;
     }
   }
 
