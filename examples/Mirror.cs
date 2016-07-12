@@ -50,7 +50,7 @@ public class Mirror : SimplePacketProcessor {
     {
       // The default configuration is for the mirror to do nothing.
       // This won't get in the way of chained elements transforming or forwarding the packet.
-      cfg[i] = ForwardingDecision.Drop.instance();
+      cfg[i] = ForwardingDecision.Drop.Instance;
     }
 
     return cfg;
