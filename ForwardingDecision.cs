@@ -35,6 +35,7 @@ namespace Pax {
     /// </summary>
     public sealed class Drop : ForwardingDecision {
       // We only need to keep a single instance of Drop, so we use a singleton pattern.
+      private Drop () {}
       public static Drop Instance { get; } = new Drop();
     }
 
