@@ -41,11 +41,11 @@ def run_server(serverport=12012, natport=35001):
     datap = sniff(count=2, filter=filter)[1]
     print "Received:"
     datap.show()
-    data =datap[TCP].payload
+    data = str(datap[TCP].payload)
     if (data == client_data):
         print "Correct data received from the client."
     else:
-        print "WARNING: incorrect data received from the client: %s" % data
+        print "WARNING: incorrect data received from the client: '%s'" % data
 
     # Wait for connection to be dropped
     print "Sleeping to wait for the connection to be dropped by the NAT"
@@ -61,7 +61,10 @@ def run_server(serverport=12012, natport=35001):
     print "  server> $ %s" % (iptables_remove_rule_fmt % iptables_rule)
     subprocess.check_call(iptables_remove_rule_fmt % iptables_rule, shell=True)
 
-    return 0
+    if (data == client_data):
+        return 0
+    else:
+        return 1
 
 def run_client(serverport=12012, clientport=12011):
     "This should be run on the internal host."

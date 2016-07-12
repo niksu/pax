@@ -10,6 +10,7 @@ from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.log import setLogLevel
+import random
 import time
 import thread
 import threading
@@ -115,22 +116,13 @@ def test():
     # Timeout after 10 seconds if nothing happens
     result = runCmd(net, in1, 'netcat -n %s 12001' % ip(net, out0), timeout=10.0)
     if result is not None:
-        result = result.rstrip('\n').rstrip('\r')
+        result = result.rstrip('\n\r')
     received(in1, result)
     # Check that the received data was correct:
     if (result != data):
         print "WARNING: incorrect data received"
     else:
         print "Correct data received"
-
-    # If we couldn't show the Pax output in a separate window, show it now.
-    if not config.X_windows:
-        sendInt(net, nat0)
-        print "Show Pax output? (y/N)"
-        if (sys.stdin.read(1).upper() == "Y"):
-            waitOutput(net, nat0, verbose=True) # Print output
-        else:
-            waitOutput(net, nat0) # Don't print, just wait
 
     # Run scapy test #1
     print ""
@@ -139,10 +131,10 @@ def test():
     runCmd(net, in1, "sleep 1")
     runCmd(net, in1, "examples/nat_scapy_tests.py client", xterm=True)
     waitOutput(net, out0)
-    out0_exitcode = int(runCmd(net, out0, "echo $?").rstrip('\n').rstrip('/r'))
-    in1_exitcode = int(runCmd(net, in1, "echo $?").rstrip('\n').rstrip('/r'))
-    if (out0_exitcode != 0 or in1_exitcode != 0):
-        print "WARNING scapy test #1 failed."
+    clientExitcode = runCmd(net, in1, "echo $?").rstrip('\n\r')
+    serverExitcode = runCmd(net, out0, "echo $?").rstrip('\n\r')
+    if (clientExitcode != "0" or serverExitcode != "0"):
+        print "WARNING scapy test #1 failed. client %s, server %s" % (clientExitcode, serverExitcode)
     else:
         print "Scapy test #1 passed"
 
@@ -153,11 +145,21 @@ def test():
     runCmd(net, in1, "sleep 1")
     runCmd(net, in1, "examples/nat_scapy_tests.py client2", xterm=True)
     waitOutput(net, out0)
-    exitcode = int(runCmd(net, in1, "echo $?").rstrip('\n').rstrip('/r'))
-    if (exitcode != 0):
-        print "WARNING scapy test #2 failed. %d" % exitcode
+    clientExitcode = runCmd(net, in1, "echo $?").rstrip('\n\r')
+    serverExitcode = runCmd(net, out0, "echo $?").rstrip('\n\r')
+    if (clientExitcode != "0" or serverExitcode != "0"):
+        print "WARNING scapy test #2 failed. client %s, server %s" % (clientExitcode, serverExitcode)
     else:
         print "Scapy test #2 passed"
+
+    # If we couldn't show the Pax output in a separate window, show it now.
+    if not config.X_windows:
+        sendInt(net, nat0)
+        print "Show Pax output? (y/N)"
+        if (sys.stdin.read(1).upper() == "Y"):
+            waitOutput(net, nat0, verbose=True) # Print output
+        else:
+            waitOutput(net, nat0) # Don't print, just wait
 
     net.stop()
 
@@ -165,12 +167,25 @@ def test():
 topos = { 'nat': (lambda: NatTopo())}
 
 # Helper procedures
-def runCmd(net, name, cmd, timeout=None, xterm=False, **args):
-    if xterm and config.X_windows:
-        cmd = "xterm -e %s" % cmd
+def setup_xterm(h, cmd, title=None):
+    if config.X_windows:
+        if title is None:
+            title = "%s> $ %s" % (h.name, cmd)
 
+        # Use a named pipe to show the output in a separate terminal, but run
+        #  the command in this shell so we have access to the exit code.
+        pipe = "/tmp/cmdpipe%d" % (random.randint(0,1000))
+        h.cmd("mkfifo %s" % pipe)
+        h.cmd("xterm -T '%s' -e 'cat < %s ; rm %s' &" % (title, pipe, pipe))
+        cmd = "stdbuf -i0 -o0 -e0 %s &> %s" % (cmd, pipe) # FIXME for most applications -iL etc. would be enough?
+    return cmd
+def runCmd(net, name, cmd, timeout=None, xterm=False, **args):
     h = net.get(name)
     print "  %s> $ %s" % (name, cmd)
+
+    if xterm:
+        cmd = setup_xterm(h, cmd)
+
     if (timeout is None):
         return h.cmd(cmd, **args)
     else:
@@ -180,11 +195,12 @@ def runCmd(net, name, cmd, timeout=None, xterm=False, **args):
         timer.cancel()
         return rv
 def sendCmd(net, name, cmd, xterm=False, **args):
-    if xterm and config.X_windows:
-        cmd = "xterm -e %s" % cmd
-
     h = net.get(name)
     print "  %s> $ %s" % (name, cmd)
+
+    if xterm:
+        cmd = setup_xterm(h, cmd)
+
     h.sendCmd(cmd, **args)
 def waitOutput(net, name, **args):
     h = net.get(name)
