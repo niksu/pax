@@ -40,7 +40,6 @@ using Pax;
 using System.Net.NetworkInformation;
 
 public class NAT : SimplePacketProcessor {
-  public const int Port_Drop = -1;
   public const int Port_Outside = 0;
 
   private IPAddress my_address;
@@ -63,7 +62,7 @@ public class NAT : SimplePacketProcessor {
   ConcurrentDictionary<MapToOutside_Key,ushort> NAT_MapToOutside =
     new ConcurrentDictionary<MapToOutside_Key,ushort>();
 
-  override public int handler (int in_port, ref Packet packet)
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
     if (packet is EthernetPacket)
     {
@@ -80,11 +79,11 @@ public class NAT : SimplePacketProcessor {
           p_tcp.Syn?"S":"");
 #endif
 
-        int out_port = Port_Drop;
+        ForwardingDecision des = ForwardingDecision.Drop.Instance;
         if (in_port == Port_Outside)
-          out_port = outside_to_inside (p_eth, p_ip, p_tcp);
+          des = outside_to_inside (p_eth, p_ip, p_tcp);
         else
-          out_port = inside_to_outside (p_eth, p_ip, p_tcp, in_port);
+          des = inside_to_outside (p_eth, p_ip, p_tcp, in_port);
 
 #if DEBUG
         Console.WriteLine(" (------ Outside ------)  \t<->\t (------ Inside ------) ");
@@ -100,22 +99,22 @@ public class NAT : SimplePacketProcessor {
         }
 #endif
 
-        return out_port;
+        return des;
       }
     }
 
     // Drop packets that aren't handled
-    return Port_Drop;
+    return ForwardingDecision.Drop.Instance;
   }
 
   /// <summary>
   /// Rewrite packets coming from the Outside and forward on the relevant Inside network port.
   /// </summary>
-  private int outside_to_inside (EthernetPacket p_eth, IpPacket p_ip, TcpPacket p_tcp)
+  private ForwardingDecision outside_to_inside (EthernetPacket p_eth, IpPacket p_ip, TcpPacket p_tcp)
   {
     // p_ip.DestinationAddress should be my_address
     if (!p_ip.DestinationAddress.Equals(my_address))
-      return Port_Drop;
+      return ForwardingDecision.Drop.Instance;
 
     // Retrieve the mapping. If a mapping doesn't exist, then it means that we're not
     // aware of a session to which the packet belongs: so drop the packet.
@@ -132,18 +131,18 @@ public class NAT : SimplePacketProcessor {
       // Update destination MAC address
       p_eth.DestinationHwAddress = destination.MacAddress;
       // Forward on the mapped network interface
-      return destination.InterfaceNumber;
+      return (new ForwardingDecision.SinglePortForward(destination.InterfaceNumber));
     }
     else
     {
-      return Port_Drop;
+      return ForwardingDecision.Drop.Instance;
     }
   }
 
   /// <summary>
   /// Rewrite packets coming from the Inside and forward on the Outside network port.
   /// </summary>
-  private int inside_to_outside (EthernetPacket p_eth, IpPacket p_ip, TcpPacket p_tcp, int incomingPort)
+  private ForwardingDecision inside_to_outside (EthernetPacket p_eth, IpPacket p_ip, TcpPacket p_tcp, int incomingPort)
   {
     var out_key = new MapToOutside_Key(p_ip.SourceAddress, p_tcp.SourcePort,
                                        p_ip.DestinationAddress, p_tcp.DestinationPort);
@@ -163,7 +162,7 @@ public class NAT : SimplePacketProcessor {
     else if (!NAT_MapToOutside.TryGetValue(out_key, out masqueradingPort))
     {
       // Not a SYN, and no existing connection, so drop.
-      return Port_Drop;
+      return ForwardingDecision.Drop.Instance;
     }
 
     // Rewrite the packet.
@@ -174,7 +173,7 @@ public class NAT : SimplePacketProcessor {
     p_tcp.UpdateTCPChecksum();
     // Update destination MAC address
     p_eth.DestinationHwAddress = next_outside_hop_mac;
-    return Port_Outside;
+    return (new ForwardingDecision.SinglePortForward(Port_Outside));
   }
 
   private ushort GetNewMasqueradingTcpPort()
