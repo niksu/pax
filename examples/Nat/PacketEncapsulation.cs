@@ -129,7 +129,7 @@ namespace Pax.Examples.Nat
 
     public override void UpdateTransportChecksum()
     {
-      // No checksums to update
+      TransportPacket.UpdateUDPChecksum();
     }
 
     public override bool SignalsStartOfConnection()
