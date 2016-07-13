@@ -22,9 +22,9 @@ public partial class Hub : MultiInterface_SimplePacketProcessor {
 #endif
 
 public partial class Hub : IAbstract_ByteProcessor {
-  public void process_packet (int in_port, ref byte[] packet, ref ulong forward)
+  public long process_packet (int in_port, ref byte[] packet)
   {
-    forward = 0;
+    long forward = 0;
 
     for (int ofs = 0; ofs < PaxConfig_Lite.no_interfaces; ofs++)
     {
@@ -35,6 +35,6 @@ public partial class Hub : IAbstract_ByteProcessor {
       }
     }
 
-    return;
+    return forward;
   }
 }

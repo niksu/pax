@@ -10,6 +10,8 @@ namespace Pax {
 
   // Packet processors.
   public interface IAbstract_ByteProcessor {
-    void process_packet (int in_port, ref byte[] packet, ref ulong forward);
+    // FIXME using "long" type is too arbitrary?
+    // FIXME should in_port be "uint"?
+    long process_packet (int in_port, ref byte[] packet);
   }
 }
