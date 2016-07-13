@@ -12,5 +12,4 @@ namespace Pax {
   public interface IAbstract_ByteProcessor {
     ForwardingDecision process_packet (int in_port, ref byte[] packet);
   }
-
 }
