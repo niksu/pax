@@ -9,8 +9,9 @@ using PacketDotNet;
 using Pax;
 
 public class Hub : MultiInterface_SimplePacketProcessor {
-  override public int[] handler (int in_port, ref Packet packet)
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
-    return MultiInterface_SimplePacketProcessor.broadcast(in_port);
+    int[] out_ports = MultiInterface_SimplePacketProcessor.broadcast(in_port);
+    return (new ForwardingDecision.MultiPortForward(out_ports));
   }
 }

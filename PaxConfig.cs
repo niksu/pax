@@ -1,4 +1,10 @@
+/*
+Pax : tool support for prototyping packet processors
+Nik Sultana, Cambridge University Computer Lab, June 2016
+Jonny Shipton, Cambridge University Computer Lab, July 2016
 
+Use of this source code is governed by the Apache 2.0 license; see LICENSE.
+*/
 
 using System;
 using System.Collections.Generic;
@@ -63,7 +69,7 @@ namespace Pax
     public static Dictionary<string, int> rdeviceMap = new Dictionary<string, int>();
     // Map from device offset to the name of its handler.
     public static string[] interface_lead_handler;
-    public static PacketProcessor[] interface_lead_handler_obj;
+    public static IPacketProcessor[] interface_lead_handler_obj;
 
     // FIXME better to link to function (rather than have indirection) to speed things up at runtime.
     // The file containing the catalogue of network interfaces.
@@ -79,7 +85,7 @@ namespace Pax
       NetworkInterfaceConfig port_conf;
       try {
         port_conf = config[port_no];
-      } catch (ArgumentOutOfRangeException e) {
+      } catch (ArgumentOutOfRangeException) {
         throw (new Exception ("resolve_config_parameter: port_no > config size, since " + port_no.ToString() + " > " +
               config.Count.ToString()));
       }

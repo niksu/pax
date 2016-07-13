@@ -2,6 +2,9 @@
 
 """
 pax_mininet_node.py: Defines PaxNode which allows Pax to behave as the sole packet hander on a node.
+Jonny Shipton, Cambridge University Computer Lab, July 2016
+
+Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 """
 
 from mininet.node import Node

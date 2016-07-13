@@ -1,4 +1,4 @@
-﻿/*
+/*
 Pax : tool support for prototyping packet processors
 Jonny Shipton, Cambridge University Computer Lab, July 2016
 

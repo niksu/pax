@@ -49,9 +49,10 @@ namespace Pax.Examples.Nat
   public sealed class NAT : SimplePacketProcessor
   {
     /// <summary>
-    /// A value indicating the packet should be dropped.
-    /// </summary>
-    public const int Port_Drop = -1;
+    /// A value indicating the packet should be dropped. 
+    /// </summary> 
+    public const int Port_Drop = -1; 
+
     /// <summary>
     /// A value representing the network interface that faces outside.
     /// </summary>
@@ -96,8 +97,8 @@ namespace Pax.Examples.Nat
     /// </summary>
     /// <param name="incomingNetworkInterface">The number representing network interface the packet arrived on.</param>
     /// <param name="packet">The observed packet.</param>
-    /// <returns>A integer representing the network interface to forward the (potentially modified) packet on, or -1 if it should be dropped.</returns>
-    override public int handler (int incomingNetworkInterface, ref Packet packet)
+    /// <returns>A <see cref="ForwardingDecision"/> for the packet.</returns>
+    override public ForwardingDecision process_packet(int incomingNetworkInterface, ref Packet packet)
     {
       if (packet is EthernetPacket)
       {
@@ -128,7 +129,7 @@ namespace Pax.Examples.Nat
       }
 
       // If we reach this point then we can't handle that type of packet
-      return Port_Drop;
+      return new ForwardingDecision.SinglePortForward(Port_Drop);
     }
 
     /// <summary>
@@ -168,24 +169,24 @@ namespace Pax.Examples.Nat
       /// </summary>
       /// <param name="packet">The observed packet.</param>
       /// <param name="incomingNetworkInterface">The number of the network interface the packet arrived on.</param>
-      /// <returns>A number representing the network interface the packet should be forwarded on, or -1 if it should be dropped.</returns>
-      public int handlePacket(PacketEncapsulation<T> packet, int incomingNetworkInterface)
+      /// <returns>A <see cref="ForwardingDecision"/> for the packet.</returns>
+      public ForwardingDecision handlePacket(PacketEncapsulation<T> packet, int incomingNetworkInterface)
       {
         // Get the mapped destination port
-        int outPort;
+        ForwardingDecision forwardingDecision;
         if (incomingNetworkInterface == Port_Outside)
-          outPort = outside_to_inside(packet);
+          forwardingDecision = outside_to_inside(packet);
         else
-          outPort = inside_to_outside(packet, incomingNetworkInterface);
+          forwardingDecision = inside_to_outside(packet, incomingNetworkInterface);
 
-        return outPort;
+        return forwardingDecision;
       }
 
       /// <summary>
       /// Rewrite packets coming from the Outside and forward on the relevant Inside network port.
       /// </summary>
       /// <param name="packet">The incoming packet.</param>
-      private int outside_to_inside(PacketEncapsulation<T> packet)
+      private ForwardingDecision outside_to_inside(PacketEncapsulation<T> packet)
       {
         // Retrieve the mapping. If a mapping doesn't exist, then it means that we're not
         // aware of a session to which the packet belongs: so drop the packet.
@@ -205,11 +206,11 @@ namespace Pax.Examples.Nat
           packet.UpdateChecksums();
 
           // Forward on the mapped network port
-          return destination.InterfaceNumber;
+          return new ForwardingDecision.SinglePortForward(destination.InterfaceNumber);
         }
         else
         {
-          return Port_Drop;
+          return new ForwardingDecision.SinglePortForward(Port_Drop);
         }
       }
 
@@ -217,7 +218,7 @@ namespace Pax.Examples.Nat
       /// Rewrite packets coming from the Inside and forward on the Outside network port.
       /// </summary>
       /// <param name="packet">The outgoing packet.</param>
-      private int inside_to_outside(PacketEncapsulation<T> packet, int incomingInterfaceNumber)
+      private ForwardingDecision inside_to_outside(PacketEncapsulation<T> packet, int incomingInterfaceNumber)
       {
         // Get the mapping key, providing the interface numbers and mac in case we need to add a mapping
         packet.LinkPacket.DestinationHwAddress = next_outside_hop_mac; // Change MAC to reflect actual destination
@@ -238,7 +239,7 @@ namespace Pax.Examples.Nat
           else
           {
             // Not a SYN, and no existing connection, so drop.
-            return NAT.Port_Drop;
+            return new ForwardingDecision.SinglePortForward(Port_Drop);
           }
         }
 
@@ -252,7 +253,7 @@ namespace Pax.Examples.Nat
         packet.UpdateChecksums();
 
         // Forward on the mapped network port
-        return connection.OutsideNode.InterfaceNumber;
+        return new ForwardingDecision.SinglePortForward(connection.OutsideNode.InterfaceNumber);
       }
 
       /// <summary>

@@ -1,6 +1,7 @@
 /*
 Pax : tool support for prototyping packet processors
 Nik Sultana, Cambridge University Computer Lab, June 2016
+Jonny Shipton, Cambridge University Computer Lab, July 2016
 
 This module is mainly intended to collect test cases and examples of instantiating
 packet processors, some of which are implemented in other modules.
@@ -33,35 +34,39 @@ using Pax;
 public class Test1 : SimplePacketProcessor {
   private int count = 0;
 
-  override public int handler (int in_port, ref Packet packet)
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
-//    Console.Write("!");
     Console.Write("{0}({1}/{2}) ", in_port, Interlocked.Increment(ref count), PaxConfig.no_interfaces);
-    return 1; // This behaves like a static switch: it forwards everything to port 1.
+    return (new ForwardingDecision.SinglePortForward(1)); // This behaves like a static switch: it forwards everything to port 1.
   }
 }
 
 public class Test2 : SimplePacketProcessor {
 
-  override public int handler (int in_port, ref Packet packet)
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
     Console.Write("?");
-    return -1; // i.e., drop packet, since it's not being forwarded to any interface.
+    return ForwardingDecision.Drop.Instance;
   }
 }
 
 public class Test3 : MultiInterface_SimplePacketProcessor {
+#if DEBUG
   private int count = 0;
+#endif
 
-  override public int[] handler (int in_port, ref Packet packet)
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
-//    Console.Write("!");
-//    Console.Write("{0}({1}/{2}) ", in_port, count++, PaxConfig.no_interfaces);
-    return (MultiInterface_SimplePacketProcessor.broadcast(in_port));
+#if DEBUG
+    Console.Write("!");
+    Console.Write("{0}({1}/{2}) ", in_port, Interlocked.Increment(ref count), PaxConfig.no_interfaces);
+#endif
+    int[] target_ports = MultiInterface_SimplePacketProcessor.broadcast(in_port);
+    return (new ForwardingDecision.MultiPortForward(target_ports));
   }
 }
 
-public class Printer : PacketProcessor {
+public class Printer : IPacketProcessor {
   int id = 0;
 
   // NOTE we always need to have a default constructor, because of how Pax works.
@@ -74,12 +79,17 @@ public class Printer : PacketProcessor {
   public void packetHandler (object sender, CaptureEventArgs e) {
     Console.WriteLine(id);
   }
+
+  public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    return ForwardingDecision.Drop.Instance;
+  }
 }
 
 // Nested packet processor -- it contains a sequence of chained processors.
-public class Nested_Chained_Test : PacketProcessor {
-  PacketProcessor pp =
-    new PacketProcessor_Chain(new List<PacketProcessor>()
+public class Nested_Chained_Test : IPacketProcessor {
+  IPacketProcessor pp =
+    new PacketProcessor_Chain(new List<IPacketProcessor>()
         {
           new Printer(1),
           new Printer(2),
@@ -88,19 +98,24 @@ public class Nested_Chained_Test : PacketProcessor {
   public void packetHandler (object sender, CaptureEventArgs e) {
     pp.packetHandler (sender, e);
   }
+
+  public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    return (pp.process_packet (in_port, ref packet));
+  }
 }
 
-public class Nested_Chained_Test2 : PacketProcessor {
-  int[] mirror_cfg;
-  PacketProcessor pp;
+public class Nested_Chained_Test2 : IPacketProcessor {
+  ForwardingDecision[] mirror_cfg;
+  IPacketProcessor pp;
 
   public Nested_Chained_Test2 () {
     mirror_cfg = Mirror.InitialConfig(PaxConfig.no_interfaces);
     Debug.Assert(PaxConfig.no_interfaces >= 3);
-    mirror_cfg[0] = 2; // Mirror port 0 to port 2
+    mirror_cfg[0] = new ForwardingDecision.SinglePortForward(2); // Mirror port 0 to port 2
 
-    PacketProcessor pp =
-      new PacketProcessor_Chain(new List<PacketProcessor>()
+    this.pp =
+      new PacketProcessor_Chain(new List<IPacketProcessor>()
           {
   /* FIXME would be tidier to use this
             new Mirror(
@@ -116,6 +131,11 @@ public class Nested_Chained_Test2 : PacketProcessor {
   public void packetHandler (object sender, CaptureEventArgs e) {
     pp.packetHandler (sender, e);
   }
+
+  public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    return (pp.process_packet (in_port, ref packet));
+  }
 }
 
 /// <summary>
@@ -123,7 +143,7 @@ public class Nested_Chained_Test2 : PacketProcessor {
 /// The purpose of Tallyer is to demonstrate and test that default constructors can be used for automatic
 ///  instantiation of PacketProcessors, as well as that port-specific configuration properties can be used.
 /// </summary>
-public class Tallyer : PacketProcessor {
+public class Tallyer : IPacketProcessor {
 
   // implicit default constructor
 
@@ -135,13 +155,18 @@ public class Tallyer : PacketProcessor {
 
     Console.WriteLine("|" + tag);
   }
+
+  public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    return ForwardingDecision.Drop.Instance;
+  }
 }
 
 /// <summary>
 /// Dinger just writes `*ding*` every time a packet is received.
 /// The purpose of Dinger is to demonstrate and test the types that can be used as constructor parameters.
 /// </summary>
-public class Dinger : PacketProcessor {
+public class Dinger : IPacketProcessor {
 
   // Constructor taking lots of interesting arguments
   public Dinger(
@@ -154,9 +179,14 @@ public class Dinger : PacketProcessor {
     if (_string == null) Console.WriteLine("_string == null");
     if (_IPAddress == null) Console.WriteLine("_IPAddress == null");
     if (_PhysicalAddress == null) Console.WriteLine("_PhysicalAddress == null");
-  } 
+  }
 
   public void packetHandler (object sender, CaptureEventArgs e) {
     Console.WriteLine("*ding*");
+  }
+
+  public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    return ForwardingDecision.Drop.Instance;
   }
 }
