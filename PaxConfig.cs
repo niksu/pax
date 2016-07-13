@@ -26,7 +26,7 @@ namespace Pax
     public string class_name { get; set; }
     public IDictionary<string,string> args { get; set; }
   }
-  
+
   public class NetworkInterfaceConfig
   {
     // FIXME I no longer use this -- perhaps can erase.
@@ -55,14 +55,6 @@ namespace Pax
 
   // FIXME crude design
   public static class PaxConfig {
-    // This is the number of interfaces in the configuration file.
-    // This must be greater than 1.
-    // Note that no_interfaces may be larger than the number of interfaces to which a packet processor has
-    // been attached (i.e., interfaces that have a "lead_handler" defined in the configuration).
-    // But this is fine, because there might be interface for which we don't want to process
-    // their incoming packets, but we want to be able to forward packets to them nonetheless.
-    public static int no_interfaces;
-
     // Array "maps" from device offset to the device object.
     public static ICaptureDevice[] deviceMap;
     // Map from device name (e.g., "eth1") to device offset.

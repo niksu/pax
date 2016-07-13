@@ -69,5 +69,27 @@ namespace Pax {
         this.target_ports = target_ports;
       }
     }
+
+    public static int[] broadcast_raw (int in_port)
+    {
+      int[] out_ports = new int[PaxConfig_Lite.no_interfaces - 1];
+      // We retrieve number of interfaces in use from PaxConfig_Lite.
+      // Naturally, we exclude in_port from the interfaces we're forwarding to since this is a broadcast.
+      int idx = 0;
+      for (int ofs = 0; ofs < PaxConfig_Lite.no_interfaces; ofs++)
+      {
+        if (ofs != in_port)
+        {
+          out_ports[idx] = ofs;
+          idx++;
+        }
+      }
+      return out_ports;
+    }
+
+    public static MultiPortForward broadcast (int in_port)
+    {
+      return (new MultiPortForward (broadcast_raw (in_port)));
+    }
   }
 }

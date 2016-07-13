@@ -16,7 +16,7 @@ using System.Diagnostics;
 // FIXME use javadoc-style comments to describe the API
 namespace Pax {
 
-  // A more abstract interface to packet processors.
+  // An abstract interface to packet processors.
   public interface IAbstract_PacketProcessor {
     ForwardingDecision process_packet (int in_port, ref Packet packet);
   }
@@ -112,23 +112,6 @@ namespace Pax {
   public abstract class MultiInterface_SimplePacketProcessor : IPacketProcessor {
     // Return the offsets of network interfaces that "packet" is to be forwarded to.
     abstract public ForwardingDecision process_packet (int in_port, ref Packet packet);
-
-    public static int[] broadcast (int in_port)
-    {
-      int[] out_ports = new int[PaxConfig.no_interfaces - 1];
-      // We retrieve number of interfaces in use from PaxConfig.
-      // Naturally, we exclude in_port from the interfaces we're forwarding to since this is a broadcast.
-      int idx = 0;
-      for (int ofs = 0; ofs < PaxConfig.no_interfaces; ofs++)
-      {
-        if (ofs != in_port)
-        {
-          out_ports[idx] = ofs;
-          idx++;
-        }
-      }
-      return out_ports;
-    }
 
     public void packetHandler (object sender, CaptureEventArgs e)
     {

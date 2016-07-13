@@ -23,6 +23,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Pax_Lite, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\Bin\Pax_Lite.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="Pax, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\Bin\Pax.exe</HintPath>
       <SpecificVersion>False</SpecificVersion>

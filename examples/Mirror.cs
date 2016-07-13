@@ -28,7 +28,7 @@ public class Mirror : SimplePacketProcessor {
 
   public Mirror (ForwardingDecision[] mirror) {
     instantiated = true;
-    Debug.Assert(mirror.Length == PaxConfig.no_interfaces);
+    Debug.Assert(mirror.Length == PaxConfig_Lite.no_interfaces);
     this.mirror = mirror;
   }
 

@@ -1,4 +1,7 @@
 #!/bin/bash
 
 # FIXME: create a .sln file that includes both projects
-xbuild Pax.csproj && xbuild examples/Examples.csproj && echo Success
+xbuild Pax_Lite.csproj && \
+xbuild Pax.csproj && \
+xbuild examples/Examples.csproj && \
+echo Success

@@ -1,0 +1,12 @@
+{
+  "interfaces": [
+    {
+      "interface_name" : "en0",
+      "lead_handler" : "Hub"
+    },
+    {
+      "interface_name" : "en3",
+      "lead_handler" : "Hub"
+    }
+  ]
+}

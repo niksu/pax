@@ -21,11 +21,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Pax_Lite, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\Bin\Pax_Lite.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="PaxConfig.cs" />
-    <Compile Include="ForwardingDecision.cs" />
     <Compile Include="Paxifax_Aux.cs" />
     <Compile Include="Paxifax.cs" />
     <Compile Include="Pax.cs" />
