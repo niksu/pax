@@ -15,14 +15,26 @@ public partial class Hub : MultiInterface_SimplePacketProcessor {
   {
     // Extract the bytes and call the instance of IAbstract_ByteProcessor
     byte[] bs = packet.Bytes;
-    return (process_packet (in_port, ref bs));
+// FIXME    return (process_packet (in_port, ref bs));
+    return (ForwardingDecision.broadcast(in_port));
   }
 }
 #endif
 
 public partial class Hub : IAbstract_ByteProcessor {
-  public ForwardingDecision process_packet (int in_port, ref byte[] packet)
+  public void process_packet (int in_port, ref byte[] packet, ref ulong forward)
   {
-    return (ForwardingDecision.broadcast(in_port));
+    forward = 0;
+
+    for (int ofs = 0; ofs < PaxConfig_Lite.no_interfaces; ofs++)
+    {
+      forward = forward << 1;
+      if (ofs != in_port)
+      {
+        forward |= 1;
+      }
+    }
+
+    return;
   }
 }

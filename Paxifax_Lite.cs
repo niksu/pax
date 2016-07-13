@@ -10,6 +10,6 @@ namespace Pax {
 
   // Packet processors.
   public interface IAbstract_ByteProcessor {
-    ForwardingDecision process_packet (int in_port, ref byte[] packet);
+    void process_packet (int in_port, ref byte[] packet, ref ulong forward);
   }
 }
