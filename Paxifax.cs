@@ -22,7 +22,7 @@ namespace Pax {
   }
 
 /* FIXME Rather than the sort of specification above, I'd much rather be able to
-   subtype derivatives of Abstract_PacketProcessor by specialising the
+   subtype derivatives of IAbstract_PacketProcessor by specialising the
    ForwardingDecision result of process_packet. One idea is to use the
    following spec (but note that this would add lots of complications
    elsewhere, particularly in the reflection code):
@@ -33,9 +33,9 @@ namespace Pax {
     T process_packet (int in_port, ref Packet packet);
   }
 
-  then one code define:
+  then one could define:
 
-  public abstract class SimplePacketProcessor : PacketProcessor<ForwardingDecision.SinglePortForward> {
+  public abstract class SimplePacketProcessor : IPacketProcessor<ForwardingDecision.SinglePortForward> {
    ...
     abstract public ForwardingDecision.SinglePortForward process_packet (int in_port, ref Packet packet);
 
