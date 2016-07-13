@@ -57,9 +57,7 @@ namespace Pax.Examples.Nat
     /// A value representing the network interface that faces outside.
     /// </summary>
     public const int Port_Outside = 0;
-
-    private readonly IPAddress my_address;
-    private readonly PhysicalAddress next_outside_hop_mac;
+    
     private readonly TimeSpan connection_timeout;
     private readonly Timer gcTimer;
     
@@ -75,15 +73,14 @@ namespace Pax.Examples.Nat
     /// <param name="tcp_start_port">The start of the range of TCP ports to use.</param>
     /// <param name="udp_start_port">The start of the range of UDP ports to use.</param>
     /// <param name="connection_timeout">The time that can elapse before a connection with no activity should be removed.</param>
-    public NAT (IPAddress my_address, PhysicalAddress next_outside_hop_mac, ushort tcp_start_port, ushort udp_start_port, TimeSpan? connection_timeout = null)
+    public NAT (IPAddress my_address, PhysicalAddress next_outside_hop_mac, ushort tcp_start_port, ushort udp_start_port,
+      TimeSpan? tcp_time_wait = null, TimeSpan? connection_timeout = null)
     {
-      this.my_address = my_address;
-      this.next_outside_hop_mac = next_outside_hop_mac;
-      this.connection_timeout = connection_timeout ?? new TimeSpan(30L * TimeSpan.TicksPerSecond);
+      this.connection_timeout = connection_timeout ?? TimeSpan.FromSeconds(30); // FIXME what should the default timeout be?
 
       // Instantiate each NAT specialisation
-      tcpNat = new SpecialisedNAT<TcpPacket>(my_address, next_outside_hop_mac, new TcpPort(tcp_start_port));
-      udpNat = new SpecialisedNAT<UdpPacket>(my_address, next_outside_hop_mac, new UdpPort(udp_start_port));
+      tcpNat = new SpecialisedNAT<TcpPacket>(my_address, next_outside_hop_mac, new TcpPort(tcp_start_port), new TcpHelper(tcp_time_wait));
+      udpNat = new SpecialisedNAT<UdpPacket>(my_address, next_outside_hop_mac, new UdpPort(udp_start_port), new GenericTransportHelper<UdpPacket>());
 
       // Call the GarbageCollectConnections method regularly
       gcTimer = new Timer(1000);
@@ -149,6 +146,7 @@ namespace Pax.Examples.Nat
       private readonly PhysicalAddress next_outside_hop_mac;
       private ITransportAddress<T> currentMasqueradeAddress;
       private readonly object currentMasqueradeAddressLock = new object();
+      private readonly IProtocolHelper<T> helper;
 
       // We keep 2 dictionaries, one for queries related to packets crossing from the outside (O) to the inside (I), and
       // the other for the inverse.
@@ -157,11 +155,12 @@ namespace Pax.Examples.Nat
       IDictionary<ConnectionKey<T>, NatConnection<T>> NAT_MapToInside = new ConcurrentDictionary<ConnectionKey<T>, NatConnection<T>>();
       IDictionary<ConnectionKey<T>, NatConnection<T>> NAT_MapToOutside = new ConcurrentDictionary<ConnectionKey<T>, NatConnection<T>>();
 
-      public SpecialisedNAT(IPAddress my_address, PhysicalAddress next_outside_hop_mac, ITransportAddress<T> initialMasqueradeAddress)
+      public SpecialisedNAT(IPAddress my_address, PhysicalAddress next_outside_hop_mac, ITransportAddress<T> initialMasqueradeAddress, IProtocolHelper<T> helper)
       {
         this.my_address = my_address;
         this.next_outside_hop_mac = next_outside_hop_mac;
         currentMasqueradeAddress = initialMasqueradeAddress;
+        this.helper = helper;
       }
 
       /// <summary>
@@ -244,7 +243,7 @@ namespace Pax.Examples.Nat
         }
 
         // Update any state
-        connection.ReceivedPacket(packet, packetFromInside: false);
+        connection.ReceivedPacket(packet, packetFromInside: true);
 
         // Rewrite the packet
         connection.NatNode.RewritePacketSource(packet);
@@ -266,7 +265,7 @@ namespace Pax.Examples.Nat
         foreach (var pair in NAT_MapToInside)
         {
           NatConnection<T> connection = pair.Value;
-          if (DateTime.Now - connection.LastUsed > connectionTimeout || connection.State.CanBeClosed)
+          if (DateTime.Now - connection.LastUsed > connectionTimeout || connection.State.CanBeClosed) // FIXME will timeout even if TIME_WAIT
           {
             Console.WriteLine("Removing connection (LU {0}, DIFF {1}, TL {2})",
               connection.LastUsed.ToShortTimeString(),
@@ -305,7 +304,7 @@ namespace Pax.Examples.Nat
           natNode = new Node<T>(my_address, nextTransportAddress, Port_Drop, PaxConfig.deviceMap[Port_Outside].MacAddress);
         
         // Create connection object
-        connection = new NatConnection<T>(insideNode, outsideNode, natNode);
+        connection = new NatConnection<T>(insideNode, outsideNode, natNode, helper.InitialState());
 
         // Add to NAT_MapToOutside
         NAT_MapToOutside[toOutsideKey] = connection;

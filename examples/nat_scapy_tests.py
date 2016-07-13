@@ -146,6 +146,9 @@ def run_server2(serverport=12022, natport=35002):
     send(ip/TCP(sport=serverport,dport=natport,flags="A", seq=seqn,ack=ackn))
     time.sleep(1)
 
+    ## Now in TIME_WAIT (NOTE tcp_time_wait needs to be configured to 5s)
+    time.sleep(5)
+
     ## Should now be unable to use the connection
     # Send something
     time.sleep(1)
@@ -198,7 +201,7 @@ def run_client2(serverport=12022, clientport=12021):
     time.sleep(1)
 
     ## Now in TIME_WAIT (NOTE tcp_time_wait needs to be configured to 5s)
-    #time.sleep(5)
+    time.sleep(5)
 
     ## Should now be unable to use the connection
     # Check we don't receive anything

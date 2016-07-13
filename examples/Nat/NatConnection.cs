@@ -42,17 +42,18 @@ namespace Pax.Examples.Nat
     public DateTime LastUsed { get; private set; }
     private readonly object LastUsed_Lock = new object();
 
-    public NatConnection(Node<T> insideNode, Node<T> outsideNode, Node<T> natNode)
+    public NatConnection(Node<T> insideNode, Node<T> outsideNode, Node<T> natNode, ITransportState<T> initialState)
     {
       if (Object.ReferenceEquals(null, insideNode)) throw new ArgumentNullException(nameof(insideNode));
       if (Object.ReferenceEquals(null, outsideNode)) throw new ArgumentNullException(nameof(outsideNode));
       if (Object.ReferenceEquals(null, natNode)) throw new ArgumentNullException(nameof(natNode));
+      if (Object.ReferenceEquals(null, initialState)) throw new ArgumentNullException(nameof(initialState));
       if (insideNode.GetType() != outsideNode.GetType()) throw new ArgumentException("Both nodes must have the same type");
 
       InsideNode = insideNode;
       OutsideNode = outsideNode;
       NatNode = natNode;
-      State = insideNode.TransportAddress.InitialState();
+      State = initialState;
       LastUsed = DateTime.Now;
     }
 

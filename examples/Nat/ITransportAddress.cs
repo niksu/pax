@@ -48,12 +48,6 @@ namespace Pax.Examples.Nat
     /// <param name="current">The current address</param>
     /// <returns>A potential address for use by the NAT.</returns>
     ITransportAddress<T> GetNextMasqueradingAddress(ITransportAddress<T> current);
-
-    /// <summary>
-    /// Gets an initial state for this Transport-layer protocol.
-    /// </summary>
-    /// <returns>An initial state.</returns>
-    ITransportState<T> InitialState();
   }
 
   internal sealed class NoTransportAddress<T> : ITransportAddress<T>, IEquatable<NoTransportAddress<T>> where T : Packet
@@ -114,11 +108,6 @@ namespace Pax.Examples.Nat
     public ITransportAddress<T> GetNextMasqueradingAddress(ITransportAddress<T> current)
     {
       return Instance;
-    }
-
-    public ITransportState<T> InitialState()
-    {
-      return NoTransportState<T>.Instance;
     }
   }
 
@@ -188,11 +177,6 @@ namespace Pax.Examples.Nat
       port++;
 
       return new TcpPort(port);
-    }
-
-    public ITransportState<TcpPacket> InitialState()
-    {
-      return new TcpState();
     }
 
     public override string ToString()

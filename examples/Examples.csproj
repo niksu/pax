@@ -41,6 +41,7 @@
     <Compile Include="Nat\PacketEncapsulation.cs" />
     <Compile Include="Nat\ITransportState.cs" />
     <Compile Include="Nat\TcpState.cs" />
+    <Compile Include="Nat\IProtocolHelper.cs" />
   </ItemGroup>
 <!--
   <Target Name="Build">

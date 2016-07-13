@@ -15,7 +15,7 @@ namespace Pax.Examples.Nat
   /// </summary>
   internal class TcpState : ITransportState<TcpPacket>
   {
-    private readonly TimeSpan TIME_WAIT = TimeSpan.FromMinutes(4); // FIXME make TIME_WAIT configurable
+    private readonly TimeSpan TIME_WAIT;
 
     private TcpDirectionalState InOutConnection = TcpDirectionalState.None;
     private TcpDirectionalState OutInConnection = TcpDirectionalState.None;
@@ -37,6 +37,11 @@ namespace Pax.Examples.Nat
     /// Gets a value indicating if the TCP connections in both directions are closed, determining if the connection can be removed before the timeout elapses.
     /// </summary>
     public bool CanBeClosed { get { return ClosedFromInside && ClosedFromOutside && !InTimeWait; } }
+
+    public TcpState(TimeSpan time_wait)
+    {
+      TIME_WAIT = time_wait;
+    }
 
     public void UpdateState(TcpPacket packet, bool packetFromInside)
     {
