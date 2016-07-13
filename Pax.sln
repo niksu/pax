@@ -1,0 +1,59 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pax", "Pax.csproj", "{772ADBA9-19FE-42EE-AA19-9DE9D18A6A6D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples", "examples\Examples.csproj", "{75A28AF5-50C2-4D17-86CF-3A8BE44FD107}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{75A28AF5-50C2-4D17-86CF-3A8BE44FD107}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{75A28AF5-50C2-4D17-86CF-3A8BE44FD107}.Debug|x86.Build.0 = Debug|Any CPU
+		{75A28AF5-50C2-4D17-86CF-3A8BE44FD107}.Release|x86.ActiveCfg = Release|Any CPU
+		{75A28AF5-50C2-4D17-86CF-3A8BE44FD107}.Release|x86.Build.0 = Release|Any CPU
+		{772ADBA9-19FE-42EE-AA19-9DE9D18A6A6D}.Debug|x86.ActiveCfg = Debug|x86
+		{772ADBA9-19FE-42EE-AA19-9DE9D18A6A6D}.Debug|x86.Build.0 = Debug|x86
+		{772ADBA9-19FE-42EE-AA19-9DE9D18A6A6D}.Release|x86.ActiveCfg = Release|x86
+		{772ADBA9-19FE-42EE-AA19-9DE9D18A6A6D}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		Policies = $0
+		$0.TextStylePolicy = $1
+		$1.FileWidth = 120
+		$1.TabWidth = 2
+		$1.IndentWidth = 2
+		$1.NoTabsAfterNonTabs = True
+		$1.inheritsSet = VisualStudio
+		$1.inheritsScope = text/plain
+		$1.scope = text/x-csharp
+		$0.CSharpFormattingPolicy = $2
+		$2.IndentPreprocessorDirectives = False
+		$2.AnonymousMethodBraceStyle = NextLine
+		$2.PropertyBraceStyle = NextLine
+		$2.PropertyGetBraceStyle = NextLine
+		$2.PropertySetBraceStyle = NextLine
+		$2.EventBraceStyle = NextLine
+		$2.EventAddBraceStyle = NextLine
+		$2.EventRemoveBraceStyle = NextLine
+		$2.StatementBraceStyle = NextLine
+		$2.ElseNewLinePlacement = NewLine
+		$2.CatchNewLinePlacement = NewLine
+		$2.FinallyNewLinePlacement = NewLine
+		$2.EmbeddedStatementPlacement = DoNotCare
+		$2.BeforeMethodDeclarationParentheses = False
+		$2.BeforeMethodCallParentheses = False
+		$2.BeforeConstructorDeclarationParentheses = False
+		$2.BeforeIndexerDeclarationBracket = False
+		$2.BeforeDelegateDeclarationParentheses = False
+		$2.AfterDelegateDeclarationParameterComma = True
+		$2.NewParentheses = False
+		$2.SpacesBeforeBrackets = False
+		$2.inheritsSet = Mono
+		$2.inheritsScope = text/x-csharp
+		$2.scope = text/x-csharp
+	EndGlobalSection
+EndGlobal
