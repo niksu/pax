@@ -123,7 +123,7 @@ def run_server2(serverport=12022, natport=35002):
     subprocess.check_call(iptables_add_rule_fmt % iptables_rule, shell=True)
 
     ip = IP(src=serverhost, dst=nathost)
-    filter = "tcp"#" and host %s and port %d" % (nathost, serverport)
+    filter = "tcp and host %s and port %d" % (nathost, serverport)
 
     ## Set up and tear down connection
     # Wait for Syn
@@ -144,9 +144,11 @@ def run_server2(serverport=12022, natport=35002):
     ackn += 1
     print "Replying with Ack"
     send(ip/TCP(sport=serverport,dport=natport,flags="A", seq=seqn,ack=ackn))
+    time.sleep(1)
 
     ## Should now be unable to use the connection
     # Send something
+    time.sleep(1)
     seqn += 1
     ackn += 1
     print "Sending something - it shouldn't be received"
@@ -193,19 +195,24 @@ def run_client2(serverport=12022, clientport=12021):
     ackn += 1
     print "Sending Fin+Ack"
     ack = sr1(ip/TCP(sport=clientport,dport=serverport,flags="FA", seq=seqn,ack=ackn))
+    time.sleep(1)
+
+    ## Now in TIME_WAIT (NOTE tcp_time_wait needs to be configured to 5s)
+    #time.sleep(5)
 
     ## Should now be unable to use the connection
-    # Send something
-    seqn += 1
-    ackn += 1
-    print "Sending something - it shouldn't be received"
-    send(ip/TCP(sport=clientport,dport=serverport,flags="A", seq=seqn,ack=ackn)/"FAIL PLEASE")
     # Check we don't receive anything
     print "Waiting to see if we receive anything"
     rcv = sniff(count=1, timeout=2, filter=filter)
     if (len(rcv) != 0):
         print "Received %d packets! Shouldn't have" % len(rcv)
         rcv[0].show()
+    # Send something
+    time.sleep(1)
+    seqn += 1
+    ackn += 1
+    print "Sending something - it shouldn't be received"
+    send(ip/TCP(sport=clientport,dport=serverport,flags="A", seq=seqn,ack=ackn)/"FAIL PLEASE")
 
     # Remove iptables rule
     print "  server> $ %s" % (iptables_remove_rule_fmt % iptables_rule)

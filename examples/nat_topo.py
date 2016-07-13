@@ -93,6 +93,10 @@ def test():
     # Create the network and initialise for testing:
     net = createNetwork(n=2)
 
+    # Provide CLI access if requested
+    if config.cli_first:
+        CLI(net)
+
     # Names of the hosts we are interested in
     nat0 = "nat0"
     out0 = "out0"
@@ -104,7 +108,7 @@ def test():
     print "Starting Pax NAT process on %s:" % nat0
     cmd = 'Bin/Pax.exe examples/nat_wiring.json examples/Bin/Examples.dll'
     if config.X_windows:
-        cmd = 'x-terminal-emulator -e %s &' % cmd
+        cmd = 'x-terminal-emulator -e \'%s\' &' % (cmd)
         runCmd(net, nat0, cmd)
     else:
         sendCmd(net, nat0, cmd)
@@ -163,6 +167,9 @@ def test():
         else:
             waitOutput(net, nat0) # Don't print, just wait
 
+    if config.hold_open:
+        CLI(net)
+
     net.stop()
 
 # List topologies defined in this file for Mininet
@@ -178,7 +185,7 @@ def setup_xterm(h, cmd, title=None):
         #  the command in this shell so we have access to the exit code.
         pipe = "/tmp/cmdpipe%d" % (random.randint(0,1000))
         h.cmd("mkfifo %s" % pipe)
-        h.cmd("xterm -T '%s' -e 'cat < %s ; rm %s' &" % (title, pipe, pipe))
+        h.cmd("xterm -T '%s' -e 'cat < %s ; rm %s ; %s' &" % (title,  pipe, pipe, "read" if config.hold_open else ""))
         cmd = "stdbuf -i0 -o0 -e0 %s &> %s" % (cmd, pipe) # FIXME for most applications -iL etc. would be enough?
     return cmd
 def runCmd(net, name, cmd, timeout=None, xterm=False, **args):
@@ -230,10 +237,14 @@ if __name__ == '__main__':
     # Set up the parser
     parser = argparse.ArgumentParser(description="Test the Pax NAT implementation.")
     parser.add_argument("action", choices=["run", "test"], nargs="?", default="run")
-    parser.add_argument("--no-X", help="don't launch additional windows'", action="store_false", dest="X_windows")
+    parser.add_argument("--no-X", help="don't launch additional windows", action="store_false", dest="X_windows")
+    parser.add_argument("--hold-open", help="leave xterm windows open", action="store_true", dest="hold_open")
+    parser.add_argument("--cli-first", help="provide cli access before running the tests", action="store_true", dest="cli_first")
 
     # Parse
     config = parser.parse_args()
+
+    print "action: %s, X_windows: %s, hold_open: %s" % (config.action, config.X_windows, config.hold_open)
 
     # Run
     if config.action == "run":
