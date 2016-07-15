@@ -4,29 +4,37 @@
       "class_name": "NAT",
       "args": {
         "my_address" : "10.0.0.3",
-        "next_port" : "35000",
-        "next_outside_hop_mac" : "00:00:00:00:00:09"
+        "next_outside_hop_mac" : "00:00:00:00:00:09",
+
+        "tcp_inactivity_timeout": "00:05:00",
+        "tcp_time_wait_duration": "00:04:00",
+        "tcp_start_port" : "35000",
+        "tcp_end_port" : "35000",
+
+        "udp_inactivity_timeout": "00:00:30",
+        "udp_start_port" : "35000",
+        "udp_end_port" : "35000"
       }
     }
   ],
-  "interfaces": [ 
-    { 
-      "interface_name" : "nat0-eth0", 
-      "lead_handler" : "NAT", 
-      "pcap_filter" : "tcp", 
+  "interfaces": [
+    {
+      "interface_name" : "nat0-eth0",
+      "lead_handler" : "NAT",
+      "pcap_filter" : "tcp or udp",
       "environment" : {
         "outside_port": "true"
-      } 
+      }
     },
-    { 
-      "interface_name" : "nat0-eth1", 
-      "lead_handler" : "NAT", 
-      "pcap_filter" : "tcp"
+    {
+      "interface_name" : "nat0-eth1",
+      "lead_handler" : "NAT",
+      "pcap_filter" : "tcp or udp"
     },
-    { 
-      "interface_name" : "nat0-eth2", 
-      "lead_handler" : "NAT", 
-      "pcap_filter" : "tcp"
+    {
+      "interface_name" : "nat0-eth2",
+      "lead_handler" : "NAT",
+      "pcap_filter" : "tcp or udp"
     }
   ]
 }
