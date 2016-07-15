@@ -130,6 +130,32 @@ def test():
     else:
         print "Correct data received"
 
+    # Test UDP support
+    print ""
+    print "Sending data via UDP from %s to %s:" % (in1, out0)
+    # Set up a simple netcat server on out0 to get the data that in1 sends and respond:
+    server_data = "Yes, UDP"
+    sendCmd(net, out0, 'echo %s | nc -u -l 12001 -q1' % server_data)
+    # Send data to out0 from in1:
+    client_data = "Hello, are you there UDP?"
+    client_result = runCmd(net, in1, 'echo %s | nc -u %s 12001 -p 12002 -q1' % (client_data, ip(net, out0)))
+    server_result = waitOutput(net, out0)
+    if client_result is not None:
+        client_result = client_result.rstrip('\n\r')
+    if server_result is not None:
+        server_result = server_result.rstrip('\n\r')
+    received(out0, server_result)
+    received(in1, client_result)
+    # Check that the received data was correct:
+    if (server_result != client_data):
+        print "WARNING: incorrect data received on the server"
+    else:
+        print "Correct data received on the server"
+    if (client_result != server_data):
+        print "WARNING: incorrect data received on the client"
+    else:
+        print "Correct data received on the client"
+
     # Run scapy test #1
     print ""
     print "Scapy test #1"
@@ -213,7 +239,7 @@ def sendCmd(net, name, cmd, xterm=False, **args):
     h.sendCmd(cmd, **args)
 def waitOutput(net, name, **args):
     h = net.get(name)
-    h.waitOutput(**args)
+    return h.waitOutput(**args)
 def received(name, result):
     if result is None:
         print "  %s> RCV: Nothing" % name
