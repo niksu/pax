@@ -29,7 +29,6 @@ namespace Pax {
   public abstract class ForwardingDecision {
     private ForwardingDecision() {}
 
-    // FIXME can use singleton to avoid multiple allocations of this?
     /// <summary>
     /// The decision to drop the packet.
     /// </summary>

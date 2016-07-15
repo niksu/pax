@@ -23,11 +23,11 @@
       }
     }
   ],
-  "interfaces": [ 
-    { 
-      "interface_name" : "eth0", 
-      "lead_handler" : "Dinger", 
-      "pcap_filter" : "", 
+  "interfaces": [
+    {
+      "interface_name" : "eth0",
+      "lead_handler" : "Dinger",
+      "pcap_filter" : "",
       "environment" : {
       }
     }

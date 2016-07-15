@@ -26,7 +26,7 @@ namespace Pax
     public string class_name { get; set; }
     public IDictionary<string,string> args { get; set; }
   }
-  
+
   public class NetworkInterfaceConfig
   {
     // FIXME I no longer use this -- perhaps can erase.
@@ -46,7 +46,7 @@ namespace Pax
     // We use a default timeout of 100ms as a compromise between latency and performance
     //  for flows with very few packets.
     // The default SharpPcap timeout is 1000ms, which can cause problems when very few
-    //  packets are being sent, as they aren't processed in a timely enough manner.  
+    //  packets are being sent, as they aren't processed in a timely enough manner.
     [DefaultValue(100)]
     public int read_timeout { get; set; }
 

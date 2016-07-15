@@ -109,7 +109,6 @@ namespace Pax
       foreach (var device in PaxConfig.deviceMap)
         device.StartCapture();
 
-      // FIXME am i right in thinking that this location is unreachable, since the threads won't terminate unless the whole process is being terminated.
       return 0;
     }
 
@@ -356,9 +355,9 @@ namespace Pax
         // Cause unknown, but setting any timeout seems to fix it. Even with timeout
         //  of 1s, the program shuts down immediately.
         device.StopCaptureTimeout = TimeSpan.FromSeconds(1);
-        
+
         device.Close();
-      } 
+      }
 
       Console.ResetColor();
       Console.WriteLine ("Terminating");
