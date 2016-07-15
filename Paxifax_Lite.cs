@@ -9,9 +9,10 @@ Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 namespace Pax {
 
   // Packet processors.
-  public interface IAbstract_ByteProcessor {
+  public abstract class BytePacket_Processor {
+    byte[] packet = new byte[PaxConfig_Lite.MAX_PACKET_SIZE];
+
     // FIXME using "long" type is too arbitrary?
-    // FIXME should in_port be "uint"?
-    long process_packet (int in_port, ref byte[] packet);
+    abstract public long process_packet (byte in_port);
   }
 }

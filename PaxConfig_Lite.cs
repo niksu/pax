@@ -15,5 +15,8 @@ namespace Pax
     // But this is fine, because there might be interface for which we don't want to process
     // their incoming packets, but we want to be able to forward packets to them nonetheless.
     public static int no_interfaces;
+
+    public const uint MAX_PACKET_SIZE = 1500; // Maximum size of a packet in bytes.
+    public const uint MAX_INTERFACES = 10; // Maximum number of interfaces we can use.
   }
 }
