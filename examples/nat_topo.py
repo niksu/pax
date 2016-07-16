@@ -220,9 +220,9 @@ def setup_xterm(h, cmd, title=None):
         pipe = "/tmp/cmdpipe%d" % (random.randint(0,1000))
         h.cmd("mkfifo %s" % pipe)
         # Create the command which will run inside the terminal:
-        term_cmd = "cat < %s " % pipe + # Show the output in the terminal (from the pipe)
+        term_cmd = ("cat < %s " % pipe + # Show the output in the terminal (from the pipe)
             "; rm %s " % pipe + # Remove the named pipe after the command is done
-            ()"; read " if config.hold_open else "") # Hold the terminal window open if configured to
+            ("; read " if config.hold_open else "")) # Hold the terminal window open if configured to
         # Create the terminal window, set the title and run the terminal command
         h.cmd("xterm -T '%s' -e '%s' &" % (title, term_cmd))
         # Modify the command so that output isn't buffered, and pipe the output into the named pipe
