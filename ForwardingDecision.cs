@@ -7,6 +7,9 @@ Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 
 namespace Pax {
 
+  // FIXME should there be a Lite version of this class? I think specifically
+  //       it would statically dimension the MultiPortForward's array, and
+  //       perhaps have it write directly to a field in Packet_Buffer.
   /// <summary>
   /// A packet processor makes some sort of forwarding decision, in addition
   /// to possibly analysing/modifying the packet (and generating new packets).
