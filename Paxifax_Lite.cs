@@ -5,6 +5,8 @@ Nik Sultana, Cambridge University Computer Lab, June 2016
 Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 */
 
+using return_type = System.Int64; //FIXME can this be used to make the type of "forward" less arbitrary?
+
 // FIXME use javadoc-style comments to describe the API
 namespace Pax {
 
@@ -13,7 +15,7 @@ namespace Pax {
   // the packet processor is executing).
   public static class Packet_Buffer {
     public static byte[] packet = new byte[PaxConfig_Lite.MAX_PACKET_SIZE];
-    public static long forward = 0; // FIXME might not be right place for this
+    public static return_type forward = 0; // FIXME might not be right place for this
   }
 
   // Packet processors.
