@@ -82,6 +82,10 @@ namespace Pax.Examples.Nat
       }
     }
 
+    // NOTE We don't check seq numbers are within a window or anything beyond the flags.
+    //      This could allow a malicious FIN packet to close down the TCP connection
+    //      by causing the entry to be removed from the NAT even though the end host
+    //      rejects it for not being in the window.
     private void TransitionState(ref TcpDirectionalState state, bool syn, bool fin)
     {
       if (fin)
