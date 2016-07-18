@@ -68,6 +68,10 @@ namespace Pax.Examples.Nat
     /// <param name="udp_inactivity_timeout">The time that should elapse before a UDP connection with no activity is removed.</param>
     /// <param name="udp_start_port">The start of the range of UDP ports to use (inclusive).</param>
     /// <param name="udp_end_port">The end of the range of UDP ports to use (inclusive).</param>
+    /// <remarks>
+    /// The constructor parameters can be specified in the wiring configuration file, in the `args` dictionary of the handler entry.
+    /// Every value must be specified as a string, and TimeSpans can be specified in the format `d | [d.]hh:mm[:ss[.ff]]`, e.g. 0:0:30 for 30 seconds.
+    /// </remarks>
     public NAT (IPAddress my_address, PhysicalAddress next_outside_hop_mac,
       TimeSpan tcp_inactivity_timeout, TimeSpan tcp_time_wait_duration, ushort tcp_start_port, ushort tcp_end_port,
       TimeSpan udp_inactivity_timeout, ushort udp_start_port, ushort udp_end_port)

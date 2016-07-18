@@ -228,6 +228,7 @@ def setup_xterm(h, cmd, title=None):
         # Modify the command so that output isn't buffered, and pipe the output into the named pipe
         cmd = "stdbuf -i0 -o0 -e0 %s &> %s" % (cmd, pipe) # FIXME for most applications -iL etc. would be enough?
     return cmd
+
 def runCmd(net, name, cmd, timeout=None, xterm=False, **args):
     "Run a shell command on a specific node in the network and return the output"
     # Get the Mininet node
@@ -252,6 +253,7 @@ def runCmd(net, name, cmd, timeout=None, xterm=False, **args):
         # Stop the timer (if it hasn't already timed out)
         timer.cancel()
         return rv
+
 def sendCmd(net, name, cmd, xterm=False, **args):
     "Run a shell command on a specific node in the network and don't block waiting for it to finish. The output can be gotten with waitOutput."
     # Get the Mininet node
@@ -265,24 +267,28 @@ def sendCmd(net, name, cmd, xterm=False, **args):
 
     # Start the command
     h.sendCmd(cmd, **args)
+
 def waitOutput(net, name, **args):
     "Block until the running process on a specific node in the network finishes, and return the output."
     # Get the Mininet node
     h = net.get(name)
     # Block until done, and return the output
     return h.waitOutput(**args)
+
 def received(name, result):
     "Prints a notification to the user that a value was received on a node in the network."
     if result is None:
         print "  %s> RCV: Nothing" % name
     else:
         print "  %s> RCV: '%s'" % (name, result)
+
 def ip(net, name, **args):
     "Gets the IP address of a specific node in the network."
     # Get the Mininet node
     h = net.get(name)
     # Return the IP address
     return h.IP(**args)
+
 def sendInt(net, name, **args):
     "Sends an interrupt to a specific node on the network."
     # Get the Mininet node
@@ -300,7 +306,7 @@ if __name__ == '__main__':
     ## Parse CLI arguments
     # Set up the parser
     parser = argparse.ArgumentParser(description="Test the Pax NAT implementation.")
-    parser.add_argument("action", choices=["run", "test", "perftest"], nargs="?", default="run")
+    parser.add_argument("action", choices=["run", "test"], nargs="?", default="run")
     parser.add_argument("--no-X", help="don't launch additional windows", action="store_false", dest="X_windows")
     parser.add_argument("--hold-open", help="leave xterm windows open", action="store_true", dest="hold_open")
     parser.add_argument("--cli-first", help="provide cli access before starting pax and running the tests. Press ^D when done to begin the testing.", action="store_true", dest="cli_first")

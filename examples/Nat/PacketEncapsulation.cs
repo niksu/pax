@@ -91,16 +91,16 @@ namespace Pax.Examples.Nat
     /// <summary>
     /// Gets the source node of this packet (where it appears to originate from).
     /// </summary>
-    /// <param name="incomingNetworkInterface">The network interface this packet arrived on.</param>
+    /// <param name="incomingNetworkInterface">The network interface this packet arrived on. Optional. If not supplied, Port_Drop is assumed.</param>
     /// <returns>A <see cref="TNode"/> representing the source of the packet.</returns>
-    public abstract TNode GetSourceNode(int incomingNetworkInterface = -1);
+    public abstract TNode GetSourceNode(int incomingNetworkInterface = NAT.Port_Drop);
 
     /// <summary>
     /// Gets the destination node of this packet.
     /// </summary>
-    /// <param name="incomingNetworkInterface">The network interface this packet arrived on.</param>
+    /// <param name="incomingNetworkInterface">The network interface this packet arrived on. Optional. If not supplied, Port_Drop is assumed.</param>
     /// <returns>A <see cref="TNode"/> representing the source of the packet.</returns>
-    public abstract TNode GetDestinationNode(int incomingNetworkInterface = -1);
+    public abstract TNode GetDestinationNode(int incomingNetworkInterface = NAT.Port_Drop);
 
     /// <summary>
     /// This method is called whenever the SetSource method is called.

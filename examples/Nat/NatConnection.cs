@@ -64,8 +64,8 @@ namespace Pax.Examples.Nat
     /// <param name="packetFromInside">True if the packet originated from a node inside the NAT, else false.</param>
     public void ReceivedPacket(PacketEncapsulation<TPacket,TNode> packet, bool packetFromInside)
     {
-      // Mark used
-      DateTime used = DateTime.Now;
+      // Mark used. Note that since timeouts are on the order of seconds, this needn't be particularly precise.
+      DateTime used = DateTime.Now; // FIXME use a cheaper method of timestamping?
       lock (LastUsed_Lock)
       {
         // Try to update the LastUsed value, keeping the latest value
