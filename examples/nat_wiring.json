@@ -8,12 +8,12 @@
 
         "tcp_inactivity_timeout": "00:05:00",
         "tcp_time_wait_duration": "00:04:00",
-        "tcp_start_port" : "35000",
-        "tcp_end_port" : "35000",
+        "tcp_start_port" : "1025",
+        "tcp_end_port" : "65535",
 
         "udp_inactivity_timeout": "00:00:30",
-        "udp_start_port" : "35000",
-        "udp_end_port" : "35000"
+        "udp_start_port" : "1025",
+        "udp_end_port" : "65535"
       }
     }
   ],

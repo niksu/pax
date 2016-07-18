@@ -58,7 +58,9 @@ namespace Pax.Examples.Nat
       lock (nextPortLock)
       {
         port = nextPort;
-        nextPort++; // FIXME naive port assignment; overflow; can reassign ports that are in use
+        nextPort++; // FIXME naive port assignment; can reassign ports that are in use
+        if (nextPort < StartPort || nextPort > EndPort)
+          nextPort = StartPort;
       }
 
       return new NodeWithPort(ipAddress, port, interfaceNumber, macAddress);
