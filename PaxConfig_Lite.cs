@@ -21,6 +21,13 @@ namespace Pax
     // their incoming packets, but we want to be able to forward packets to them nonetheless.
     public static int no_interfaces; //FIXME make uint?
 
+    // By "phantom forwarding" I mean forwarding to a network port
+    // that doesn't exist (because it's greater than no_interfaces).
+    // Phantom forwarding might occur if we are running a processor that has
+    // been hardcoded to expect a number of network interfaces, but we lack
+    // that number of interfaces in the configuration we're running it in.
+    public static bool ignore_phantom_forwarding = false;
+
 //#if LITE
     // We need static bounds on arrays, and these are
     // provided by such constants.

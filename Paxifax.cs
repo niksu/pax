@@ -132,15 +132,23 @@ namespace Pax {
 #endif
       for (int idx = 0; idx < out_ports.Length; idx++)
       {
-        PaxConfig.deviceMap[out_ports[idx]].SendPacket(packet);
+        int out_port = out_ports[idx];
+        // Check if trying to send over a non-existent port.
+        if (out_port < PaxConfig_Lite.no_interfaces &&
+            PaxConfig_Lite.ignore_phantom_forwarding) {
+          PaxConfig.deviceMap[out_ports[idx]].SendPacket(packet);
 #if DEBUG
-        if (idx < out_ports.Length - 1)
-        {
-          Debug.Write(PaxConfig.deviceMap[out_ports[idx]].Name + ", ");
-        } else {
-          Debug.Write(PaxConfig.deviceMap[out_ports[idx]].Name);
-        }
+          if (idx < out_ports.Length - 1)
+          {
+             Debug.Write(PaxConfig.deviceMap[out_ports[idx]].Name + ", ");
+          } else {
+             Debug.Write(PaxConfig.deviceMap[out_ports[idx]].Name);
+          }
 #endif
+        } else if (!(out_port < PaxConfig_Lite.no_interfaces) &&
+            !PaxConfig_Lite.ignore_phantom_forwarding) {
+          throw (new Exception ("Tried forward to non-existant port"));
+        }
       }
 
 #if DEBUG
