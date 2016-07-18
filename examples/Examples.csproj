@@ -33,6 +33,8 @@
     <Compile Include="LearningSwitch.cs" />
     <Compile Include="Mirror.cs" />
     <Compile Include="NAT.cs" />
+    <Compile Include="paxos\Paxos_Packet.cs" />
+    <Compile Include="paxos\Paxos.cs" />
     <Compile Include="Test.cs" />
   </ItemGroup>
 <!--

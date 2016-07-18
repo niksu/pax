@@ -1,0 +1,52 @@
+/*
+Porting the P4 implementation of Paxos as described in the "Paxos made Switch-y"
+paper by Huynh Tu Dang, Marco Canini, Fernando Pedone, and Robert Soule.
+
+Nik Sultana, Cambridge University Computer Lab, July 2016
+
+Use of this source code is governed by the Apache 2.0 license; see LICENSE.
+*/
+
+using System;
+using PacketDotNet;
+using Pax;
+
+
+public static class Paxos {
+  public static readonly ushort Paxos_Acceptor_Port = 0x8889;
+  public static readonly ushort Paxos_Coordinator_Port = 0x8888;
+}
+
+public class Coordinator : SimplePacketProcessor {
+  // State maintained by the Coordinator.
+  ushort instance_register = 0; // FIXME Initialise at 0? Or at 1?
+
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    if (packet is EthernetPacket)
+    {
+      if (packet.Encapsulates(typeof(IPv4Packet), typeof(UdpPacket), typeof(Paxos_Packet)))
+      {
+        IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+        UdpPacket udp_p = ((UdpPacket)(ip_p.PayloadPacket));
+        Paxos_Packet paxos_p = ((Paxos_Packet)(udp_p.PayloadPacket));
+
+        instance_register++; // FIXME use atomic increment
+        paxos_p.Instance = instance_register;
+        udp_p.DestinationPort = Paxos.Paxos_Acceptor_Port;
+        udp_p.UpdateUDPChecksum();
+      }
+    }
+
+    // We assume that we receive from in_port and send to in_port+1.
+    return (new ForwardingDecision.SinglePortForward(in_port + 1));
+  }
+}
+
+public class Acceptor : SimplePacketProcessor {
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
+  {
+    //TODO
+    return null;
+  }
+}
