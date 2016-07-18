@@ -20,7 +20,7 @@ namespace Pax.Examples.Nat
   /// Base implementation of a protocol-specific NAT.
   /// </summary>
   /// <typeparam name="TPacket">The type of packet.</typeparam>
-  /// <typeparam name="TNode">The type of node.</typeparam>
+  /// <typeparam name="TNode">The type of node. See the description of <see cref="Node"/> for more details.</typeparam>
   /// <typeparam name="TEncapsulation">The type of the packet encapsulation.</typeparam>
   public abstract class NATBase<TPacket,TNode,TEncapsulation> where TPacket : Packet where TNode : Node where TEncapsulation : PacketEncapsulation<TPacket,TNode>
   {
@@ -222,6 +222,8 @@ namespace Pax.Examples.Nat
 
     /// <summary>
     /// Creates a new <see cref="TNode"/> that can act as the masquerading address for a new connection. E.g. an unused TCP socket on the NAT host.
+    /// Note that as all the information required to instantiate a <see cref="Node"/> is provided, in practice the main purpose of this method
+    /// is to (for example) provide a source port for a new entry in the NAT for a new TCP connection.
     /// </summary>
     /// <param name="ipAddress">The IP address to use.</param>
     /// <param name="interfaceNumber">The interface number to use.</param>
