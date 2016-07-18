@@ -226,6 +226,8 @@ def run_client2(serverport=12022, clientport=12021):
 # This code runs when the script is executed (e.g. $ sudo ./examples/nat_scapy_tests.py)
 import sys
 if __name__ == '__main__':
+    print "Please note these tests rely on the StartPort being 35000 (when used within nat_topo test)"
+
     if len(sys.argv) > 1 and sys.argv[1]=="server":
         # The command was `$ nat_topo.py test`, so run the automated test:
         sys.exit(run_server())
