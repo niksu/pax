@@ -221,7 +221,7 @@ namespace Pax.Examples.Nat
     }
 
     /// <summary>
-    /// Creates a new <see cref="TNode"/> that can act as the masquerading address for a new connection. E.g. an unused TCP socket.
+    /// Creates a new <see cref="TNode"/> that can act as the masquerading address for a new connection. E.g. an unused TCP socket on the NAT host.
     /// </summary>
     /// <param name="ipAddress">The IP address to use.</param>
     /// <param name="interfaceNumber">The interface number to use.</param>

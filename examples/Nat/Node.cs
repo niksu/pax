@@ -13,9 +13,13 @@ using PacketDotNet;
 namespace Pax.Examples.Nat
 {
   /// <summary>
-  /// A class representing a node on the network with an IP address and potentially (in a subclass) a specific transport-layer address, e.g. a TCP socket.
+  /// A class representing a node on the network with an IP address.
   /// It also stores a network interface number and MAC address for the node.
   /// </summary>
+  /// <remarks>
+  /// It is important to note that it is intended for subclasses to add additional addressing information that will distinguish
+  /// two Node objects that represent the same actual node on the network, but represent for example two different TCP sockets.
+  /// </remarks>
   public class Node : IEquatable<Node>
   {
     /// <summary>
