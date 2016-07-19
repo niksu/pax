@@ -11,3 +11,9 @@ The implementation consists of two parts.
 * No handling of ARP.
 * Rather than having forwarding behaviour, this is a module that could be
   plugged into (or chained with) a forwarding device.
+
+## Acknowledgements
+Thanks to [Huynh Tu Dang](http://www.people.usi.ch/danghu/), [Marco
+Canini](http://perso.uclouvain.be/marco.canini/) and [Robert
+Soul&eacute;](http://www.inf.usi.ch/faculty/soule/) for helping me understand
+their implementation in P4.
