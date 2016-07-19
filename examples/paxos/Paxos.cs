@@ -88,7 +88,7 @@ public class Acceptor : SimplePacketProcessor {
         paxos_p.Accept_ID = datapath_id;
         rounds_register[paxos_p.Instance] = paxos_p.Voted_Round;
         udp_p.DestinationPort = learner_port; //FIXME why is learner_port a parameter?
-        udp_p.Checksum = 0;
+        udp_p.Checksum = 0; // NOTE following the P4 implementation.
         break;
 
       case ((ushort)Phase.Paxos_2A):
@@ -98,7 +98,7 @@ public class Acceptor : SimplePacketProcessor {
         value_register[paxos_p.Instance] = paxos_p.Value;
         paxos_p.Accept_ID = datapath_id;
         udp_p.DestinationPort = learner_port; //FIXME why is learner_port a parameter?
-        udp_p.Checksum = 0;
+        udp_p.Checksum = 0; // NOTE following the P4 implementation.
         break;
 
       default:
@@ -109,7 +109,7 @@ public class Acceptor : SimplePacketProcessor {
 
   override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
-    //Check if the packet is of the right form
+    //Check if the packet is of the form we're interested in.
     if (packet is EthernetPacket)
     {
       if (packet.Encapsulates(typeof(IPv4Packet), typeof(UdpPacket), typeof(Paxos_Packet)))
@@ -124,10 +124,10 @@ public class Acceptor : SimplePacketProcessor {
         if (local_metadata.round <= paxos_p.Round) {
           acceptor(ref udp_p, ref paxos_p);
         }
-        // FIXME otherwise we drop?
       }
     }
 
-    return null; // FIXME shall we just forward to in_port+1 as with the Coordinator?
+    // We follow the same forwarding policy as the Coordinator.
+    return (new ForwardingDecision.SinglePortForward(in_port + 1));
   }
 }
