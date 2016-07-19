@@ -11,7 +11,6 @@ using System;
 using PacketDotNet;
 using Pax;
 
-
 public static class Paxos {
   public static readonly ushort Paxos_Acceptor_Port = 0x8889;
   public static readonly ushort Paxos_Coordinator_Port = 0x8888;
@@ -44,6 +43,9 @@ public class Coordinator : SimplePacketProcessor {
     }
 
     // We assume that we receive from in_port and send to in_port+1.
+    // NOTE that we implicitly forward all non-Paxos packets onwards,
+    //      unmmodified. The downstream processor then decides how to forward
+    //      them along the network.
     return (new ForwardingDecision.SinglePortForward(in_port + 1));
   }
 }
