@@ -11,9 +11,17 @@ using System;
 using PacketDotNet;
 using Pax;
 
+using round_size_t = System.UInt16;
+using datapath_size_t = System.UInt16;
+using value_size_t = Value_Type;
+
+
+enum Phase {Paxos_1A = 0, Paxos_1B, Paxos_2A, Paxos_2B};
+
 public static class Paxos {
   public static readonly ushort Paxos_Acceptor_Port = 0x8889;
   public static readonly ushort Paxos_Coordinator_Port = 0x8888;
+  public static readonly int Instance_Count = 65536;
 }
 
 // Paxos Coordinator.
@@ -50,10 +58,76 @@ public class Coordinator : SimplePacketProcessor {
   }
 }
 
+public class ingress_metadata_t {
+  public round_size_t round = 0;
+  public bool set_drop = false;
+}
+
 public class Acceptor : SimplePacketProcessor {
+  private datapath_size_t datapath_id = 0;
+  private round_size_t[] rounds_register = new round_size_t[Paxos.Instance_Count];
+  private round_size_t[] vrounds_register = new round_size_t[Paxos.Instance_Count];
+  private value_size_t[] value_register = new value_size_t[Paxos.Instance_Count];
+
+  private void read_round (out ingress_metadata_t local_metadata, Paxos_Packet paxos_p)
+  {
+    local_metadata = new ingress_metadata_t();
+    local_metadata.round = rounds_register[paxos_p.Instance];
+    local_metadata.set_drop = true;
+  }
+
+  private void acceptor (ref UdpPacket udp_p, ref Paxos_Packet paxos_p)
+  {
+    ushort learner_port = 20; //FIXME temporary fudge!
+
+    switch (paxos_p.MsgType) {
+      case ((ushort)Phase.Paxos_1A):
+        paxos_p.MsgType = (ushort)Phase.Paxos_1B;
+        paxos_p.Voted_Round = vrounds_register[paxos_p.Instance];
+        paxos_p.Value = value_register[paxos_p.Instance];
+        paxos_p.Accept_ID = datapath_id;
+        rounds_register[paxos_p.Instance] = paxos_p.Voted_Round;
+        udp_p.DestinationPort = learner_port; //FIXME why is learner_port a parameter?
+        udp_p.Checksum = 0;
+        break;
+
+      case ((ushort)Phase.Paxos_2A):
+        paxos_p.MsgType = (ushort)Phase.Paxos_2B;
+        rounds_register[paxos_p.Instance] = paxos_p.Round;
+        vrounds_register[paxos_p.Instance] = paxos_p.Round;
+        value_register[paxos_p.Instance] = paxos_p.Value;
+        paxos_p.Accept_ID = datapath_id;
+        udp_p.DestinationPort = learner_port; //FIXME why is learner_port a parameter?
+        udp_p.Checksum = 0;
+        break;
+
+      default:
+        throw (new Exception ("Unknown Paxos phase"));
+        break;
+    }
+  }
+
   override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
-    //TODO
-    return null;
+    //Check if the packet is of the right form
+    if (packet is EthernetPacket)
+    {
+      if (packet.Encapsulates(typeof(IPv4Packet), typeof(UdpPacket), typeof(Paxos_Packet)))
+      {
+        IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+        UdpPacket udp_p = ((UdpPacket)(ip_p.PayloadPacket));
+        // FIXME should we check if (udp_p.DestinationPort == Paxos.Paxos_Acceptor_Port)?
+        Paxos_Packet paxos_p = ((Paxos_Packet)(udp_p.PayloadPacket));
+
+        ingress_metadata_t local_metadata;
+        read_round(out local_metadata, paxos_p);
+        if (local_metadata.round <= paxos_p.Round) {
+          acceptor(ref udp_p, ref paxos_p);
+        }
+        // FIXME otherwise we drop?
+      }
+    }
+
+    return null; // FIXME shall we just forward to in_port+1 as with the Coordinator?
   }
 }
