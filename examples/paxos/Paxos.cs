@@ -22,6 +22,17 @@ public static class Paxos {
   public static readonly ushort Paxos_Acceptor_Port = 0x8889;
   public static readonly ushort Paxos_Coordinator_Port = 0x8888;
   public static readonly int Instance_Count = 65536;
+  public static ushort Learner_Port = 0; //The port on which the Learner listens.
+
+  private const int default_port = 0; //Pax port that we'd expect to be involved in this packet processor.
+  static Paxos() {
+    if (PaxConfig.can_resolve_config_parameter(default_port, "learner_port"))
+    {
+      Learner_Port = UInt16.Parse(PaxConfig.resolve_config_parameter(default_port, "learner_port"));
+    } else {
+      throw (new Exception ("Undefined parameter: learner_port"));
+    }
+  }
 }
 
 // Paxos Coordinator.
@@ -45,8 +56,8 @@ public class Coordinator : SimplePacketProcessor {
         instance_register++; // FIXME use atomic increment
         paxos_p.Instance = instance_register;
         udp_p.DestinationPort = Paxos.Paxos_Acceptor_Port;
-        //udp_p.UpdateUDPChecksum();
-        udp_p.Checksum = 0; // FIXME this follows the P4 implementation, but I'm not yet sure why the UDP checksum is being invalidated.
+        udp_p.Checksum = 0; // NOTE this follows the P4 implementation, but normally
+                            //      i'd use "udp_p.UpdateUDPChecksum();"
       }
     }
 
@@ -78,8 +89,6 @@ public class Acceptor : SimplePacketProcessor {
 
   private void acceptor (ref UdpPacket udp_p, ref Paxos_Packet paxos_p)
   {
-    ushort learner_port = 20; //FIXME temporary fudge!
-
     switch (paxos_p.MsgType) {
       case ((ushort)Phase.Paxos_1A):
         paxos_p.MsgType = (ushort)Phase.Paxos_1B;
@@ -87,8 +96,8 @@ public class Acceptor : SimplePacketProcessor {
         paxos_p.Value = value_register[paxos_p.Instance];
         paxos_p.Accept_ID = datapath_id;
         rounds_register[paxos_p.Instance] = paxos_p.Voted_Round;
-        udp_p.DestinationPort = learner_port; //FIXME why is learner_port a parameter?
-        udp_p.Checksum = 0; // NOTE following the P4 implementation.
+        udp_p.DestinationPort = Paxos.Learner_Port;
+        udp_p.Checksum = 0; // NOTE As above, following the P4 implementation.
         break;
 
       case ((ushort)Phase.Paxos_2A):
@@ -97,8 +106,8 @@ public class Acceptor : SimplePacketProcessor {
         vrounds_register[paxos_p.Instance] = paxos_p.Round;
         value_register[paxos_p.Instance] = paxos_p.Value;
         paxos_p.Accept_ID = datapath_id;
-        udp_p.DestinationPort = learner_port; //FIXME why is learner_port a parameter?
-        udp_p.Checksum = 0; // NOTE following the P4 implementation.
+        udp_p.DestinationPort = Paxos.Learner_Port;
+        udp_p.Checksum = 0; // NOTE As above (above), following the P4 implementation.
         break;
 
       default:
