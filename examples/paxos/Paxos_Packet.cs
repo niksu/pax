@@ -22,15 +22,17 @@ public struct Paxos_Packet_Fields {
   public readonly static int MsgType_Position = 0;
   public readonly static int Instance_Position;
   public readonly static int Round_Position;
-  public readonly static int Datapath_Position;
+  public readonly static int VotedRound_Position;
+  public readonly static int AcceptID_Position;
   public readonly static int Value_Position;
 
   static Paxos_Packet_Fields()
   {
     Instance_Position = MsgType_Length;
     Round_Position = Instance_Position + Instance_Length;
-    Datapath_Position = Round_Position + Round_Length;
-    Value_Position = Datapath_Position + Datapath_Length;
+    VotedRound_Position = Round_Position + Round_Length;
+    AcceptID_Position = VotedRound_Position + Round_Length;
+    Value_Position = AcceptID_Position + Datapath_Length;
   }
 }
 
@@ -81,16 +83,29 @@ public class Paxos_Packet : Packet {
    }
   }
 
-  public ushort Datapath
+  public ushort Voted_Round
   {
    get {
      return EndianBitConverter.Big.ToUInt16 (header.Bytes,
-        header.Offset + Paxos_Packet_Fields.Datapath_Position);
+        header.Offset + Paxos_Packet_Fields.VotedRound_Position);
    }
 
    set {
      EndianBitConverter.Big.CopyBytes (value, header.Bytes,
-         header.Offset + Paxos_Packet_Fields.Datapath_Position);
+         header.Offset + Paxos_Packet_Fields.VotedRound_Position);
+   }
+  }
+
+  public ushort Accept_ID
+  {
+   get {
+     return EndianBitConverter.Big.ToUInt16 (header.Bytes,
+        header.Offset + Paxos_Packet_Fields.AcceptID_Position);
+   }
+
+   set {
+     EndianBitConverter.Big.CopyBytes (value, header.Bytes,
+         header.Offset + Paxos_Packet_Fields.AcceptID_Position);
    }
   }
 
@@ -99,16 +114,16 @@ public class Paxos_Packet : Packet {
    get {
      Value_Type v = new Value_Type();
      v.f0 = EndianBitConverter.Big.ToUInt64 (header.Bytes,
-        header.Offset + Paxos_Packet_Fields.Datapath_Position +
+        header.Offset + Paxos_Packet_Fields.AcceptID_Position +
         0 * sizeof(UInt64));
      v.f1 = EndianBitConverter.Big.ToUInt64 (header.Bytes,
-        header.Offset + Paxos_Packet_Fields.Datapath_Position +
+        header.Offset + Paxos_Packet_Fields.AcceptID_Position +
         1 * sizeof(UInt64));
      v.f2 = EndianBitConverter.Big.ToUInt64 (header.Bytes,
-        header.Offset + Paxos_Packet_Fields.Datapath_Position +
+        header.Offset + Paxos_Packet_Fields.AcceptID_Position +
         2 * sizeof(UInt64));
      v.f3 = EndianBitConverter.Big.ToUInt64 (header.Bytes,
-        header.Offset + Paxos_Packet_Fields.Datapath_Position +
+        header.Offset + Paxos_Packet_Fields.AcceptID_Position +
         3 * sizeof(UInt64));
      return v;
    }
@@ -116,16 +131,16 @@ public class Paxos_Packet : Packet {
    set {
      Value_Type v = value;
      EndianBitConverter.Big.CopyBytes (v.f0, header.Bytes,
-         header.Offset + Paxos_Packet_Fields.Datapath_Position +
+         header.Offset + Paxos_Packet_Fields.AcceptID_Position +
          0 * sizeof(UInt64));
      EndianBitConverter.Big.CopyBytes (v.f0, header.Bytes,
-         header.Offset + Paxos_Packet_Fields.Datapath_Position +
+         header.Offset + Paxos_Packet_Fields.AcceptID_Position +
          1 * sizeof(UInt64));
      EndianBitConverter.Big.CopyBytes (v.f0, header.Bytes,
-         header.Offset + Paxos_Packet_Fields.Datapath_Position +
+         header.Offset + Paxos_Packet_Fields.AcceptID_Position +
          2 * sizeof(UInt64));
      EndianBitConverter.Big.CopyBytes (v.f0, header.Bytes,
-         header.Offset + Paxos_Packet_Fields.Datapath_Position +
+         header.Offset + Paxos_Packet_Fields.AcceptID_Position +
          3 * sizeof(UInt64));
    }
   }
