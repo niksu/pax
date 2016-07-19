@@ -112,7 +112,6 @@ public class Acceptor : SimplePacketProcessor {
 
       default:
         throw (new Exception ("Unknown Paxos phase"));
-        break;
     }
   }
 
