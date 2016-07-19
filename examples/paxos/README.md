@@ -7,7 +7,7 @@ The implementation consists of two parts.
 1. Dissector for the Paxos protocol header.
 2. Logic implemented in the Coordinator and Acceptor.
 
-## Differences from NetPaxos
+## Differences from the P4 implementation
 * No handling of ARP.
 * Rather than having forwarding behaviour, this is a module that could be
   plugged into (or chained with) a forwarding device.

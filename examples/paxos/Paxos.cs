@@ -17,9 +17,12 @@ public static class Paxos {
   public static readonly ushort Paxos_Coordinator_Port = 0x8888;
 }
 
+// Paxos Coordinator.
+// It operates on Paxos packets arriving on in_port. Both Paxos and other
+// traffic is forward on to inport+1.
 public class Coordinator : SimplePacketProcessor {
   // State maintained by the Coordinator.
-  ushort instance_register = 0; // FIXME Initialise at 0? Or at 1?
+  ushort instance_register = 0;
 
   override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
@@ -29,12 +32,14 @@ public class Coordinator : SimplePacketProcessor {
       {
         IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
         UdpPacket udp_p = ((UdpPacket)(ip_p.PayloadPacket));
+        // FIXME should we check if (udp_p.DestinationPort == Paxos.Paxos_Coordinator_Port)?
         Paxos_Packet paxos_p = ((Paxos_Packet)(udp_p.PayloadPacket));
 
         instance_register++; // FIXME use atomic increment
         paxos_p.Instance = instance_register;
         udp_p.DestinationPort = Paxos.Paxos_Acceptor_Port;
-        udp_p.UpdateUDPChecksum();
+        //udp_p.UpdateUDPChecksum();
+        udp_p.Checksum = 0; // FIXME this follows the P4 implementation, but I'm not yet sure why the UDP checksum is being invalidated.
       }
     }
 
