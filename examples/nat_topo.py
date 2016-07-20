@@ -163,7 +163,7 @@ def test():
     # Run scapy test #1
     print ""
     print "Scapy test #1"
-    sendCmd(net, out0, "examples/nat_scapy_tests.py server", xterm=True)
+    sendCmd(net, out0, "examples/nat_scapy_tests.py server 35001", xterm=True)
     runCmd(net, in1, "sleep 1")
     runCmd(net, in1, "examples/nat_scapy_tests.py client", xterm=True)
     waitOutput(net, out0)
@@ -177,7 +177,7 @@ def test():
     # Run scapy test #2
     print ""
     print "Scapy test #2"
-    sendCmd(net, out0, "examples/nat_scapy_tests.py server2", xterm=True)
+    sendCmd(net, out0, "examples/nat_scapy_tests.py server2 35002", xterm=True)
     runCmd(net, in1, "sleep 1")
     runCmd(net, in1, "examples/nat_scapy_tests.py client2", xterm=True)
     waitOutput(net, out0)

@@ -15,6 +15,12 @@ possible with the OS network stack, such as sending packets during the TIME_WAIT
 from scapy.all import *
 from scapy.layers.inet import *
 
+# Values that need to be kept in sync with those in the wiring config:
+# NOTE that all times are in seconds
+tcp_inactivity_timeout = 20
+tcp_time_wait_duration = 10
+udp_inactivity_timeout= 200
+
 # The IP addresses of the nodes we use
 serverhost = "10.0.0.4"
 nathost = "10.0.0.3"
@@ -61,8 +67,8 @@ def run_server(serverport=12012, natport=35001):
         print "WARNING: incorrect data received from the client: '%s'" % data
 
     # Wait for connection to be dropped
-    print "Sleeping to wait for the connection to be dropped by the NAT (reliant on tcp_inactivity_timeout=00:00:10)"
-    time.sleep(12) # 12s
+    print "Sleeping to wait for the connection to be dropped by the NAT (reliant on tcp_inactivity_timeout=%ds)" % tcp_inactivity_timeout
+    time.sleep(tcp_inactivity_timeout + 2)
 
     # Try sending data - should fail
     print "Trying to send a packet to the client - should fail"
@@ -106,7 +112,7 @@ def run_client(serverport=12012, clientport=12011):
 
     # Check we don't get another packet
     print "Waiting to see if we get another packet"
-    rcv = sniff(count=1, timeout=15, filter=filter)
+    rcv = sniff(count=1, timeout=tcp_inactivity_timeout + 5, filter=filter)
     if (len(rcv) != 0):
         print "Received %d packets! Shouldn't have" % len(rcv)
         rcv[0].show()
@@ -147,11 +153,10 @@ def run_server2(serverport=12022, natport=35002):
     # Ack
     print "Replying with Ack"
     send(ip/TCP(sport=serverport,dport=natport,flags="A"))
-    time.sleep(1)
 
-    ## Now in TIME_WAIT (NOTE tcp_time_wait needs to be configured to 5s)
-    print "Sleeping to wait for the connection entry to be removed. (reliant on tcp_time_wait_duration=00:00:05)"
-    time.sleep(5)
+    ## Now in TIME_WAIT
+    print "Sleeping to wait for the connection entry to be removed. (reliant on tcp_time_wait_duration=%ds)" % tcp_time_wait_duration
+    time.sleep(tcp_time_wait_duration + 1)
 
     ## Should now be unable to use the connection
     # Send something
@@ -196,11 +201,10 @@ def run_client2(serverport=12022, clientport=12021):
     # Fin+Ack
     print "Sending Fin+Ack"
     ack = sr1(ip/TCP(sport=clientport,dport=serverport,flags="FA"))
-    time.sleep(1)
 
-    ## Now in TIME_WAIT (NOTE tcp_time_wait needs to be configured to 5s)
-    print "Sleeping to wait for the connection entry to be removed. (reliant on tcp_time_wait_duration=00:00:05)"
-    time.sleep(5)
+    ## Now in TIME_WAIT
+    print "Sleeping to wait for the connection entry to be removed. (reliant on tcp_time_wait_duration=%ds)" % tcp_time_wait_duration
+    time.sleep(tcp_time_wait_duration + 1)
 
     ## Should now be unable to use the connection
     # Check we don't receive anything
@@ -223,21 +227,39 @@ def run_client2(serverport=12022, clientport=12021):
     else:
         return 0
 
-# This code runs when the script is executed (e.g. $ sudo ./examples/nat_scapy_tests.py)
 import sys
-if __name__ == '__main__':
-    print "Please note these tests rely on the StartPort being 35000 (when used within nat_topo test)"
+def usage():
+    print "%s server[n] [port]     Run the server code for test n. The NAT will use port port."
+    print "%s client[n]            Run the client code for test n."
+    print "Valid range for n: 1-2"
 
-    if len(sys.argv) > 1 and sys.argv[1]=="server":
-        # The command was `$ nat_topo.py test`, so run the automated test:
-        sys.exit(run_server())
-    elif len(sys.argv) > 1 and sys.argv[1]=="client":
-        # The command was `$ nat_topo.py test`, so run the automated test:
-        sys.exit(run_client())
-    elif len(sys.argv) > 1 and sys.argv[1]=="server2":
-        # The command was `$ nat_topo.py test`, so run the automated test:
-        sys.exit(run_server2())
-    elif len(sys.argv) > 1 and sys.argv[1]=="client2":
-        # The command was `$ nat_topo.py test`, so run the automated test:
-        sys.exit(run_client2())
+# This code runs when the script is executed (e.g. $ sudo ./examples/nat_scapy_tests.py)
+if __name__ == '__main__':
+    print "Please ensure the settings in this script file match those in the nat wiring config file."
+
+    if len(sys.argv) > 1:
+        action = sys.argv[1]
+        if action.startswith("server"):
+            # Get the port
+            port = 35000
+            if len(sys.argv) > 2:
+                port = int(sys.argv[2])
+
+            # Run the server code for the specified test
+            suffix = action[len("server"):len(action)]
+            if suffix == "" or suffix == "1":
+                sys.exit(run_server(natport=port))
+            elif suffix == "2":
+                sys.exit(run_server2(natport=port))
+        elif action.startswith("client"):
+            # Run the client code for the specified test
+            suffix = action[len("client"):len(action)]
+            if suffix == "" or suffix == "1":
+                sys.exit(run_client())
+            elif suffix == "2":
+                sys.exit(run_client2())
+
+    # If we reach this point, the correct syntax wasn't used
+    usage()
+    sys.exit(2)
 
