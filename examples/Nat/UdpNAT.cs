@@ -58,7 +58,10 @@ namespace Pax.Examples.Nat
       lock (nextPortLock)
       {
         port = nextPort;
-        nextPort++; // FIXME naive port assignment; can reassign ports that are in use
+
+        // FIXME naive port assignment: when nextPort wraps around, could reassign ports that are already in use
+        // Note that this is fairly unlikely because the key is made up of the source port, destination port, and source address.
+        nextPort++;
         if (nextPort < StartPort || nextPort > EndPort)
           nextPort = StartPort;
       }
