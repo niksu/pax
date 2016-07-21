@@ -56,8 +56,11 @@ public class Coordinator : SimplePacketProcessor {
         instance_register++;
         paxos_p.Instance = instance_register;
         udp_p.DestinationPort = Paxos.Paxos_Acceptor_Port;
-        udp_p.Checksum = 0; // NOTE this follows the P4 implementation, but normally
-                            //      i'd use "udp_p.UpdateUDPChecksum();"
+        udp_p.UpdateUDPChecksum(); // NOTE we could use "udp_p.Checksum = 0" to
+                                   //      follows the P4 implementation,
+                                   //      avoiding the (optional) UDP checksum.
+                                   //      Same applies to instances of
+                                   //      checksum-setting below.
       }
     }
 
@@ -97,7 +100,7 @@ public class Acceptor : SimplePacketProcessor {
         paxos_p.Accept_ID = datapath_id;
         rounds_register[paxos_p.Instance] = paxos_p.Voted_Round;
         udp_p.DestinationPort = Paxos.Learner_Port;
-        udp_p.Checksum = 0; // NOTE As above, following the P4 implementation.
+        udp_p.UpdateUDPChecksum();
         break;
 
       case ((ushort)Phase.Paxos_2A):
@@ -107,7 +110,7 @@ public class Acceptor : SimplePacketProcessor {
         value_register[paxos_p.Instance] = paxos_p.Value;
         paxos_p.Accept_ID = datapath_id;
         udp_p.DestinationPort = Paxos.Learner_Port;
-        udp_p.Checksum = 0; // NOTE As above (above), following the P4 implementation.
+        udp_p.UpdateUDPChecksum();
         break;
 
       default:
