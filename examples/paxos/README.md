@@ -12,6 +12,10 @@ The implementation consists of two parts.
 * Rather than having forwarding behaviour, this is a module that could be
   plugged into (or chained with) a forwarding device.
 
+## TODO
+Test this on the P4Paxos [test setup](https://github.com/usi-systems/p4paxos-demo/tree/master/p4paxos/bmv2),
+swapping the P4 emulator with Pax.
+
 ## Acknowledgements
 Thanks to [Huynh Tu Dang](http://www.people.usi.ch/danghu/), [Marco
 Canini](http://perso.uclouvain.be/marco.canini/) and [Robert
