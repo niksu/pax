@@ -13,11 +13,12 @@ using MiscUtil.Conversion;
 
 
 public struct Paxos_Packet_Fields {
-  public readonly static int MsgType_Length = 16;
-  public readonly static int Instance_Length = 32;
-  public readonly static int Round_Length = 16;
-  public readonly static int Datapath_Length = 16;
-  public readonly static int Value_Length = 256;
+  // Length is expressed in bytes.
+  public readonly static int MsgType_Length = 2;
+  public readonly static int Instance_Length = 4;
+  public readonly static int Round_Length = 2;
+  public readonly static int Datapath_Length = 2;
+  public readonly static int Value_Length = 32;
 
   public readonly static int MsgType_Position = 0;
   public readonly static int Instance_Position;
