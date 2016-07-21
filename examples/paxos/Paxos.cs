@@ -53,7 +53,7 @@ public class Coordinator : SimplePacketProcessor {
         // FIXME should we check if (udp_p.DestinationPort == Paxos.Paxos_Coordinator_Port)?
         Paxos_Packet paxos_p = ((Paxos_Packet)(udp_p.PayloadPacket));
 
-        instance_register++; // FIXME use atomic increment
+        instance_register++;
         paxos_p.Instance = instance_register;
         udp_p.DestinationPort = Paxos.Paxos_Acceptor_Port;
         udp_p.Checksum = 0; // NOTE this follows the P4 implementation, but normally
