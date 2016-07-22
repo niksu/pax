@@ -44,13 +44,14 @@ public class Coordinator : SimplePacketProcessor {
 
   override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
-    if (packet is EthernetPacket)
+    if (packet is EthernetPacket &&
+      packet.Encapsulates(typeof(IPv4Packet), typeof(UdpPacket), typeof(Paxos_Packet)))
     {
-      if (packet.Encapsulates(typeof(IPv4Packet), typeof(UdpPacket), typeof(Paxos_Packet)))
+      IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+      UdpPacket udp_p = ((UdpPacket)(ip_p.PayloadPacket));
+
+      if (udp_p.DestinationPort == Paxos.Paxos_Coordinator_Port)
       {
-        IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
-        UdpPacket udp_p = ((UdpPacket)(ip_p.PayloadPacket));
-        // FIXME should we check if (udp_p.DestinationPort == Paxos.Paxos_Coordinator_Port)?
         Paxos_Packet paxos_p = ((Paxos_Packet)(udp_p.PayloadPacket));
 
         instance_register++;
@@ -121,13 +122,14 @@ public class Acceptor : SimplePacketProcessor {
   override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
     //Check if the packet is of the form we're interested in.
-    if (packet is EthernetPacket)
+    if (packet is EthernetPacket &&
+      packet.Encapsulates(typeof(IPv4Packet), typeof(UdpPacket), typeof(Paxos_Packet)))
     {
-      if (packet.Encapsulates(typeof(IPv4Packet), typeof(UdpPacket), typeof(Paxos_Packet)))
+      IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+      UdpPacket udp_p = ((UdpPacket)(ip_p.PayloadPacket));
+
+      if (udp_p.DestinationPort != Paxos.Paxos_Acceptor_Port)
       {
-        IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
-        UdpPacket udp_p = ((UdpPacket)(ip_p.PayloadPacket));
-        // FIXME should we check if (udp_p.DestinationPort == Paxos.Paxos_Acceptor_Port)?
         Paxos_Packet paxos_p = ((Paxos_Packet)(udp_p.PayloadPacket));
 
         ingress_metadata_t local_metadata;
