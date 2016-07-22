@@ -1,6 +1,6 @@
 This implements a network-based form of a [TCP
 wrapper](https://en.wikipedia.org/wiki/TCP_Wrapper) as described in this
-[article](ftp://ftp.porcupine.org/pub/security/tcp_wrapper.pdf).
+article at ftp://ftp.porcupine.org/pub/security/tcp_wrapper.pdf.
 In the method described in the article, the wrapper consists of a process B that
 pretends to be some other process A in order to intercept network messages
 intended to be processed by A. For example, A could be fingerd, and B would log
