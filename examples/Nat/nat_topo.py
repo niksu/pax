@@ -113,7 +113,7 @@ def test():
     # Start the Pax NAT process on the NAT node:
     # Start it in a separate terminal so that we can see the output in real time.
     print "Starting Pax NAT process on %s:" % nat0
-    cmd = 'Bin/Pax.exe examples/Nat/nat_wiring.json examples/Bin/Examples.dll'
+    cmd = 'Bin/Pax.exe examples/Nat/nat_wiring_test.json examples/Bin/Examples.dll'
     if config.X_windows:
         cmd = 'x-terminal-emulator -e \'%s\' &' % (cmd)
         runCmd(net, nat0, cmd)
@@ -253,7 +253,7 @@ def runCmd(net, name, cmd, timeout=None, xterm=False, **args):
     else:
         # We want the command to timeout if it runs too long.
         # Start a timer. Send an interrupt when it expires.
-        timer = threading.Timer(timeout, lambda: h.sendInt(chr(4)))
+        timer = threading.Timer(timeout, lambda: h.sendInt(chr(4))) # sends ^D
         timer.start()
         # Run the command
         rv = h.cmd(cmd, **args)
