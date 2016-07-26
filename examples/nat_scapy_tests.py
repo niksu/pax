@@ -52,6 +52,7 @@ def run_server(serverport=12012, natport=35001):
     # Wait for the connection to be initialised from the client
     print "Waiting for connection from client"
     syn = sniff(count=1, filter=filter)[0]
+    assert syn.sprintf("%TCP.flags%") == "S" # Check it's a Syn
     # send Syn+Ack
     tcp_synack = TCP(sport=serverport, dport=natport, flags="SA", options=[('MSS', 1460)])
     print "Sending Syn+Ack"
@@ -103,6 +104,7 @@ def run_client(serverport=12012, clientport=12011):
     tcp_syn = TCP(sport=clientport, dport=serverport, flags="S", options=[('MSS', 1460)])
     print "Sending syn"
     synack = sr1(ip/tcp_syn)[0]
+    assert synack.sprintf("%TCP.flags%") == "SA" # Check it's a SynAck
     print "Received:"
     synack.show()
     # send Ack
@@ -150,12 +152,15 @@ def run_server2(serverport=12022, natport=35002):
     # Wait for Syn
     print "Waiting for Syn from client"
     syn = sniff(count=1, filter=filter)
+    assert syn[0].sprintf("%TCP.flags%") == "S" # Check it's a Syn
     # Syn+Ack
     print "Replying with Syn+Ack"
     ack = sr1(ip/TCP(sport=serverport,dport=natport,flags="SA"))
+    assert ack.sprintf("%TCP.flags%") == "A" # Check it's an Ack
     # Fin
     print "Sending Fin"
-    finack = sr1(ip/TCP(sport=serverport,dport=natport,flags="FA"))
+    finack = sr1(ip/TCP(sport=serverport,dport=natport,flags="F"))
+    assert finack.sprintf("%TCP.flags%") == "FA" # Check it's a FinAck
     # Ack
     print "Replying with Ack"
     send(ip/TCP(sport=serverport,dport=natport,flags="A"))
@@ -203,12 +208,15 @@ def run_client2(serverport=12022, clientport=12021):
     # Send Syn
     print "Sending Syn"
     synack = sr1(ip/TCP(sport=clientport,dport=serverport,flags="S"))
+    assert synack.sprintf("%TCP.flags%") == "SA" # Check it's a SynAck
     # Ack
     print "Replying with Ack"
     fin = sr1(ip/TCP(sport=clientport,dport=serverport,flags="A"))
+    assert fin.sprintf("%TCP.flags%") == "F" # Check it's a Fin
     # Fin+Ack
     print "Sending Fin+Ack"
     ack = sr1(ip/TCP(sport=clientport,dport=serverport,flags="FA"))
+    assert ack.sprintf("%TCP.flags%") == "A" # Check it's an Ack
 
     ## Now in TIME_WAIT
     print "Sleeping to wait for the connection entry to be removed. (reliant on tcp_time_wait_duration=%ds)" % tcp_time_wait_duration
