@@ -17,8 +17,14 @@ namespace Pax.Examples.Nat
   public interface ITransportState<T> where T : Packet
   {
     /// <summary>
-    /// Gets a boolean value determining if the connection can be removed before the timeout elapses.
+    /// Gets a boolean value determining if the connection can be removed before the inactivity timeout elapses.
     /// </summary>
+    /// <remarks>
+    /// When implementing this property, note that it should indicate when the connection entry can be *removed* from
+    /// the mapping tables. For example, a TCP implementation should only return true when the connections in both directions
+    /// are closed *and* the TIME_WAIT timeout has elapsed. That means that any specific timeouts (as opposed to inactivity)
+    /// should be implemented internally.
+    /// </remarks>
     bool CanBeClosed { get; }
 
     /// <summary>

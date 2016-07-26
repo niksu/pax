@@ -18,6 +18,10 @@ namespace Pax.Examples.Nat
   /// <summary>
   /// A class that handles UDP packets and performs Port-Address Translation.
   /// </summary>
+  /// <remarks>
+  /// This class is almost identical to the <see cref="TcpNAT"/> class because both protocols use 16-bit port numbers. The
+  /// CreateMasqueradeNode methods *are* identical. <!--FIXME perhaps use a common NATBase<TPacket,NodeWithPort,TEncaps> ancestor?-->
+  /// </remarks>
   public sealed class UdpNAT : NATBase<UdpPacket, NodeWithPort, UdpPacketEncapsulation>
   {
     /// <summary>
@@ -28,7 +32,7 @@ namespace Pax.Examples.Nat
     /// <summary>
     /// The end of the range of UDP ports to use (inclusive).
     /// </summary>
-    private readonly ushort EndPort; // FIXME we don't use EndPort yet
+    private readonly ushort EndPort;
 
     private ushort nextPort;
     private object nextPortLock = new object();

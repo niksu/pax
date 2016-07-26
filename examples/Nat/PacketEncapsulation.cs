@@ -103,15 +103,17 @@ namespace Pax.Examples.Nat
     public abstract TNode GetDestinationNode(int incomingNetworkInterface = NAT.Port_Drop);
 
     /// <summary>
-    /// This method is called whenever the SetSource method is called.
-    /// Override this method to update the protocol specific source values of the packet.
+    /// This method is called whenever the SetSource method is called, which is whenever the source address of the packet is changed.
+    /// Override this method to update the protocol specific source values of the packet. The sole purpose of this method should be
+    /// to change the source address values of the packet which are specific to this subclass (e.g. TCP port).
     /// </summary>
     /// <param name="node">The source node.</param>
     protected abstract void OnSetSource(TNode node); // FIXME better name?
 
     /// <summary>
-    /// This method is called whenever the SetDestination method is called.
-    /// Override this method to update the protocol specific destination values of the packet.
+    /// This method is called whenever the SetDestination method is called, which is wheneve the destination address of the packet is changed.
+    /// Override this method to update the protocol specific destination values of the packet. The sole purpose of this method should be
+    /// to change the destination address values of the packet which are specific to this subclass (e.g. TPC port).
     /// </summary>
     /// <param name="node">The destination node.</param>
     protected abstract void OnSetDestination(TNode node);

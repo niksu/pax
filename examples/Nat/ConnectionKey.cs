@@ -57,8 +57,7 @@ namespace Pax.Examples.Nat
     }
 
     public override int GetHashCode() { return hashCode; }
-
-    // FIXME should all ToString overrides be conditional on target? (i.e. not on Kiwi)
+    
     public override string ToString()
     {
       return String.Format("{0} to {1}", Source, Destination);

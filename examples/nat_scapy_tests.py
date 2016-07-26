@@ -36,7 +36,9 @@ server_data = "SERVER DATA"
 client_data = "CLIENT DATA"
 
 def run_server(serverport=12012, natport=35001):
-    "This should be run on the external host."
+    """This should be run on the external host.
+       This test checks that a TCP connection can be opened from the inside to the outside and that
+       the connection entry is removed after the inactivity timeout elapses."""
 
     # Set up iptables rule to allow us exclusive access on our port
     iptables_rule = iptables_rule_fmt % (natport, serverport)
@@ -70,7 +72,7 @@ def run_server(serverport=12012, natport=35001):
     print "Sleeping to wait for the connection to be dropped by the NAT (reliant on tcp_inactivity_timeout=%ds)" % tcp_inactivity_timeout
     time.sleep(tcp_inactivity_timeout + 2)
 
-    # Try sending data - should fail
+    # Try sending data - should fail. We wait on the client to check that we don't receive this packet.
     print "Trying to send a packet to the client - should fail"
     send(ip/TCP(sport=serverport, dport=natport, flags="", options=[('MSS', 1460)])/"FAIL PLEASE")
 
@@ -84,7 +86,9 @@ def run_server(serverport=12012, natport=35001):
         return 1
 
 def run_client(serverport=12012, clientport=12011):
-    "This should be run on the internal host."
+    """This should be run on the internal host.
+       This test checks that a TCP connection can be opened from the inside to the outside and that
+       the connection entry is removed after the inactivity timeout elapses."""
 
     # Set up iptables rule to allow us exclusive access on our port
     iptables_rule = iptables_rule_fmt % (serverport, clientport)
@@ -128,7 +132,9 @@ def run_client(serverport=12012, clientport=12011):
         return 0
 
 def run_server2(serverport=12022, natport=35002):
-    "This should be run on the external host."
+    """This should be run on the external host.
+       This test checks that a TCP connection can be opened from the inside to the outside, and that when it is
+       closed with Fin packets, the connection entry is removed after the TIME_WAIT timeout elapses."""
 
     # Set up iptables rule to allow us exclusive access on our port
     iptables_rule = iptables_rule_fmt % (natport, serverport)
@@ -159,7 +165,7 @@ def run_server2(serverport=12022, natport=35002):
     time.sleep(tcp_time_wait_duration + 1)
 
     ## Should now be unable to use the connection
-    # Send something
+    # Send something. We wait on the client to check we don't receive it.
     time.sleep(1) # Wait to make sure the client has begun sniffing
     print "Sending something - it shouldn't be received"
     send(ip/TCP(sport=serverport,dport=natport,flags="A")/"FAIL PLEASE")
@@ -180,7 +186,9 @@ def run_server2(serverport=12022, natport=35002):
         return 0
 
 def run_client2(serverport=12022, clientport=12021):
-    "This should be run on the internal host."
+    """This should be run on the internal host.
+       This test checks that a TCP connection can be opened from the inside to the outside, and that when it is
+       closed with Fin packets, the connection entry is removed after the TIME_WAIT timeout elapses."""
 
     # Set up iptables rule to allow us exclusive access on our port
     iptables_rule = iptables_rule_fmt % (serverport, clientport)
@@ -213,7 +221,7 @@ def run_client2(serverport=12022, clientport=12021):
     if (len(rcv) != 0):
         print "Received %d packets! Shouldn't have" % len(rcv)
         rcv[0].show()
-    # Send something
+    # Send something. We wait on the server to make sure we don't receive anything.
     time.sleep(1) # Wait to make sure the server has begun sniffing
     print "Sending something - it shouldn't be received"
     send(ip/TCP(sport=clientport,dport=serverport,flags="A")/"FAIL PLEASE")

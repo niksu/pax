@@ -51,7 +51,8 @@ namespace Pax.Examples.Nat
     public bool InTimeWait { get { return CloseTime.HasValue && DateTime.Now - CloseTime < TIME_WAIT; } }
 
     /// <summary>
-    /// True if the TCP connections in both directions are closed, determining if the connection can be removed before the timeout elapses.
+    /// True if the TCP connections in both directions are closed, determining if the connection can be removed before the inactivity timeout elapses.
+    /// Will remain false until the TCP connections in both directions are closed and the TIME_WAIT timeout has elapsed.
     /// </summary>
     public bool CanBeClosed { get { return ClosedFromInside && ClosedFromOutside && !InTimeWait; } }
 
@@ -64,6 +65,14 @@ namespace Pax.Examples.Nat
       TIME_WAIT = time_wait;
     }
 
+    /// <summary>
+    /// Updates the state of the connection to reflect the transmission of the packet. In this case (TCP),
+    /// it keeps record of which TCP state it thinks the connection is in. It tracks Syns, Acks, and Fins.
+    /// This is to track when the connection entry should be removed, so we don't remove it too early
+    /// or leave it open indefinitely.
+    /// </summary>
+    /// <param name="packet">The packet being transmitted</param>
+    /// <param name="packetFromInside">True if the packet originated from inside the NAT, else false.</param>
     public void UpdateState(TcpPacket packet, bool packetFromInside)
     {
       // NOTE we don't handle RST packets because we don't want to worry about validity,

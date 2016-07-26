@@ -33,7 +33,7 @@ namespace Pax.Examples.Nat
     /// <summary>
     /// The end of the range of TCP ports to use (inclusive).
     /// </summary>
-    private readonly ushort EndPort; // FIXME we don't use EndPort yet
+    private readonly ushort EndPort;
 
     private ushort nextPort;
     private object nextPortLock = new object();
