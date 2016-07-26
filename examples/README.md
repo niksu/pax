@@ -150,7 +150,7 @@ it might not be the IP you were expecting.
 _
 
 Feel free to look in [`examples/nat_topo.py`](nat_topo.py):
-- The `NatTopo` class defines the network topology for Mininet 
+- The `NatTopo` class defines the network topology for Mininet
 ```
                   ┌──────┐     ┌─────┐
                   |      |-----│ in1 |
@@ -168,7 +168,7 @@ Feel free to look in [`examples/nat_topo.py`](nat_topo.py):
   the OS doesn't forward packets that aren't addressed to it.
 - The `createNetwork()` procedure instantiates the network topology and sets up
   the hosts. It sets the default gateway for the internal hosts to nat0 so that
-  connections to outside the subnet go through the NAT. 
+  connections to outside the subnet go through the NAT.
 
   Take special note that the MAC address of out0 is manually set. This is so because
   the NAT implementation currently requires the next hop to be hardcoded in the config.

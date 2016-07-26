@@ -57,7 +57,7 @@ namespace Pax.Examples.Nat
     }
 
     public override int GetHashCode() { return hashCode; }
-    
+
     public override string ToString()
     {
       return String.Format("{0} to {1}", Source, Destination);
