@@ -105,12 +105,15 @@ namespace Pax.Examples.Nat
 
     private void TransitionState(ref TcpDirectionalState state, bool ack)
     {
-      if (state == TcpDirectionalState.Syn)
-        state = TcpDirectionalState.SynAck;
-      else if (state == TcpDirectionalState.Fin)
+      if (ack)
       {
-        CloseTime = DateTime.Now;
-        state = TcpDirectionalState.FinAck;
+        if (state == TcpDirectionalState.Syn)
+          state = TcpDirectionalState.SynAck;
+        else if (state == TcpDirectionalState.Fin)
+        {
+          CloseTime = DateTime.Now;
+          state = TcpDirectionalState.FinAck;
+        }
       }
     }
 
