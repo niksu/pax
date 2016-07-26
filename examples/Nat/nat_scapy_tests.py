@@ -249,7 +249,7 @@ def usage():
     print "%s client[n]            Run the client code for test n."
     print "Valid range for n: 1-2"
 
-# This code runs when the script is executed (e.g. $ sudo ./examples/nat_scapy_tests.py)
+# This code runs when the script is executed (e.g. $ sudo ./examples/Nat/nat_scapy_tests.py)
 if __name__ == '__main__':
     print "Please ensure the settings in this script file match those in the nat wiring config file."
 
