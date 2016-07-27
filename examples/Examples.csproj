@@ -43,6 +43,9 @@
     <Compile Include="Nat\TcpNAT.cs" />
     <Compile Include="Nat\TcpState.cs" />
     <Compile Include="Nat\UdpNAT.cs" />
+    <Compile Include="paxos\Paxos_Packet.cs" />
+    <Compile Include="paxos\Paxos.cs" />
+    <Compile Include="tcp_wrapper\TCP_Wrapper.cs" />
     <Compile Include="Test.cs" />
   </ItemGroup>
 <!--
