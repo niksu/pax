@@ -81,13 +81,11 @@ namespace Pax.Examples.Nat
 
       if (packetFromInside)
       {
-        TransitionState(ref InOutConnection, packet.Syn, packet.Fin);
-        TransitionState(ref OutInConnection, packet.Ack);
+        TransitionState(ref InOutConnection, ref OutInConnection, packet.Syn, packet.Fin, packet.Ack);
       }
       else
       {
-        TransitionState(ref OutInConnection, packet.Syn, packet.Fin);
-        TransitionState(ref InOutConnection, packet.Ack);
+        TransitionState(ref OutInConnection, ref InOutConnection, packet.Syn, packet.Fin, packet.Ack);
       }
     }
 
@@ -95,24 +93,28 @@ namespace Pax.Examples.Nat
     //      This could allow a malicious FIN packet to close down the TCP connection
     //      by causing the entry to be removed from the NAT even though the end host
     //      rejects it for not being in the window.
-    private void TransitionState(ref TcpDirectionalState state, bool syn, bool fin)
+    private void TransitionState(ref TcpDirectionalState state, ref TcpDirectionalState otherDirectionState, bool syn, bool fin, bool ack)
     {
+      // Transition our inferred state based on the TCP flags in this packet
+
+      // The state for the connection going in the same direction as the packet
       if (fin)
         state = TcpDirectionalState.Fin;
       else if (state == TcpDirectionalState.None && syn)
         state = TcpDirectionalState.Syn;
-    }
 
-    private void TransitionState(ref TcpDirectionalState state, bool ack)
-    {
+      // The state for the connection going in the opposite direction to the packet
       if (ack)
       {
-        if (state == TcpDirectionalState.Syn)
-          state = TcpDirectionalState.SynAck;
-        else if (state == TcpDirectionalState.Fin)
+        // NOTE we don't check that this Ack is for the Syn/Fin from earlier but it doesn't matter hugely
+        //      because we don't differentiate our forwarding behaviour between Syn and SynAck, and if we
+        //      infer a FinAck too early, then all that happens is the TIME_WAIT state expires earlier than expected.
+        if (otherDirectionState == TcpDirectionalState.Syn)
+          otherDirectionState = TcpDirectionalState.SynAck;
+        else if (otherDirectionState == TcpDirectionalState.Fin)
         {
           CloseTime = DateTime.Now;
-          state = TcpDirectionalState.FinAck;
+          otherDirectionState = TcpDirectionalState.FinAck;
         }
       }
     }
