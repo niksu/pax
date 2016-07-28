@@ -78,64 +78,47 @@ Then Pax activates the handlers, and your code takes it from there.
 
 
 # What does a Pax processor look like?
-The main handler function of our [NAT example](examples/NAT.cs) looks like this.
+The main handler function of our [NAT example](examples/Nat/NATBase.cs) looks like this.
 The return value is the port over which to emit the (modified) packet. The
 actual network interface connected to that port is determined by the
 configuration file.
 ```csharp
-// We drop anything other than TCP packets that are encapsulated in IPv4,
-// and in Ethernet.
-if (!(packet is PacketDotNet.EthernetPacket) ||
-    !packet.Encapsulates(typeof(IPv4Packet), typeof(TcpPacket)))
-{
-  return Port_Drop;
-}
+// Get the forwarding decision
+ForwardingDecision forwardingDecision;
+if (incomingNetworkInterface == Port_Outside)
+  forwardingDecision = OutsideToInside(packet);
+else
+  forwardingDecision = InsideToOutside(packet, incomingNetworkInterface);
 
-// Unencapsulate the packets, so we can read and change their fields more easily.
-IpPacket p_ip = ((IpPacket)(packet.PayloadPacket));
-TcpPacket p_tcp = ((PacketDotNet.TcpPacket)(p_ip.PayloadPacket));
-
-// Prepare the structure with which we'll query our port mapping.
-NAT_Entry from = new NAT_Entry();
-from.ip_address = p_ip.SourceAddress;
-from.tcp_port = p_tcp.SourcePort;
-
-// The NAT's behaviour depends on whether the packet came from Outside or Inside.
-// By default we drop packets.
-int out_port = Port_Drop;
-if (in_port == Port_Outside)
-{
-  from.assigned_tcp_port = p_tcp.DestinationPort;
-  from.network_port = null;
-  out_port = outside_to_inside (p_ip, p_tcp, from);
-} else {
-  from.assigned_tcp_port = null;
-  from.network_port = in_port;
-  out_port = inside_to_outside (p_ip, p_tcp, from);
-}
-
-return out_port;
+return forwardingDecision;
 ```
-And the `outside_to_inside` function is implemented as follows:
+And the `OutsideToInside` function is implemented as follows:
 ```csharp
-private int outside_to_inside (IpPacket p_ip, TcpPacket p_tcp, NAT_Entry from)
+private ForwardingDecision OutsideToInside(TEncapsulation packet)
 {
   // Retrieve the mapping. If a mapping doesn't exist, then it means that we're not
   // aware of a session to which the packet belongs: so drop the packet.
-  NAT_Entry to;
-  if (port_mapping.TryGetValue(from, out to))
+  var key = new ConnectionKey(packet.GetSourceNode(), packet.GetDestinationNode());
+  NatConnection<TPacket,TNode> connection;
+  if (NAT_MapToInside.TryGetValue(key, out connection))
   {
-    // Rewrite destination IP address and TCP port, and map to the appropriate Inside port.
-    p_ip.DestinationAddress = to.ip_address;
-    p_tcp.DestinationPort = to.tcp_port;
-    // Update checksums.
-    p_tcp.UpdateTCPChecksum();
-    ((IPv4Packet)p_ip).UpdateIPChecksum();
-    return to.network_port.Value;
+    var destination = connection.InsideNode;
+
+    // Update any connection state, including resetting the inactivity timer
+    connection.ReceivedPacket(packet, packetFromInside: false);
+
+    // Rewrite the packet destination
+    packet.SetDestination(destination);
+
+    // Update checksums
+    packet.UpdateChecksums();
+
+    // Forward on the mapped network port
+    return new ForwardingDecision.SinglePortForward(destination.InterfaceNumber);
   }
   else
   {
-    return Port_Drop;
+    return Drop;
   }
 }
 ```

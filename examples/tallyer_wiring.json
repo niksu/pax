@@ -1,17 +1,17 @@
 {
   "interfaces": [
-    { 
-      "interface_name" : "eth0", 
-      "lead_handler" : "Tallyer", 
-      "pcap_filter" : "", 
+    {
+      "interface_name" : "eth0",
+      "lead_handler" : "Tallyer",
+      "pcap_filter" : "",
       "environment" : {
         "tag": " on eth0"
       }
     },
-    { 
-      "interface_name" : "lo", 
-      "lead_handler" : "Tallyer", 
-      "pcap_filter" : "", 
+    {
+      "interface_name" : "lo",
+      "lead_handler" : "Tallyer",
+      "pcap_filter" : "",
       "environment" : {
         "tag": " on lo"
       }

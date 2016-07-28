@@ -36,6 +36,10 @@ namespace Pax {
 
     public static object ConvertConstructorParameter(Type ty, string s)
     {
+      // Get the underlying type if nullable (e.g. int?)
+      if (ty.IsGenericType && ty.GetGenericTypeDefinition() == typeof(Nullable<>))
+        ty = Nullable.GetUnderlyingType(ty);
+
       if (ty == typeof(string))
         return s;
       else if (ty == typeof(System.Net.IPAddress))
@@ -97,22 +101,22 @@ namespace Pax {
         argsDict.ContainsKey(param.Name) && IsAllowedConstructorParameterType(param.ParameterType);
       // Predicate determining if a constructor can be called
       Func<ConstructorInfo,bool> constructorCanBeCalled = ctor =>
-        ctor.GetParameters().All(parameterIsAvailable);
+        ctor.GetParameters().All(p => parameterIsAvailable(p) || p.IsOptional);
 
       // Get the constructors for this type that we could call with the given arguments:
       var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
                              .Where(constructorCanBeCalled);
 
       // Try to instantiate the type, using the best constructor we can:
-      foreach (var constructor in constructors.OrderByDescending(ctor => ctor.GetParameters().Length))
+      // Prefer constructors where we can provide all the parameters to those where some will be their default values
+      var sortedConstructors = constructors.OrderByDescending(ctor => ctor.GetParameters().Length)
+                                           .ThenByDescending(ctor => ctor.GetParameters().Count(p => !p.IsOptional));
+      foreach (var constructor in sortedConstructors)
       {
         try
         {
           // Get the arguments for the constructor, converted to the proper types
-          var arguments =
-            constructor.GetParameters()
-                       .Select(p => ConvertConstructorParameter(p.ParameterType, argsDict[p.Name]))
-                       .ToArray();
+          var arguments = GetArgumentsForConstructor(constructor, argsDict).ToArray();
           // Invoke the constructor, instantiating the type
 #if MOREDEBUG
           Console.WriteLine("Invoking new {0}", ConstructorString(constructor, arguments));
@@ -121,7 +125,8 @@ namespace Pax {
           return pp;
         }
         catch (Exception ex) when (ex is InvalidCastException
-                                || ex is FormatException)
+                                || ex is FormatException
+                                || ex is KeyNotFoundException)
         {
           // If an exception is thrown, ignore it and try the next best constructor
           // But log it first:
@@ -133,6 +138,41 @@ namespace Pax {
       // If we reach this point, there were no constructors that we could use
       Console.WriteLine("No suitable constructor could be found.");
       return null;
+    }
+    private static IEnumerable<object> GetArgumentsForConstructor(ConstructorInfo ctor, IDictionary<string,string> argsDict)
+    {
+      foreach (var param in ctor.GetParameters())
+      {
+        if (argsDict.ContainsKey(param.Name))
+        {
+          object converted = null;
+          string argString = argsDict[param.Name];
+          bool successful = false;
+          try
+          {
+            // Convert to the desired parameter type from the config string
+            converted = ConvertConstructorParameter(param.ParameterType, argString);
+            successful = true;
+          }
+          catch (Exception ex) when (ex is FormatException || ex is InvalidCastException)
+          {
+            // We couldn't convert this value. Log it, and then carry on, in case it is optional anyway
+            Debug.WriteLine("Couldn't convert string \"{0}\" to type {1}", argString, param.ParameterType.FullName);
+          }
+          if (successful)
+          {
+            yield return converted;
+            continue;
+          }
+        }
+
+        if (param.IsOptional)
+          // Allow optional parameters to be missing
+          yield return Type.Missing;
+        else
+          // We cannot provide the argument value - throw an error
+          throw new KeyNotFoundException();
+      }
     }
   }
 
