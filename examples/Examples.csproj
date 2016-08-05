@@ -46,6 +46,7 @@
     <Compile Include="paxos\Paxos_Packet.cs" />
     <Compile Include="paxos\Paxos.cs" />
     <Compile Include="tcp_wrapper\TCP_Wrapper.cs" />
+    <Compile Include="packet_formats/Syslog_Packet.cs" />
     <Compile Include="Test.cs" />
   </ItemGroup>
 <!--
