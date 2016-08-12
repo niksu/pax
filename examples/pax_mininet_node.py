@@ -12,9 +12,10 @@ from mininet.node import Node
 class PaxNode( Node ):
     "PaxNode: A node which allows Pax to behave as the sole packet hander on that node."
 
-    def __init__(self, name, **params):
+    def __init__(self, name, disable_arp=False, **params):
         super(PaxNode, self).__init__(name, **params)
         self.ip_forward = ""
+        self.disable_arp = disable_arp
 
     def config(self, **params):
         super(PaxNode, self).config(**params)
@@ -24,6 +25,10 @@ class PaxNode( Node ):
         #  to prevent the OS from handling them and responding.
         for intf in self.intfList():
             self.cmd("iptables -A INPUT -p tcp -i %s -j DROP" % intf.name)
+
+        # Also drop ARP packets for testing
+        if (self.disable_arp):
+            self.cmd("arptables -P INPUT DROP")
 
         # Disable ip_forward because otherwise, even with the above iptables rules, the OS
         #  will still forward packets that have a different IP on the other interfaces, which
@@ -35,6 +40,10 @@ class PaxNode( Node ):
         # Remove iptables rules
         for intf in self.intfList():
             self.cmd("iptables -D INPUT -p tcp -i %s -j DROP" % intf.name)
+
+        if (self.disable_arp):
+            self.cmd("arptables -P INPUT DROP")
+            self.cmd("arptables --flush")
 
         # Restore ip_forward value
         self.cmd("sysctl -w net.ipv4.ip_forward=%s" % self.ip_forward)
