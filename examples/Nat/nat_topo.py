@@ -170,6 +170,8 @@ def test():
     # Run scapy test #1
     print ""
     print "Scapy test #1"
+    print "  This test checks that a TCP connection can be opened from the inside to the outside and " + \
+            "that the connection entry is removed after the inactivity timeout elapses."
     sendCmd(net, out0, "examples/Nat/nat_scapy_tests.py server 35001", xterm=True)
     runCmd(net, in1, "sleep 1")
     runCmd(net, in1, "examples/Nat/nat_scapy_tests.py client", xterm=True)
@@ -184,6 +186,8 @@ def test():
     # Run scapy test #2
     print ""
     print "Scapy test #2"
+    print "  This test checks that a TCP connection can be opened from the inside to the outside, and " + \
+            "that when it is closed with Fin packets, the connection entry is removed after the TIME_WAIT timeout elapses."
     sendCmd(net, out0, "examples/Nat/nat_scapy_tests.py server2 35002", xterm=True)
     runCmd(net, in1, "sleep 1")
     runCmd(net, in1, "examples/Nat/nat_scapy_tests.py client2", xterm=True)
