@@ -127,8 +127,8 @@ networks when we don't have the physical machines otherwise needed.
 
 To test the NAT implementation:
 - [Install](http://mininet.org/download/) Mininet - it doesn't matter which way. We used Mininet 2.2.1 on Ubuntu 14.04 LTS.
-- cd into your cloned Pax directory and run `$ sudo ./examples/nat_topo.py test`
-- You can also jump into the Mininet CLI by running `$ sudo ./examples/nat_topo.py`
+- cd into your cloned Pax directory and run `$ sudo ./examples/Nat/nat_topo.py test`
+- You can also jump into the Mininet CLI by running `$ sudo ./examples/Nat/nat_topo.py`
 
 You will find it very helpful to learn more about Mininet if you plan to do anything
 apart from run the automated test. The Mininet
@@ -138,7 +138,7 @@ One very useful thing to know is to use `mininet> host command` in the CLI to ru
 
 We could manually test the NAT by running these commands:
 ``` bash
-$ sudo ./examples/nat_topo.py
+$ sudo ./examples/Nat/nat_topo.py
 mininet> out0 echo 'Hi from out0!' | netcat -l 12010 &
 mininet> in1 netcat out0 12010
 ```
@@ -149,7 +149,7 @@ it might not be the IP you were expecting.
 
 _
 
-Feel free to look in [`examples/nat_topo.py`](nat_topo.py):
+Feel free to look in [`examples/Nat/nat_topo.py`](Nat/nat_topo.py):
 - The `NatTopo` class defines the network topology for Mininet
 ```
                   ┌──────┐     ┌─────┐
