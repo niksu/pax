@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Hand-written .csproj file, based on instructions at https://msdn.microsoft.com/en-us/library/dd576348.aspx
+ Got further advice from http://stackoverflow.com/questions/2016697/msbuild-exe-not-accepting-either-pdefineconstants-nor-ppreprocessordefinitio
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <AssemblyName>Hub</AssemblyName>
+    <OutputPath>Bin\</OutputPath>
+    <OutputType>Library</OutputType>
+    <!--DefineConstants>DEBUG;TRACE;LITE</DefineConstants-->
+    <DefineConstants Condition=" '$(DefineConstants)'==''" >DEBUG;TRACE;LITE</DefineConstants>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Reference Include="Pax_Lite, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\Bin\Pax_Lite.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Hub.cs" />
+  </ItemGroup>
+<!--
+  <Target Name="Build">
+    <MSBuild Projects="@(Projects)" Properties="DefineConstants=$(DefineConstants)"/>
+    <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
+    <Csc Sources="@(Compile)" OutputAssembly="$(OutputPath)$(AssemblyName).exe" />
+  </Target>
+-->
+</Project>

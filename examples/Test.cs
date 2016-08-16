@@ -36,7 +36,7 @@ public class Test1 : SimplePacketProcessor {
 
   override public ForwardingDecision process_packet (int in_port, ref Packet packet)
   {
-    Console.Write("{0}({1}/{2}) ", in_port, Interlocked.Increment(ref count), PaxConfig.no_interfaces);
+    Console.Write("{0}({1}/{2}) ", in_port, Interlocked.Increment(ref count), PaxConfig_Lite.no_interfaces);
     return (new ForwardingDecision.SinglePortForward(1)); // This behaves like a static switch: it forwards everything to port 1.
   }
 }
@@ -59,9 +59,9 @@ public class Test3 : MultiInterface_SimplePacketProcessor {
   {
 #if DEBUG
     Console.Write("!");
-    Console.Write("{0}({1}/{2}) ", in_port, Interlocked.Increment(ref count), PaxConfig.no_interfaces);
+    Console.Write("{0}({1}/{2}) ", in_port, Interlocked.Increment(ref count), PaxConfig_Lite.no_interfaces);
 #endif
-    int[] target_ports = MultiInterface_SimplePacketProcessor.broadcast(in_port);
+    int[] target_ports = ForwardingDecision.broadcast_raw(in_port);
     return (new ForwardingDecision.MultiPortForward(target_ports));
   }
 }
@@ -110,8 +110,8 @@ public class Nested_Chained_Test2 : IPacketProcessor {
   IPacketProcessor pp;
 
   public Nested_Chained_Test2 () {
-    mirror_cfg = Mirror.InitialConfig(PaxConfig.no_interfaces);
-    Debug.Assert(PaxConfig.no_interfaces >= 3);
+    mirror_cfg = Mirror.InitialConfig(PaxConfig_Lite.no_interfaces);
+    Debug.Assert(PaxConfig_Lite.no_interfaces >= 3);
     mirror_cfg[0] = new ForwardingDecision.SinglePortForward(2); // Mirror port 0 to port 2
 
     this.pp =
@@ -119,7 +119,7 @@ public class Nested_Chained_Test2 : IPacketProcessor {
           {
   /* FIXME would be tidier to use this
             new Mirror(
-              Mirror.InitialConfig(PaxConfig.no_interfaces).MirrorPort(0, 2)
+              Mirror.InitialConfig(PaxConfig_Lite.no_interfaces).MirrorPort(0, 2)
               ),
   */
             new Mirror(mirror_cfg),

@@ -43,7 +43,7 @@ public class LearningSwitch : MultiInterface_SimplePacketProcessor {
           out_ports = new int[1]{lookup_out_port};
         }
       } else {
-        out_ports = MultiInterface_SimplePacketProcessor.broadcast(in_port);
+        out_ports = ForwardingDecision.broadcast_raw(in_port);
       }
 
       // This might hold the value that's mapped to by eth.SourceHwAddress,

@@ -7,6 +7,9 @@ Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 
 namespace Pax {
 
+  // FIXME should there be a Lite version of this class? I think specifically
+  //       it would statically dimension the MultiPortForward's array, and
+  //       perhaps have it write directly to a field in Packet_Buffer.
   /// <summary>
   /// A packet processor makes some sort of forwarding decision, in addition
   /// to possibly analysing/modifying the packet (and generating new packets).
@@ -67,6 +70,28 @@ namespace Pax {
       public MultiPortForward (int[] target_ports) {
         this.target_ports = target_ports;
       }
+    }
+
+    public static int[] broadcast_raw (int in_port)
+    {
+      int[] out_ports = new int[PaxConfig_Lite.no_interfaces - 1];
+      // We retrieve number of interfaces in use from PaxConfig_Lite.
+      // Naturally, we exclude in_port from the interfaces we're forwarding to since this is a broadcast.
+      int idx = 0;
+      for (int ofs = 0; ofs < PaxConfig_Lite.no_interfaces; ofs++)
+      {
+        if (ofs != in_port)
+        {
+          out_ports[idx] = ofs;
+          idx++;
+        }
+      }
+      return out_ports;
+    }
+
+    public static MultiPortForward broadcast (int in_port)
+    {
+      return (new MultiPortForward (broadcast_raw (in_port)));
     }
   }
 }

@@ -16,7 +16,7 @@ using System.Diagnostics;
 // FIXME use javadoc-style comments to describe the API
 namespace Pax {
 
-  // A more abstract interface to packet processors.
+  // An abstract interface to packet processors.
   public interface IAbstract_PacketProcessor {
     ForwardingDecision process_packet (int in_port, ref Packet packet);
   }
@@ -113,23 +113,6 @@ namespace Pax {
     // Return the offsets of network interfaces that "packet" is to be forwarded to.
     abstract public ForwardingDecision process_packet (int in_port, ref Packet packet);
 
-    public static int[] broadcast (int in_port)
-    {
-      int[] out_ports = new int[PaxConfig.no_interfaces - 1];
-      // We retrieve number of interfaces in use from PaxConfig.
-      // Naturally, we exclude in_port from the interfaces we're forwarding to since this is a broadcast.
-      int idx = 0;
-      for (int ofs = 0; ofs < PaxConfig.no_interfaces; ofs++)
-      {
-        if (ofs != in_port)
-        {
-          out_ports[idx] = ofs;
-          idx++;
-        }
-      }
-      return out_ports;
-    }
-
     public void packetHandler (object sender, CaptureEventArgs e)
     {
       var packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
@@ -140,24 +123,47 @@ namespace Pax {
       if (des is ForwardingDecision.MultiPortForward)
       {
         out_ports = ((ForwardingDecision.MultiPortForward)des).target_ports;
+        /*
+        Since MultiPortForward works with arrays, this increases the exposure
+        to dud values:
+        * negative values within arrays
+        * repeated values within arrays
+        * an array might be larger than intended, and contains rubbish data.
+        These could manifest themselves as bugs or abused behaviour.
+        FIXME determine how each of these cases will be treated.
+        */
       } else {
         throw (new Exception ("Expected MultiPortForward"));
       }
 
 #if DEBUG
       Debug.Write(PaxConfig.deviceMap[in_port].Name + " -> ");
+      // It's useful to know the width of the returned array during debugging,
+      // since it might be that the array was wider than intended, and contained
+      // repeated or rubbish values.
+      Debug.Write("[" + out_ports.Length.ToString() + "] ");
 #endif
+
       for (int idx = 0; idx < out_ports.Length; idx++)
       {
-        PaxConfig.deviceMap[out_ports[idx]].SendPacket(packet);
+        int out_port = out_ports[idx];
+        // Check if trying to send over a non-existent port.
+        if (out_port < PaxConfig_Lite.no_interfaces) {
+          PaxConfig.deviceMap[out_port].SendPacket(packet);
 #if DEBUG
-        if (idx < out_ports.Length - 1)
-        {
-          Debug.Write(PaxConfig.deviceMap[out_ports[idx]].Name + ", ");
-        } else {
-          Debug.Write(PaxConfig.deviceMap[out_ports[idx]].Name);
-        }
+          Debug.Write("(" + out_port.ToString() + ") "); // Show the network interface offset.
+          // And now show the network interface name that the offset resolves to.
+          if (idx < out_ports.Length - 1)
+          {
+             Debug.Write(PaxConfig.deviceMap[out_port].Name + ", ");
+          } else {
+             Debug.Write(PaxConfig.deviceMap[out_port].Name);
+          }
 #endif
+        } else if (!(out_port < PaxConfig_Lite.no_interfaces) &&
+            !PaxConfig_Lite.ignore_phantom_forwarding) {
+          throw (new Exception ("Tried forward to non-existant port"));
+        }
       }
 
 #if DEBUG

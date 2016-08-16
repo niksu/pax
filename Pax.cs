@@ -151,14 +151,14 @@ namespace Pax
         JsonSerializer j = new JsonSerializer();
         j.DefaultValueHandling = DefaultValueHandling.Populate;
         PaxConfig.configFile = j.Deserialize<ConfigFile>(r);
-        PaxConfig.no_interfaces = PaxConfig.config.Count;
-        PaxConfig.deviceMap = new ICaptureDevice[PaxConfig.no_interfaces];
-        PaxConfig.interface_lead_handler = new string[PaxConfig.no_interfaces];
-        PaxConfig.interface_lead_handler_obj = new IPacketProcessor[PaxConfig.no_interfaces];
+        PaxConfig_Lite.no_interfaces = PaxConfig.config.Count;
+        PaxConfig.deviceMap = new ICaptureDevice[PaxConfig_Lite.no_interfaces];
+        PaxConfig.interface_lead_handler = new string[PaxConfig_Lite.no_interfaces];
+        PaxConfig.interface_lead_handler_obj = new IPacketProcessor[PaxConfig_Lite.no_interfaces];
 
         int idx = 0;
         foreach (var i in PaxConfig.config) {
-          Debug.Assert (idx < PaxConfig.no_interfaces);
+          Debug.Assert (idx < PaxConfig_Lite.no_interfaces);
 
           PaxConfig.deviceMap[idx] = null;
           //FIXME not using internal_name any more to avoid more lookups. Remove completely?
@@ -221,7 +221,7 @@ namespace Pax
         // Find which network interfaces this class is handling
         List<int> subscribed = new List<int>();
         IPacketProcessor pp = null;
-        for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
+        for (int idx = 0; idx < PaxConfig_Lite.no_interfaces; idx++)
         {
           // Does this interface have this type specified as the lead handler?
           if ((!String.IsNullOrEmpty(PaxConfig.interface_lead_handler[idx])) &&
@@ -311,7 +311,7 @@ namespace Pax
         });
       // Shutdown on ^C -- FIXME remove handling of ^C or ^D?
       Console.CancelKeyPress += new ConsoleCancelEventHandler(shutdown);
-      for (int idx = 0; idx < PaxConfig.no_interfaces; idx++)
+      for (int idx = 0; idx < PaxConfig_Lite.no_interfaces; idx++)
       {
         if (PaxConfig.interface_lead_handler_obj[idx] == null)
         {
