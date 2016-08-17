@@ -37,7 +37,7 @@ public static class Paxos {
 
 // Paxos Coordinator.
 // It operates on Paxos packets arriving on in_port. Both Paxos and other
-// traffic is forward on to inport+1.
+// traffic is forward on to in_port+1.
 public class Coordinator : SimplePacketProcessor {
   // State maintained by the Coordinator.
   ushort instance_register = 0;
