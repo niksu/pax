@@ -128,7 +128,7 @@ public class Acceptor : SimplePacketProcessor {
       IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
       UdpPacket udp_p = ((UdpPacket)(ip_p.PayloadPacket));
 
-      if (udp_p.DestinationPort != Paxos.Paxos_Acceptor_Port)
+      if (udp_p.DestinationPort == Paxos.Paxos_Acceptor_Port)
       {
         Paxos_Packet paxos_p = ((Paxos_Packet)(udp_p.PayloadPacket));
 
