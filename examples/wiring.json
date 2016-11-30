@@ -1,12 +1,17 @@
 {
+  "handlers": [
+    {
+      "class_name": "Printer",
+      "args": {
+        "id": "1"
+      }
+    }
+  ],
   "interfaces": [
     {
-      "interface_name" : "eth0",
-      "lead_handler" : "Nested_Chained_Test2",
+      "interface_name" : "en0",
+      "lead_handler" : "Printer",
       "pcap_filter" : "udp"
-    },
-    {
-      "interface_name" : "lo"
     }
   ]
 }
