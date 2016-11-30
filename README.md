@@ -70,6 +70,13 @@ For the example code I run:
 sudo ./Bin/Pax.exe examples/wiring.json examples/Bin/Examples.dll
 ```
 
+This runs the Printer element, which simply prints an integer whenever a
+particular kind of packet arrives on an interface. For another element we use
+for debugging, try:
+```
+sudo ./Bin/Pax.exe examples/tallyer_wiring.json examples/Bin/Examples.dll
+```
+
 Pax then starts up and checks the configuration file and assembly, listing some of their contents.
 It connects the network interfaces with the handlers in the assembly, as specified in the configuration.
 Then Pax activates the handlers, and your code takes it from there.
