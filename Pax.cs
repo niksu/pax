@@ -20,6 +20,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Reflection;
+using Mono.Options;
 
 namespace Pax
 {
@@ -64,6 +65,10 @@ namespace Pax
 #if DEBUG
       Debug.Listeners.Add(new TextWriterTraceListener(System.Console.Out));
 #endif
+
+      OptionSet p = new OptionSet ()
+        .Add ("v", _ => PaxConfig.opt_verbose = true);
+      args = p.Parse(args).ToArray();
 
       if (args.Length < 2)
       {
@@ -124,21 +129,24 @@ namespace Pax
       Console.Write ("http://www.cl.cam.ac.uk/~ns441/pax");
       Console.ForegroundColor = ConsoleColor.White;
       Console.WriteLine();
-      print_kv  (indent + "running as ",
-          (System.Environment.Is64BitProcess ? "64bit" : "32bit") + " process",
-          true);
-      print_kv  (indent + "on .NET runtime v", System.Environment.Version.ToString(),
-                 true);
-      print_kv  (indent + "OS is ",
-          System.Environment.OSVersion.ToString() +
-          " (" +
-          (System.Environment.Is64BitOperatingSystem ? "64bit" : "32bit")
-          + ")",
-          true);
-      print_kv  (indent + "OS running for (ticks) ", System.Environment.TickCount.ToString(),
-                 true);
-      print_kv  (indent + "No. processors available ", System.Environment.ProcessorCount.ToString(),
-                 true);
+      if (PaxConfig.opt_verbose) {
+        print_kv  (indent + "running as ",
+            (System.Environment.Is64BitProcess ? "64bit" : "32bit") + " process",
+            true);
+        print_kv  (indent + "on .NET runtime v", System.Environment.Version.ToString(),
+                   true);
+        print_kv  (indent + "OS is ",
+            System.Environment.OSVersion.ToString() +
+            " (" +
+            (System.Environment.Is64BitOperatingSystem ? "64bit" : "32bit")
+            + ")",
+            true);
+        print_kv  (indent + "OS running for (ticks) ", System.Environment.TickCount.ToString(),
+                   true);
+        print_kv  (indent + "No. processors available ", System.Environment.ProcessorCount.ToString(),
+                   true);
+      }
+
       print_kv ("Using configuration file: ", PaxConfig.config_filename);
       print_kv ("Using assembly file: ", PaxConfig.assembly_filename);
     }
@@ -242,11 +250,13 @@ namespace Pax
         Console.ForegroundColor = ConsoleColor.Green;
         Console.Write (type);
 
-        // List the Pax interfaces this type implements:
-        Console.ForegroundColor = ConsoleColor.Gray;
-        Console.Write(" : ");
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write(String.Join(", ", PacketProcessorHelper.GetUsedPaxTypes(type).Select(t => t.Name)));
+        if (PaxConfig.opt_verbose) {
+          // List the Pax interfaces this type implements:
+          Console.ForegroundColor = ConsoleColor.Gray;
+          Console.Write(" : ");
+          Console.ForegroundColor = ConsoleColor.Cyan;
+          Console.Write(String.Join(", ", PacketProcessorHelper.GetUsedPaxTypes(type).Select(t => t.Name)));
+        }
 
         // Print which interfaces this type is the handler for
         if (subscribed.Count != 0) {
