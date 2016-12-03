@@ -8,16 +8,16 @@ Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System.Net.NetworkInformation;
+using System.Net;
 
 namespace Pax_TCP {
 
   // FIXME many constant values are excluded, e.g., various error codes.
   //       i only included the ones that i think i'll use in the prototype.
-  enum Internet_Domain {AF_Inet};
-  enum Internet_Type {Sock_Stream};
-  enum Internet_Protocol {TCP};
-  enum Error {EACCES, EADDRINUSE, EBADF, EINVAL, ENOTSOCK, EOPNOTSUPP, EINTR, EIO,
+  public enum Internet_Domain {AF_Inet};
+  public enum Internet_Type {Sock_Stream};
+  public enum Internet_Protocol {TCP};
+  public enum Error {EACCES, EADDRINUSE, EBADF, EINVAL, ENOTSOCK, EOPNOTSUPP, EINTR, EIO,
     EAGAIN, EWOULDBLOCK, EDESTADDRREQ, EDQUOT, EFAULT, EFBIG, ENOSP, EPERM, EPIPE};
 
   public class SockID {
@@ -34,10 +34,9 @@ namespace Pax_TCP {
   public class Result<T> {
     public readonly T result;
     public readonly bool erroneous = false;
-    public readonly Error error;
+    public readonly Error? error;
 
-    public Result (T result, Error error) {
-      Debug.Assert (result == null || error == null);
+    public Result (T result, Error? error) {
       this.result = result;
       this.error = error;
       if (error != null) {
@@ -47,73 +46,74 @@ namespace Pax_TCP {
 
     public T value_exc () {
       if (erroneous) {
-        throw new Exception(ToString());
+        throw new Exception(this.ToString());
       }
 
       return result;
     }
 
-    public string ToString() {
+    override public string ToString() {
       string result;
 
       if (error == null) {
-        return result.ToString();
+        return this.result.ToString();
       }
 
       switch (error) {
-        case EACCES:
+        case Error.EACCES:
           result = "EACCESS";
           break;
-        case EADDRINUSE:
+        case Error.EADDRINUSE:
           result = "EADDRINUSE";
           break;
-        case EBADF:
+        case Error.EBADF:
           result = "EBADF";
           break;
-        case EINVAL:
+        case Error.EINVAL:
           result = "EINVAL";
           break;
-        case ENOTSOCK:
+        case Error.ENOTSOCK:
           result = "ENOTSOCK";
           break;
-        case EOPNOTSUPP:
+        case Error.EOPNOTSUPP:
           result = "EOPNOTSUPP";
           break;
-        case EINTR:
+        case Error.EINTR:
           result = "EINTR";
           break;
-        case EIO:
+        case Error.EIO:
           result = "EIO";
           break;
-        case EAGAIN:
+        case Error.EAGAIN:
           result = "EAGAIN";
           break;
-        case EWOULDBLOCK:
+        case Error.EWOULDBLOCK:
           result = "EWOULDBLOCK";
           break;
-        case EDESTADDRREQ:
+        case Error.EDESTADDRREQ:
           result = "EDESTADDRREQ";
           break;
-        case EDQUOT:
+        case Error.EDQUOT:
           result = "EDQUOT";
           break;
-        case EFAULT:
+        case Error.EFAULT:
           result = "EFAULT";
           break;
-        case EFBIG:
+        case Error.EFBIG:
           result = "EFBIG";
           break;
-        case ENOSP:
+        case Error.ENOSP:
           result = "ENOSP";
           break;
-        case EPERM:
+        case Error.EPERM:
           result = "EPERM";
           break;
-        case EPIPE:
+        case Error.EPIPE:
           result = "EPIPE";
           break;
         default:
           result = "(Unknown error)";
+          break;
       }
 
       return result;
@@ -141,7 +141,7 @@ namespace Pax_TCP {
     Result<SockID> socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot);
     Result<bool> bind (SockID sid, SockAddr_In address);
     Result<bool> listen (SockID sid, uint backlog);
-    Result<SockID> accept (SockID sid, SockAddr_In address);
+    Result<SockID> accept (SockID sid, out SockAddr_In address);
     Result<int> write (SockID sid, byte[] buf);
     Result<int> read (SockID sid, out byte[] buf, uint count);
     Result<bool> close (SockID sid);
