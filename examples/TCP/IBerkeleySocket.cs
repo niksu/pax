@@ -6,6 +6,7 @@ Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 */
 
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
 
@@ -32,11 +33,24 @@ namespace Pax_TCP {
 
   public class Result<T> {
     public readonly T result;
+    public readonly bool erroneous = false;
     public readonly Error error;
 
     public Result (T result, Error error) {
+      Debug.Assert (result == null || error == null);
       this.result = result;
       this.error = error;
+      if (error != null) {
+        erroneous = true;
+      }
+    }
+
+    public T value_exc () {
+      if (erroneous) {
+        throw new Exception(ToString());
+      }
+
+      return result;
     }
 
     public string ToString() {
@@ -124,10 +138,10 @@ namespace Pax_TCP {
      Also i exclude "sendto", "recvfrom", "send", and "recv", again for prototyping.
   */
   public interface IBerkeleySocket {
-    SockID socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot);
+    Result<SockID> socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot);
     Result<bool> bind (SockID sid, SockAddr_In address);
     Result<bool> listen (SockID sid, uint backlog);
-    Result<bool> accept (SockID sid, SockAddr_In address);
+    Result<SockID> accept (SockID sid, SockAddr_In address);
     Result<int> write (SockID sid, byte[] buf);
     Result<int> read (SockID sid, out byte[] buf, uint count);
     Result<bool> close (SockID sid);

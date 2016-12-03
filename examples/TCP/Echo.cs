@@ -12,20 +12,13 @@ using Pax;
 using Pax_TCP;
 
 public class Echo_Server {
-  var my_sock_e = TCP.socket(Internet_Domain.AF_Inet, Internet_Type.Sock_Stream, Internet_Protocol.TCP);
+  SockID my_sock = TCP.socket(Internet_Domain.AF_Inet, Internet_Type.Sock_Stream, Internet_Protocol.TCP).value_exc();
   SockAddr_In my_addr = new SockAddr_In(7, IPAddress.Parse("192.168.100.100"));
-  var r = TCP.bind(my_sock, my_addr);
   private readonly uint backlog = 1024;
 
   public void start () {
-    if (!r.result) {
-      throw new Exception(r.ToString());
-    }
-
-    r = TCP.listen(my_sock, backlog);
-    if (!r.result) {
-      throw new Exception(r.ToString());
-    }
+    TCP.bind(my_sock, my_addr).value_exc();
+    TCP.listen(my_sock, backlog).value_exc();
 
     while (true) {
       //FIXME check if we have any availability left -- do this here, or in TCP?
