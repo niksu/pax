@@ -17,6 +17,7 @@ public class Echo_Server {
   SockID my_sock;
   SockAddr_In my_addr;
 
+  // FIXME use static echo buffer, rather than keep reallocating.
   public Echo_Server (uint port, IPAddress address) {
     my_sock = tcp.socket(Internet_Domain.AF_Inet, Internet_Type.Sock_Stream, Internet_Protocol.TCP).value_exc();
     my_addr = new SockAddr_In(port, address);
@@ -32,7 +33,13 @@ public class Echo_Server {
       SockAddr_In client_addr;
       SockID client_sock = tcp.accept(my_sock, out client_addr).value_exc();
 
-      //FIXME read + write
+      bool ended = false;
+      byte[] buf;
+      while (!ended) {
+        tcp.read (client_sock, out buf, 10/*FIXME const*/); // FIXME check 'read' value to see if connection's been broken.
+        tcp.write (client_sock, buf);
+        ended = true; // FIXME check 'buf' to see if there's an EOF.
+      }
 
       tcp.close(client_sock).value_exc();
     }
