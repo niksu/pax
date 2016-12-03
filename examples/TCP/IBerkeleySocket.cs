@@ -32,10 +32,77 @@ namespace Pax_TCP {
 
   public class Result<T> {
     public readonly T result;
-    public readonly string error;
-    public Result (T result, string error) {
+    public readonly Error error;
+
+    public Result (T result, Error error) {
       this.result = result;
       this.error = error;
+    }
+
+    public string ToString() {
+      string result;
+
+      if (error == null) {
+        return result.ToString();
+      }
+
+      switch (error) {
+        case EACCES:
+          result = "EACCESS";
+          break;
+        case EADDRINUSE:
+          result = "EADDRINUSE";
+          break;
+        case EBADF:
+          result = "EBADF";
+          break;
+        case EINVAL:
+          result = "EINVAL";
+          break;
+        case ENOTSOCK:
+          result = "ENOTSOCK";
+          break;
+        case EOPNOTSUPP:
+          result = "EOPNOTSUPP";
+          break;
+        case EINTR:
+          result = "EINTR";
+          break;
+        case EIO:
+          result = "EIO";
+          break;
+        case EAGAIN:
+          result = "EAGAIN";
+          break;
+        case EWOULDBLOCK:
+          result = "EWOULDBLOCK";
+          break;
+        case EDESTADDRREQ:
+          result = "EDESTADDRREQ";
+          break;
+        case EDQUOT:
+          result = "EDQUOT";
+          break;
+        case EFAULT:
+          result = "EFAULT";
+          break;
+        case EFBIG:
+          result = "EFBIG";
+          break;
+        case ENOSP:
+          result = "ENOSP";
+          break;
+        case EPERM:
+          result = "EPERM";
+          break;
+        case EPIPE:
+          result = "EPIPE";
+          break;
+        default:
+          result = "(Unknown error)";
+      }
+
+      return result;
     }
   }
 
