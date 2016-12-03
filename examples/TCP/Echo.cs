@@ -11,6 +11,7 @@ using System.Net;
 using PacketDotNet;
 using Pax;
 using Pax_TCP;
+using Mono.Options;
 
 public class Echo_Server {
   //TCPuny tcp = new TCPuny (100, 1024);
@@ -54,8 +55,20 @@ public class Echo_Server {
 //       loaded via Pax?
 public class Test_Echo_Server {
   public static int Main (string[] args) {
-    Console.WriteLine("Starting Echo server");
-    var server = new Echo_Server(7000, IPAddress.Parse("192.168.0.9")); // FIXME hardcoded
+    IPAddress address = null;
+    uint port = 7; //default Internet port for Echo.
+
+    OptionSet p = new OptionSet ()
+      .Add ("address=", (String s) => address = IPAddress.Parse(s))
+      .Add ("port=", (uint pt) => port = pt);
+    p.Parse(args).ToArray();
+
+    if (address == null) {
+      throw new Exception("Expected the parameter 'address' to be given.");
+    }
+
+    Console.WriteLine("Starting Echo server at " + address.ToString() + ":" + port.ToString());
+    var server = new Echo_Server(port, address);
     server.start(); // FIXME start as thread?
     return 0;
   }
