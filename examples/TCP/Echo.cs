@@ -9,9 +9,11 @@ Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 using System;
 using PacketDotNet;
 using Pax;
+using Pax_TCP;
 
 public class Echo_Server {
   SockID my_sock = TCP.socket(...);
+    SockID socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot);
   SockAddr_In my_addr = new SockAddr_In(...);
   var r = TCP.bind(my_sock, my_addr);
   if (!r.result) {

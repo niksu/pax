@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
 
-namespace Pax {
+namespace Pax_TCP {
 
   // FIXME many constant values are excluded, e.g., various error codes.
   //       i only included the ones that i think i'll use in the prototype.

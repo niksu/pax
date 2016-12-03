@@ -10,23 +10,26 @@ using System;
 using PacketDotNet;
 using Pax;
 
-public class TCP : SimplePacketProcessor, IBerkeleySocket {
+namespace Pax_TCP {
 
-  override public ForwardingDecision process_packet (int in_port, ref Packet packet)
-  {
-    if (packet is EthernetPacket &&
-      packet.Encapsulates(typeof(IPv4Packet), typeof(TcpPacket)))
+  public class TCP : SimplePacketProcessor, IBerkeleySocket {
+
+    override public ForwardingDecision process_packet (int in_port, ref Packet packet)
     {
-        IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
-        TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
+      if (packet is EthernetPacket &&
+        packet.Encapsulates(typeof(IPv4Packet), typeof(TcpPacket)))
+      {
+          IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+          TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
-        // FIXME do something with tcp_p
+          // FIXME do something with tcp_p
+      }
+
+      // FIXME return nothing?
+      return (new ForwardingDecision.SinglePortForward(in_port + 1));
     }
 
-    // FIXME return nothing?
-    return (new ForwardingDecision.SinglePortForward(in_port + 1));
+    // FIXME function to send a segment
+
   }
-
-  // FIXME function to send a segment
-
 }
