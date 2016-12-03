@@ -30,26 +30,6 @@ namespace Pax {
     }
   }
 
-/*
-  public class ResultInt {
-    public readonly int result;
-    public readonly string error;
-    public ResultInt (int result, string error) {
-      this.result = result;
-      this.error = error;
-    }
-  }
-
-  public class Result {
-    public readonly bool success;
-    public readonly string error;
-    public Result (bool success, string error) {
-      this.success = success;
-      this.error = error;
-    }
-  }
-*/
-
   public class Result<T> {
     public readonly T result;
     public readonly string error;
