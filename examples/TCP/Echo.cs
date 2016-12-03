@@ -13,23 +13,34 @@ using Pax;
 using Pax_TCP;
 
 public class Echo_Server {
-  SockID my_sock = TCP.socket(Internet_Domain.AF_Inet, Internet_Type.Sock_Stream, Internet_Protocol.TCP).value_exc();
-  SockAddr_In my_addr = new SockAddr_In(7, IPAddress.Parse("192.168.100.100"));
-  private readonly uint backlog = 1024;
+  TCPuny tcp = new TCPuny (100, 1024);
+  SockID my_sock;
+  SockAddr_In my_addr;
+
+  public Echo_Server (uint port, IPAddress address) {
+    my_sock = tcp.socket(Internet_Domain.AF_Inet, Internet_Type.Sock_Stream, Internet_Protocol.TCP).value_exc();
+    my_addr = new SockAddr_In(port, address);
+  }
 
   public void start () {
     // NOTE we call "value_exc()" to force the check to see if there's an error result.
-    TCP.bind(my_sock, my_addr).value_exc();
-    TCP.listen(my_sock, backlog).value_exc();
+    tcp.bind(my_sock, my_addr).value_exc();
+    tcp.listen(my_sock).value_exc();
 
     //FIXME make this multithreaded, using a static thread pool.
     while (true) {
       SockAddr_In client_addr;
-      SockID client_sock = TCP.accept(my_sock, out client_addr).value_exc();
+      SockID client_sock = tcp.accept(my_sock, out client_addr).value_exc();
 
       //FIXME read + write
 
-      TCP.close(client_sock).value_exc();
+      tcp.close(client_sock).value_exc();
     }
+  }
+}
+
+public class Test_Echo_Server {
+  public static void Main() {
+    var server = new Echo_Server(7, IPAddress.Parse("192.168.100.100"));
   }
 }

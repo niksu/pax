@@ -13,8 +13,17 @@ using Pax;
 
 namespace Pax_TCP {
 
-  public class TCP : SimplePacketProcessor, IBerkeleySocket {
+  public class TCPuny : SimplePacketProcessor, IBerkeleySocket {
+    uint max_conn;
+    uint max_backlog;
+
+
     // FIXME specify TCB
+
+    public TCPuny (uint max_conn, uint max_backlog) {
+      this.max_conn = max_conn;
+      this.max_backlog = max_backlog;
+    }
 
     override public ForwardingDecision process_packet (int in_port, ref Packet packet)
     {
@@ -41,7 +50,7 @@ namespace Pax_TCP {
       throw new Exception("TODO");
     }
 
-    public Result<bool> listen (SockID sid, uint backlog) {
+    public Result<bool> listen (SockID sid) {
       throw new Exception("TODO");
     }
 

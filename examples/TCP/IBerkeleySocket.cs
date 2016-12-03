@@ -122,9 +122,9 @@ namespace Pax_TCP {
 
   // FIXME specialised this to work on IPv4
   public class SockAddr_In {
-    public readonly int port;
+    public readonly uint port;
     public readonly IPAddress address;
-    public SockAddr_In (int port, IPAddress address) {
+    public SockAddr_In (uint port, IPAddress address) {
       this.port = port;
       this.address = address;
     }
@@ -140,7 +140,7 @@ namespace Pax_TCP {
   public interface IBerkeleySocket {
     Result<SockID> socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot);
     Result<bool> bind (SockID sid, SockAddr_In address);
-    Result<bool> listen (SockID sid, uint backlog);
+    Result<bool> listen (SockID sid); // NOTE we let the "backlog" parameter be implicit for prototyping reasons; it's a parameter of TCP, not the interface.
     Result<SockID> accept (SockID sid, out SockAddr_In address);
     Result<int> write (SockID sid, byte[] buf);
     Result<int> read (SockID sid, out byte[] buf, uint count);
