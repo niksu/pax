@@ -51,7 +51,7 @@ public class TCwraP : IBerkeleySocket {
 
     public Result<bool> listen (SockID sid) {
       SockID_dotNET s = upcast_sock(sid);
-      s.base_socket.Listen((int)this.max_backlog); // FIXME turning uint into int
+      s.base_socket.Listen((int)this.max_backlog); // FIXME casting uint into int
       return new Result<bool> (true, null);
     }
 
