@@ -39,6 +39,8 @@ public class Echo_Server {
   }
 }
 
+// FIXME can run this directly? I think with the current setup it needs to be
+//       loaded via Pax?
 public class Test_Echo_Server {
   public static void Main() {
     var server = new Echo_Server(7, IPAddress.Parse("192.168.100.100"));
