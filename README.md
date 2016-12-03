@@ -131,12 +131,18 @@ private ForwardingDecision OutsideToInside(TEncapsulation packet)
 ```
 
 # License
-Apache 2.0
+Pax is licensed under [Apache 2.0](license).
+[Mono.Options](Options.cs) is licensed as described in its header.
+
 
 # Acknowledgements :v:
 * Project [NaaS](http://www.naas-project.org/) and its funder ([EPSRC](http://epsrc.ac.uk)).
 * Colleagues at [NetOS](http://www.cl.cam.ac.uk/research/srg/netos/).
-* Contributors to [PacketDotNet](https://github.com/chmorgan/packetnet), [SharpPcap](https://github.com/chmorgan/sharppcap), [Newtonsoft.JSON](https://github.com/JamesNK/Newtonsoft.Json/), [libpcap](http://www.tcpdump.org/) and [winpcap](http://www.winpcap.org/).
+* Contributors to [PacketDotNet](https://github.com/chmorgan/packetnet),
+  [SharpPcap](https://github.com/chmorgan/sharppcap),
+  [Newtonsoft.JSON](https://github.com/JamesNK/Newtonsoft.Json/),
+  [libpcap](http://www.tcpdump.org/) and [winpcap](http://www.winpcap.org/),
+  [Mono.Options](https://github.com/mono/mono/blob/master/mcs/class/Mono.Options/Mono.Options/Options.cs).
 
 # Project ideas
 Try using Pax to implement prototypes of the following:
