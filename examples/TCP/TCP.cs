@@ -13,13 +13,18 @@ using Pax;
 
 namespace Pax_TCP {
 
+  // FIXME specify TCB
+  public struct TCB {
+
+  }
+
   public class TCPuny : SimplePacketProcessor, IBerkeleySocket {
     uint max_conn;
     uint max_backlog;
+    // FIXME instantiate TCB
 
-
-    // FIXME specify TCB
-
+    // FIXME start thread to take care of sending stuff onto network.
+    //       and to register with the timer.
     public TCPuny (uint max_conn, uint max_backlog) {
       this.max_conn = max_conn;
       this.max_backlog = max_backlog;
