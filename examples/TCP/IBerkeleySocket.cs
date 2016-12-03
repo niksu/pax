@@ -143,7 +143,7 @@ namespace Pax_TCP {
     Result<bool> listen (SockID sid); // NOTE we let the "backlog" parameter be implicit for prototyping reasons; it's a parameter of TCP, not the interface.
     Result<SockID> accept (SockID sid, out SockAddr_In address);
     Result<int> write (SockID sid, byte[] buf);
-    Result<int> read (SockID sid, out byte[] buf, uint count);
+    Result<int> read (SockID sid, byte[] buf, uint count);
     Result<bool> close (SockID sid);
   }
 }

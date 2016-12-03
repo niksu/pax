@@ -67,7 +67,7 @@ namespace Pax_TCP {
       throw new Exception("TODO");
     }
 
-    public Result<int> read (SockID sid, out byte[] buf, uint count) {
+    public Result<int> read (SockID sid, byte[] buf, uint count) {
       throw new Exception("TODO");
     }
 

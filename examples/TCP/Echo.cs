@@ -13,7 +13,8 @@ using Pax;
 using Pax_TCP;
 
 public class Echo_Server {
-  TCPuny tcp = new TCPuny (100, 1024);
+  //TCPuny tcp = new TCPuny (100, 1024);
+  IBerkeleySocket tcp = new TCwraP (100, 1024);
   SockID my_sock;
   SockAddr_In my_addr;
 
@@ -33,15 +34,18 @@ public class Echo_Server {
       SockAddr_In client_addr;
       SockID client_sock = tcp.accept(my_sock, out client_addr).value_exc();
 
+      Console.WriteLine("Client added");
+
       bool ended = false;
-      byte[] buf;
+      byte[] buf = new byte[20]; // FIXME const
       while (!ended) {
-        tcp.read (client_sock, out buf, 10/*FIXME const*/); // FIXME check 'read' value to see if connection's been broken.
+        tcp.read (client_sock, buf, 10/*FIXME const*/); // FIXME check 'read' value to see if connection's been broken.
         tcp.write (client_sock, buf);
         ended = true; // FIXME check 'buf' to see if there's an EOF.
       }
 
       tcp.close(client_sock).value_exc();
+      Console.WriteLine("Client removed");
     }
   }
 }
@@ -49,7 +53,10 @@ public class Echo_Server {
 // FIXME can run this directly? I think with the current setup it needs to be
 //       loaded via Pax?
 public class Test_Echo_Server {
-  public static void Main() {
-    var server = new Echo_Server(7, IPAddress.Parse("192.168.100.100"));
+  public static int Main (string[] args) {
+    Console.WriteLine("Starting Echo server");
+    var server = new Echo_Server(7000, IPAddress.Parse("192.168.0.9")); // FIXME hardcoded
+    server.start(); // FIXME start as thread?
+    return 0;
   }
 }

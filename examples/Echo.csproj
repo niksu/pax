@@ -2,26 +2,24 @@
 <!-- Hand-written .csproj file, based on instructions at https://msdn.microsoft.com/en-us/library/dd576348.aspx-->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <AssemblyName>Examples</AssemblyName>
+    <AssemblyName>Echo</AssemblyName>
     <OutputPath>Bin\</OutputPath>
-    <OutputType>Library</OutputType>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="PacketDotNet, Version=0.10.0.0, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\PacketDotNet.dll</HintPath>
+      <HintPath>lib\PacketDotNet.dll</HintPath>
     </Reference>
     <Reference Include="SharpPcap, Version=4.2.0.0, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\SharpPcap.dll</HintPath>
+      <HintPath>lib\SharpPcap.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=8.0.3.0, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\Newtonsoft.Json.dll</HintPath>
+      <HintPath>lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Pax_Lite, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\Bin\Pax_Lite.dll</HintPath>
@@ -33,30 +31,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Hub.cs" />
-    <Compile Include="LearningSwitch.cs" />
-    <Compile Include="Mirror.cs" />
-    <Compile Include="Nat\ConnectionKey.cs" />
-    <Compile Include="Nat\ITransportState.cs" />
-    <Compile Include="Nat\NAT.cs" />
-    <Compile Include="Nat\NATBase.cs" />
-    <Compile Include="Nat\NatConnection.cs" />
-    <Compile Include="Nat\Node.cs" />
-    <Compile Include="Nat\NodeWithPort.cs" />
-    <Compile Include="Nat\PacketEncapsulation.cs" />
-    <Compile Include="Nat\TcpNAT.cs" />
-    <Compile Include="Nat\TcpState.cs" />
-    <Compile Include="Nat\UdpNAT.cs" />
     <Compile Include="TCP\IBerkeleySocket.cs" />
     <Compile Include="TCP\TCP.cs" />
     <Compile Include="TCP\TCwraP.cs" />
     <Compile Include="TCP\Echo.cs" />
-    <Compile Include="paxos\Paxos_Packet.cs" />
-    <Compile Include="paxos\Paxos.cs" />
-    <Compile Include="tcp_wrapper\TCP_Wrapper.cs" />
-    <Compile Include="packet_formats/Syslog_Packet.cs" />
-    <Compile Include="Test.cs" />
-    <Compile Include="Generator.cs" />
+    <None Include="..\lib/SharpPcap.dll.config">
+      <Link>SharpPcap.dll.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 <!--
   <Target Name="Build">
