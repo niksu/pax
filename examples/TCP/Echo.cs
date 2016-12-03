@@ -12,21 +12,24 @@ using Pax;
 using Pax_TCP;
 
 public class Echo_Server {
-  SockID my_sock = TCP.socket(...);
-    SockID socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot);
-  SockAddr_In my_addr = new SockAddr_In(...);
+  SockID my_sock = TCP.socket(Internet_Domain.AF_Inet, Internet_Type.Sock_Stream, Internet_Protocol.TCP);
+  SockAddr_In my_addr = new SockAddr_In(7, IPAddress.Parse("192.168.100.100"));
   var r = TCP.bind(my_sock, my_addr);
-  if (!r.result) {
-    ...
-  }
-  r = TCP.listen(my_sock, 1/*FIXME const*/);
 
-  while (true) {
-    //FIXME check if we have any availability left -- do this here, or in TCP?
-    r = TCP.accept(my_sock, my_addr/*FIXME ???*/);
+  public void start () {
+    if (!r.result) {
+      throw new Exception(r.ToString());
+    }
 
-    //FIXME read + write
+    r = TCP.listen(my_sock, 1/*FIXME const*/);
 
-    //FIXME close
+    while (true) {
+      //FIXME check if we have any availability left -- do this here, or in TCP?
+      r = TCP.accept(my_sock, my_addr/*FIXME ???*/);
+
+      //FIXME read + write
+
+      //FIXME close
+    }
   }
 }
