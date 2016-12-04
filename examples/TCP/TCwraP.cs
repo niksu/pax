@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Diagnostics;
 using Pax_TCP;
+using System.Linq;
 
 public class TCwraP : IBerkeleySocket {
     uint max_conn; // FIXME unused
@@ -72,9 +73,9 @@ public class TCwraP : IBerkeleySocket {
       return new Result<SockID> (sid, null);
     }
 
-    public Result<int> write (SockID sid, byte[] buf) {
+    public Result<int> write (SockID sid, byte[] buf, uint count) {
       SockID_dotNET s = upcast_sock(sid);
-      int result = s.base_socket.Send(buf);
+      int result = s.base_socket.Send(buf.Take((int)count/*FIXME cast*/).ToArray());
       return new Result<int> (result, null);
     }
 
