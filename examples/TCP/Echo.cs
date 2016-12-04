@@ -47,7 +47,7 @@ public class Echo_Server {
       while (!ended) {
         var v = tcp.read (client_sock, buf, 10/*FIXME const*/); // FIXME check 'read' value to see if connection's been broken.
         if (verbose) Console.WriteLine("Got " + v.ToString());
-        if (v.erroneous /* FIXME are these meaningful? || v.value_exc() == 0 || v.value_exc() == -1*/) {
+        if (v.erroneous || v.value_exc() == 0 /* NOTE according to MSDN and SO, it appears that receiving 0 bytes means that the connection has been closed*/) {
           ended = true;
         } else {
           cutoff = v.value_exc();

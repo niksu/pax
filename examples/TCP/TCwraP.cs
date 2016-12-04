@@ -80,13 +80,25 @@ public class TCwraP : IBerkeleySocket {
 
     public Result<int> read (SockID sid, byte[] buf, uint count) {
       SockID_dotNET s = upcast_sock(sid);
-      int result = s.base_socket.Receive(buf);
-      return new Result<int> (result, null);
+      int result;
+      try {
+        result = s.base_socket.Receive(buf);
+      } catch (SocketException e) {
+        // FIXME inspect e.ErrorCode
+        return new Result<int> (-1, Error.EBADF/*FIXME not sure if this is the right error code*/);
+      }
+
+      if (s.base_socket.Connected) {
+        return new Result<int> (result, null);
+      } else {
+        return new Result<int> (-1, Error.EBADF/*FIXME not sure if this is the right error code*/);
+      }
     }
 
     public Result<bool> close (SockID sid) {
       SockID_dotNET s = upcast_sock(sid);
       s.base_socket.Close();
+      s.base_socket.Dispose();
       return new Result<bool> (true, null);
     }
 
