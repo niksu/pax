@@ -1,0 +1,22 @@
+{
+  "handlers": [
+    {
+      "class_name": "Generator",
+      "args": {
+        "interval": "100",
+        "src_port": "10",
+        "dst_port": "11",
+        "src_ip": "10.0.0.4",
+        "dst_ip": "10.0.0.5",
+        "src_mac": "02-00-00-00-00-01",
+        "dst_mac": "02-00-00-00-00-02"
+      }
+    }
+  ],
+  "interfaces": [
+    {
+      "interface_name" : "en3",
+      "lead_handler" : "Generator"
+    }
+  ]
+}

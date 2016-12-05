@@ -197,4 +197,12 @@ namespace Pax {
       return fd;
     }
   }
+
+  public interface IActive {
+    // NOTE "PreStart" and "Start" might be called multiple times -- once for
+    //      each device to which a packet processor is associated with.
+    void PreStart (ICaptureDevice device);
+    void Start ();
+    void Stop ();
+  }
 }
