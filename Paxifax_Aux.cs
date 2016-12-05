@@ -18,6 +18,8 @@ namespace Pax {
 
   internal static class PacketProcessorHelper
   {
+    private const string pax_fqn_prefix = "Pax.";
+
     public readonly static Type[] AllowedConstructorParameterTypes = new Type[]
       {
         typeof(Boolean),  typeof(Byte),   typeof(SByte),  typeof(UInt16),   typeof(Int16),
@@ -71,7 +73,7 @@ namespace Pax {
       // Yield implemented Pax interfaces
       foreach (Type intf in type.GetInterfaces())
       {
-        if (intf.FullName.StartsWith("Pax."))
+        if (intf.FullName.StartsWith(pax_fqn_prefix))
           yield return intf;
         else
         {
@@ -85,7 +87,7 @@ namespace Pax {
       type = type.BaseType;
       while (type != null)
       {
-        if (type.FullName.StartsWith("Pax."))
+        if (type.FullName.StartsWith(pax_fqn_prefix))
         {
           yield return type;
           yield break;
@@ -139,6 +141,7 @@ namespace Pax {
       Console.WriteLine("No suitable constructor could be found.");
       return null;
     }
+
     private static IEnumerable<object> GetArgumentsForConstructor(ConstructorInfo ctor, IDictionary<string,string> argsDict)
     {
       foreach (var param in ctor.GetParameters())
