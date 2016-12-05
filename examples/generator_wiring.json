@@ -16,8 +16,7 @@
   "interfaces": [
     {
       "interface_name" : "en3",
-      "lead_handler" : "Generator",
-      "pcap_filter" : "udp"
+      "lead_handler" : "Generator"
     }
   ]
 }

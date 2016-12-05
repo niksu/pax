@@ -177,3 +177,56 @@ Feel free to look in [`examples/Nat/nat_topo.py`](Nat/nat_topo.py):
 - The `test()` procedure creates a network, tests the NAT implementation by
   creating a connection between in1 and out0, and then cleans up.
 
+## Packet generator
+The packet generator example emits packets on a specific interface at regular
+intervals. It's a very simple affair, but can easily be extended for more
+complex behaviour.
+
+### Configuration
+The generator emits TCP segments from (`src_port`,`src_ip`,`src_mac`) to
+(`dst_port`,`dst_ip`,`dst_mac`) every `interval` milliseconds, on interface
+`interface_name`.
+
+```javascript
+{
+  "handlers": [
+    {
+      "class_name": "Generator",
+      "args": {
+        "interval": "100",
+        "src_port": "10",
+        "dst_port": "11",
+        "src_ip": "10.0.0.4",
+        "dst_ip": "10.0.0.5",
+        "src_mac": "02-00-00-00-00-01",
+        "dst_mac": "02-00-00-00-00-02"
+      }
+    }
+  ],
+  "interfaces": [
+    {
+      "interface_name" : "en3",
+      "lead_handler" : "Generator"
+    }
+  ]
+}
+```
+
+### Testing
+I used tcpdump, with a suitable filter, to see what the generator is producing.
+
+```
+$ sudo tcpdump -nvvv "host 10.0.0.4"
+tcpdump: data link type PKTAP
+tcpdump: listening on pktap, link-type PKTAP (Packet Tap), capture size 65535 bytes
+18:47:58.688820 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40, bad cksum 0 (->66c8)!)
+    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x0000 (incorrect -> 0x9bc7), seq 0, win 0, length 0
+18:47:58.783990 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40, bad cksum 0 (->66c8)!)
+    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x0000 (incorrect -> 0x9bc7), seq 0, win 0, length 0
+18:47:58.886173 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40, bad cksum 0 (->66c8)!)
+    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x0000 (incorrect -> 0x9bc7), seq 0, win 0, length 0
+18:47:58.987158 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40, bad cksum 0 (->66c8)!)
+    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x0000 (incorrect -> 0x9bc7), seq 0, win 0, length 0
+18:47:59.087415 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40, bad cksum 0 (->66c8)!)
+    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x0000 (incorrect -> 0x9bc7), seq 0, win 0, length 0
+```
