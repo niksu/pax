@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Reflection;
 using Mono.Options;
+using System.Threading;
 
 namespace Pax
 {
@@ -352,6 +353,14 @@ namespace Pax
           Console.ForegroundColor = tmp;
           PaxConfig.deviceMap[idx].OnPacketArrival +=
             PaxConfig.interface_lead_handler_obj[idx].packetHandler;
+
+          // If the packet processor is "active" then start it.
+          if (PaxConfig.interface_lead_handler_obj[idx] is IActive) {
+            var o = PaxConfig.interface_lead_handler_obj[idx] as IActive;
+            o.PreStart (PaxConfig.deviceMap[idx]);
+            Thread t = new Thread (new ThreadStart (o.Start));
+            t.Start();
+          }
         }
       }
     }
@@ -359,14 +368,19 @@ namespace Pax
     //Cleanup
     private static void shutdown (object sender, ConsoleCancelEventArgs args)
     {
-      foreach (var device in PaxConfig.deviceMap)
+      for (int idx = 0; idx < PaxConfig_Lite.no_interfaces; idx++)
       {
+        // If the packet processor is "active" then stop it now.
+        if (PaxConfig.interface_lead_handler_obj[idx] is IActive) {
+          ((IActive)PaxConfig.interface_lead_handler_obj[idx]).Stop();
+        }
+
         // Set the capture timeout, as without the program can hang indefinitely.
         // Cause unknown, but setting any timeout seems to fix it. Even with timeout
         //  of 1s, the program shuts down immediately.
-        device.StopCaptureTimeout = TimeSpan.FromSeconds(1);
+        PaxConfig.deviceMap[idx].StopCaptureTimeout = TimeSpan.FromSeconds(1);
 
-        device.Close();
+        PaxConfig.deviceMap[idx].Close();
       }
 
       Console.ResetColor();
