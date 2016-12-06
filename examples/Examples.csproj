@@ -52,6 +52,7 @@
     <Compile Include="tcp_wrapper\TCP_Wrapper.cs" />
     <Compile Include="packet_formats/Syslog_Packet.cs" />
     <Compile Include="Test.cs" />
+    <Compile Include="Generator.cs" />
   </ItemGroup>
 <!--
   <Target Name="Build">
