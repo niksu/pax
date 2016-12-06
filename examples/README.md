@@ -185,7 +185,8 @@ complex behaviour.
 ### Configuration
 The generator emits TCP segments from (`src_port`,`src_ip`,`src_mac`) to
 (`dst_port`,`dst_ip`,`dst_mac`) every `interval` milliseconds, on interface
-`interface_name`.
+`interface_name`. An example configuration can be seen in
+[generator_wiring.json](generator_wiring.json):
 
 ```javascript
 {
@@ -213,8 +214,11 @@ The generator emits TCP segments from (`src_port`,`src_ip`,`src_mac`) to
 ```
 
 ### Testing
-I used tcpdump, with a suitable filter, to see what the generator is producing.
-
+I ran the generator by calling
+```
+$ sudo mono ./Bin/Pax.exe examples/generator_wiring.json examples/Bin/Examples.dll
+```
+and, in parallel used tcpdump  -- with a suitable filter -- to see what the generator is producing:
 ```
 $ sudo tcpdump -nvvv "host 10.0.0.4"
 tcpdump: data link type PKTAP
