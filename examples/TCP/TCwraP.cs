@@ -47,6 +47,7 @@ public class TCwraP : IBerkeleySocket {
       IPEndPoint ep = new IPEndPoint (address.address, (Int32)address.port/*FIXME cast*/);
       s.base_socket.Bind(ep);
       return new Result<bool> (true, null);
+      // FIXME return "false" if we have problem
     }
 
     public Result<bool> listen (SockID sid) {
