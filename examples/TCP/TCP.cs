@@ -99,11 +99,11 @@ namespace Pax_TCP {
       throw new Exception("TODO");
     }
 
-    public Result<bool> bind (SockID sid, SockAddr_In address) {
+    public Result<Unit> bind (SockID sid, SockAddr_In address) {
       throw new Exception("TODO");
     }
 
-    public Result<bool> listen (SockID sid) {
+    public Result<Unit> listen (SockID sid) {
       throw new Exception("TODO");
     }
 
@@ -119,7 +119,7 @@ namespace Pax_TCP {
       throw new Exception("TODO");
     }
 
-    public Result<bool> close (SockID sid) {
+    public Result<Unit> close (SockID sid) {
       throw new Exception("TODO");
     }
 

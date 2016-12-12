@@ -41,19 +41,18 @@ public class TCwraP : IBerkeleySocket {
       return new Result<SockID> (sid, null);
     }
 
-    public Result<bool> bind (SockID sid, SockAddr_In address) {
+    public Result<Unit> bind (SockID sid, SockAddr_In address) {
       SockID_dotNET s = upcast_sock(sid);
 
       IPEndPoint ep = new IPEndPoint (address.address, (Int32)address.port/*FIXME cast*/);
       s.base_socket.Bind(ep);
-      return new Result<bool> (true, null);
-      // FIXME return "false" if we have problem
+      return new Result<Unit> (Unit.Value, null);
     }
 
-    public Result<bool> listen (SockID sid) {
+    public Result<Unit> listen (SockID sid) {
       SockID_dotNET s = upcast_sock(sid);
       s.base_socket.Listen((int)this.max_backlog); // FIXME casting uint into int
-      return new Result<bool> (true, null);
+      return new Result<Unit> (Unit.Value, null);
     }
 
     public Result<SockID> accept (SockID sid, out SockAddr_In address) {
@@ -96,11 +95,11 @@ public class TCwraP : IBerkeleySocket {
       }
     }
 
-    public Result<bool> close (SockID sid) {
+    public Result<Unit> close (SockID sid) {
       SockID_dotNET s = upcast_sock(sid);
       s.base_socket.Close();
       s.base_socket.Dispose();
-      return new Result<bool> (true, null);
+      return new Result<Unit> (Unit.Value, null);
     }
 
     public SockID_dotNET upcast_sock (SockID sid) {

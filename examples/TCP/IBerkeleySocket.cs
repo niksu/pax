@@ -12,6 +12,8 @@ using System.Net;
 
 namespace Pax_TCP {
 
+  public enum Unit { Value };
+
   // FIXME many constant values are excluded, e.g., various error codes.
   //       i only included the ones that i think i'll use in the prototype.
   public enum Internet_Domain {AF_Inet};
@@ -139,11 +141,11 @@ namespace Pax_TCP {
   */
   public interface IBerkeleySocket {
     Result<SockID> socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot);
-    Result<bool> bind (SockID sid, SockAddr_In address);
-    Result<bool> listen (SockID sid); // NOTE we let the "backlog" parameter be implicit for prototyping reasons; it's a parameter of TCP, not the interface.
+    Result<Unit> bind (SockID sid, SockAddr_In address);
+    Result<Unit> listen (SockID sid); // NOTE we let the "backlog" parameter be implicit for prototyping reasons; it's a parameter of TCP, not the interface.
     Result<SockID> accept (SockID sid, out SockAddr_In address);
     Result<int> write (SockID sid, byte[] buf, uint count);
     Result<int> read (SockID sid, byte[] buf, uint count);
-    Result<bool> close (SockID sid);
+    Result<Unit> close (SockID sid);
   }
 }
