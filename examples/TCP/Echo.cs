@@ -14,19 +14,16 @@ using Pax_TCP;
 using Mono.Options;
 
 public class Echo_Server {
-  IBerkeleySocket tcp =
-    // FIXME parametrise protocol implementations.
-    // new TCPuny (100, 1024); // Toggle between these two to use different TCP implementations.
-    new TCwraP (100, 1024);
+  IBerkeleySocket tcp;
   SockID my_sock;
   SockAddr_In my_addr;
   private bool verbose = false;
 
-  // FIXME use static echo buffer, rather than keep reallocating.
-  public Echo_Server (uint port, IPAddress address, bool verbose) {
+  public Echo_Server (IBerkeleySocket tcp, uint port, IPAddress address, bool verbose) {
+    this.verbose = verbose;
+    this.tcp = tcp;
     my_sock = tcp.socket(Internet_Domain.AF_Inet, Internet_Type.Sock_Stream, Internet_Protocol.TCP).value_exc();
     my_addr = new SockAddr_In(port, address);
-    this.verbose = verbose;
   }
 
   public void start () {
@@ -41,8 +38,9 @@ public class Echo_Server {
 
       if (verbose) Console.WriteLine("Client added");
 
-      bool ended = false;
+      // FIXME use static echo buffer, rather than keep reallocating.
       byte[] buf = new byte[20]; // FIXME const
+      bool ended = false;
       int cutoff = 0;
       while (!ended) {
         var v = tcp.read (client_sock, buf, 10/*FIXME const*/); // FIXME check 'read' value to see if connection's been broken.
@@ -92,8 +90,11 @@ public class Test_Echo_Server {
       throw new Exception("Expected the parameter 'address' to be given.");
     }
 
+    // Instantiate the TCP implementation
+    IBerkeleySocket tcp = new TCwraP (100, 1024); // FIXME consts
+
     Console.WriteLine("Starting Echo server at " + address.ToString() + ":" + port.ToString());
-    var server = new Echo_Server(port, address, verbose);
+    var server = new Echo_Server(tcp, port, address, verbose);
     server.start(); // FIXME start as thread?
     return 0;
   }
