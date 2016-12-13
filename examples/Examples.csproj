@@ -48,6 +48,7 @@
     <Compile Include="Nat\TcpState.cs" />
     <Compile Include="Nat\UdpNAT.cs" />
     <Compile Include="TCP\IBerkeleySocket.cs" />
+    <Compile Include="TCP\TCB.cs" />
     <Compile Include="TCP\TCP.cs" />
     <Compile Include="TCP\TCwraP.cs" />
     <Compile Include="TCP\Echo.cs" />
