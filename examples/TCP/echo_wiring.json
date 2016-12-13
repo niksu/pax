@@ -15,7 +15,7 @@
     {
       "interface_name" : "en0",
       "lead_handler" : "Pax_Echo_Server",
-      "pcap_filter_" : "tcp and host 10.0.0.4"
+      "pcap_filter" : "tcp"
     }
   ]
 }
