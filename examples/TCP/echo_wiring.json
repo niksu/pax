@@ -1,0 +1,21 @@
+{
+  "handlers": [
+    {
+      "class_name": "Pax_Echo_Server",
+      "args": {
+        "mac_address": "02-00-00-00-00-01",
+        "ip_address": "127.0.0.1",
+        "port": "7000",
+        "max_conn": "100",
+        "max_backlog": "10"
+      }
+    }
+  ],
+  "interfaces": [
+    {
+      "interface_name" : "en0",
+      "lead_handler" : "Pax_Echo_Server",
+      "pcap_filter_" : "tcp and host 10.0.0.4"
+    }
+  ]
+}

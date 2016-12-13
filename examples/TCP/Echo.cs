@@ -10,11 +10,12 @@ using System;
 using System.Net;
 using PacketDotNet;
 using Pax;
-using Pax_TCP;
 using Mono.Options;
 using System.Net.NetworkInformation;
 using SharpPcap;
 using System.Threading;
+
+namespace Pax_TCP {
 
 public class Echo_Server {
   IBerkeleySocket tcp;
@@ -124,7 +125,7 @@ public class Pax_Echo_Server : IActive, IPacketProcessor {
   IActiveBerkeleySocket tcp;
   Echo_Server server;
 
-  public Pax_Echo_Server (PhysicalAddress mac, IPAddress ip_address, ushort port,
+  public Pax_Echo_Server (PhysicalAddress mac_address, IPAddress ip_address, ushort port,
    uint max_conn, uint max_backlog) {
     this.mac_address = mac_address;
     this.ip_address = ip_address;
@@ -164,4 +165,6 @@ public class Pax_Echo_Server : IActive, IPacketProcessor {
     // FIXME how to indicate if we don't want to register a handler?
     return null;
   }
+}
+
 }
