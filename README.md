@@ -24,27 +24,9 @@ you can quickly test prototypes of packet-processors written in high-level
 languages. Some [example](https://github.com/niksu/pax/tree/master/examples) implementations are included in the repo.
 
 # Building
-## Dependencies
-Other than a C# (>=6.0) compiler and runtime, you need:
-* libpcap (on UNIXy systems) or winpcap.dll (on Windows)
-* [SharpPcap](https://github.com/chmorgan/sharppcap) and [PacketDotNet](https://github.com/chmorgan/packetnet)
-* Newtonsoft's JSON library (download one of the [releases](https://github.com/JamesNK/Newtonsoft.Json/releases))
-* On Ubuntu Linux (14.04) it's easiest to follow Mono's
-[instructions](http://www.mono-project.com/docs/getting-started/install/linux/) to install the latest version,
-and `apt-get install` the `mono-complete`
-package. You might need to tweak Mono's config files (such as that in
-`/etc/mono/config`) in order to direct Mono's loader to the right location of
-libpcap on your system (by adding a
-[dllmap](http://www.mono-project.com/docs/advanced/pinvoke/dllmap/) entry).
-* **Optional** Mininet for [testing](examples#testing-the-nat-with-mininet). We used Mininet 2.2.1 on Ubuntu 14.04 LTS.
-
-Put the DLLs for Newtonsoft.Json, SharpPcap and PacketDotNet in Pax's `lib/` directory.
-
-## Compiling
-Run the `build.sh` script and everything should go smoothly.
-This will produce a single file (Pax.exe), called an *assembly* in .NET jargon. This assembly serves two purposes:
-* It is the tool that runs your packet processors using a configuration you provide.
-* It is the library that your packet processors reference. This reference will be checked by the .NET compiler when compiling your code.
+Follow the instructions in [BUILD.md](BUILD.md).
+We've tested Pax on OSX and different versions of Ubuntu Linux, but it shouldn't
+be hard to get it running wherever .NET runs.
 
 # Writing for Pax
 Packet processers using Pax can be written in any [.NET language](https://en.wikipedia.org/wiki/List_of_CLI_languages).
