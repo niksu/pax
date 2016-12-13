@@ -143,9 +143,12 @@ namespace Pax_TCP {
     }
 
     public Result<Unit> listen (SockID sid) {
-      // Lookup TCB etc
-      // Set to LISTEN state
-//      throw new Exception("TODO");
+      if (tcbs[sid.sockid].state != TCP_State.Closed ||
+          tcbs[sid.sockid].local_port == 0) {
+        return new Result<Unit> (Unit.Value, Error.EFAULT);//FIXME is this the right code?
+      }
+
+      tcbs[sid.sockid].state = TCP_State.Listen;
       return new Result<Unit> (Unit.Value, null);
     }
 
