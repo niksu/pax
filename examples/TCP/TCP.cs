@@ -41,6 +41,7 @@ namespace Pax_TCP {
 
     ConcurrentQueue<Packet> in_q = new ConcurrentQueue<Packet>();
     ConcurrentQueue<Packet> out_q = new ConcurrentQueue<Packet>();
+    ConcurrentQueue<TCB> conn_q = new ConcurrentQueue<TCB>();
 
     TCB[] tcbs;
 
@@ -156,9 +157,30 @@ namespace Pax_TCP {
       // FIXME this must be blocking, right?
       // FIXME shall we add a parameter over which is can be shutdown, and a
       //       function to call when the shutdown request arrives?
-//      throw new Exception("TODO");
-      // Look up the TCB
-while (true) {}
+
+      address = SockAddr_In.none;
+
+      if (tcbs[sid.sockid].state != TCP_State.Listen) {
+        return new Result<SockID> (null, Error.EFAULT);//FIXME is this the right code?
+      }
+
+      int free_TCB;
+      TCB tcb;
+      while (true) {
+        if (conn_q.TryDequeue (out tcb)) {
+          lock (this) {
+            free_TCB = find_free_TCB();
+            if (free_TCB < 0) {
+              return new Result<SockID> (null, Error.ENOSP);
+            }
+
+            tcbs[free_TCB] = tcb;
+          }
+
+          address = new SockAddr_In (tcb.remote_port, tcb.remote_address);
+          return new Result<SockID> (new SockID((uint)free_TCB), null);
+        }
+      }
     }
 
     public Result<int> write (SockID sid, byte[] buf, uint count) {

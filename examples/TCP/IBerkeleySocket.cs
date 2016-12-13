@@ -132,6 +132,10 @@ namespace Pax_TCP {
   public class SockAddr_In {
     public readonly ushort port;
     public readonly IPAddress address;
+
+    // NOTE dummy value
+    public static readonly SockAddr_In none = new SockAddr_In (0, null);
+
     public SockAddr_In (ushort port, IPAddress address) {
       this.port = port;
       this.address = address;
