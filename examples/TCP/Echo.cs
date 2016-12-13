@@ -112,7 +112,7 @@ public class NonPax_Echo_Server {
 // TCP instance, and pass the TCP instance to the application.
 // That is, instead of a "main" function, we have a slightly different
 // interface.
-public class Pax_Echo_Server : IActive, IPacketProcessor {
+public class Pax_Echo_Server : PacketMonitor, IActive {
   bool verbose = false;
 
   // FIXME currently no way of assigning defaults to Pax parameters in a wiring.json file?
@@ -157,12 +157,9 @@ public class Pax_Echo_Server : IActive, IPacketProcessor {
     Console.WriteLine("Stopped TCP");
   }
 
-  public void packetHandler (object sender, CaptureEventArgs e) {
-    // FIXME how to indicate if we don't want to register a handler?
-  }
-  public ForwardingDecision process_packet (int in_port, ref Packet packet) {
-    // FIXME how to indicate if we don't want to register a handler?
-    return null;
+  override public ForwardingDecision process_packet (int in_port, ref Packet packet) {
+    // NOTE we assume that 'tcp' inherits from PacketMonitor.
+    return ((PacketMonitor)tcp).process_packet(in_port, ref packet);
   }
 }
 
