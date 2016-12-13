@@ -9,6 +9,7 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Net;
+using Pax;
 
 namespace Pax_TCP {
 
@@ -148,4 +149,6 @@ namespace Pax_TCP {
     Result<int> read (SockID sid, byte[] buf, uint count);
     Result<Unit> close (SockID sid);
   }
+
+  public interface IActiveBerkeleySocket: IBerkeleySocket, IActive {}
 }

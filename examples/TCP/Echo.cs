@@ -12,6 +12,9 @@ using PacketDotNet;
 using Pax;
 using Pax_TCP;
 using Mono.Options;
+using System.Net.NetworkInformation;
+using SharpPcap;
+using System.Threading;
 
 public class Echo_Server {
   IBerkeleySocket tcp;
@@ -72,18 +75,21 @@ public class Echo_Server {
   }
 }
 
-// FIXME can run this directly? I think with the current setup it needs to be
-//       loaded via Pax?
-public class Test_Echo_Server {
+// Entry point when using the non-Pax stack.
+public class NonPax_Echo_Server {
   public static int Main (string[] args) {
     IPAddress address = null;
     uint port = 7; //default Internet port for Echo.
     bool verbose = false;
+    uint max_conn = 100;
+    uint max_backlog = 1024;
 
     OptionSet p = new OptionSet ()
       .Add ("v", _ => verbose = true)
       .Add ("address=", (String s) => address = IPAddress.Parse(s))
-      .Add ("port=", (uint pt) => port = pt);
+      .Add ("port=", (uint pt) => port = pt)
+      .Add ("max_conn=", (uint i) => max_conn = i)
+      .Add ("max_backlog=", (uint i) => max_backlog = i);
     p.Parse(args).ToArray();
 
     if (address == null) {
@@ -91,11 +97,71 @@ public class Test_Echo_Server {
     }
 
     // Instantiate the TCP implementation
-    IBerkeleySocket tcp = new TCwraP (100, 1024); // FIXME consts
+    IBerkeleySocket tcp = new TCwraP (max_conn, max_backlog);
 
     Console.WriteLine("Starting Echo server at " + address.ToString() + ":" + port.ToString());
+    Console.WriteLine("Max. connections " + max_conn.ToString() + ", max. backlog " + max_backlog.ToString());
     var server = new Echo_Server(tcp, port, address, verbose);
     server.start(); // FIXME start as thread?
     return 0;
+  }
+}
+
+// Entry point when using a Pax stack. It needs to wire up the listeners for the
+// TCP instance, and pass the TCP instance to the application.
+// That is, instead of a "main" function, we have a slightly different
+// interface.
+public class Pax_Echo_Server : IActive, IPacketProcessor {
+  bool verbose = false;
+
+  // FIXME currently no way of assigning defaults to Pax parameters in a wiring.json file?
+  ushort port;
+  IPAddress ip_address;
+  PhysicalAddress mac_address;
+  uint max_conn;
+  uint max_backlog;
+
+  IActiveBerkeleySocket tcp;
+  Echo_Server server;
+
+  public Pax_Echo_Server (PhysicalAddress mac, IPAddress ip_address, ushort port,
+   uint max_conn, uint max_backlog) {
+    this.mac_address = mac_address;
+    this.ip_address = ip_address;
+    this.port = port;
+    this.max_conn = max_conn;
+    this.max_backlog = max_backlog;
+
+    // Instantiate the TCP implementation
+    tcp = new TCPuny (max_conn, max_backlog, ip_address, mac_address);
+
+    // FIXME factor out, since same code appears in NonPax_Echo_Server
+    Console.WriteLine("Starting Echo server at " + ip_address.ToString() + ":" + port.ToString());
+    Console.WriteLine("Max. connections " + max_conn.ToString() + ", max. backlog " + max_backlog.ToString());
+
+    server = new Echo_Server(tcp, port, ip_address, verbose);
+  }
+
+  public void PreStart (ICaptureDevice device) {
+    tcp.PreStart(device);
+  }
+
+  public void Start () {
+    Thread t = new Thread (new ThreadStart (tcp.Start));
+    t.Start();
+
+    server.start();
+  }
+
+  public void Stop () {
+    tcp.Stop();
+  }
+
+  public void packetHandler (object sender, CaptureEventArgs e) {
+    // FIXME how to indicate if we don't want to register a handler?
+  }
+  public ForwardingDecision process_packet (int in_port, ref Packet packet) {
+    // FIXME how to indicate if we don't want to register a handler?
+    return null;
   }
 }
