@@ -16,11 +16,36 @@ using System.Threading;
 using System.Diagnostics;
 using System.Collections.Concurrent;
 
+using tcpseq = System.UInt32;
+
 namespace Pax_TCP {
 
-  // FIXME specify TCB
-  public struct TCB {
+  public enum TCP_State { Free, Closed, Listen, SynSent, SynRcvd, Established,
+    FinWait1, FinWait2, CloseWait, LastAck, Closing, TimeWait }
 
+  // NOTE unlike "usual" TCB i don't store a reference to the network interface
+  //      or the local IP address, since that info seems redundant in this
+  //      implementation.
+  public struct TCB {
+    public TCP_State state;
+    public IPAddress remote_address;
+    public short remote_port;
+    public short local_port;
+    public tcpseq unacked_send;
+    public tcpseq next_send;
+    public ulong send_window_size;
+
+    public uint retransmit_count;
+
+    public uint sending_max_seg_size;
+
+    public Packet[] receive_buffer;
+    public Packet[] send_buffer;
+
+//    seq
+//    ack
+//    window
+//    timer
   }
 
   // We have multiple threads of execution, of basically three kinds:
@@ -40,13 +65,15 @@ namespace Pax_TCP {
     PhysicalAddress mac_address;
     bool running = false; // FIXME having to check this slows things down much?
 
+    uint next_sock_id = 0;
+
     int interval = 5000; //FIXME const
     Timer timer; // FIXME we're going to need more than one
 
     ConcurrentQueue<Packet> in_q = new ConcurrentQueue<Packet>();
     ConcurrentQueue<Packet> out_q = new ConcurrentQueue<Packet>();
 
-    // FIXME instantiate TCB
+    TCB[] tcbs;
 
     // FIXME need to work through logic of how TCPuny is started, as well as how
     //       the user application initialises it.
@@ -61,6 +88,11 @@ namespace Pax_TCP {
       // NOTE we learn about "device" via "PreStart".
       this.ip_address = ip_address;
       this.mac_address = mac_address;
+
+      tcbs = new TCB[max_conn];
+      for (int i = 0; i < max_conn; i++) {
+        tcbs[i].state = TCP_State.Free;
+      }
     }
 
     override public ForwardingDecision process_packet (int in_port, ref Packet packet)
@@ -68,53 +100,43 @@ namespace Pax_TCP {
       if (running && packet is EthernetPacket &&
         packet.Encapsulates(typeof(IPv4Packet), typeof(TcpPacket)))
       {
-        Console.Write ("(");
         EthernetPacket eth_p = (EthernetPacket)packet;
         IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
 
         if (ip_p.DestinationAddress.Equals(ip_address)) {
+          // FIXME before putting this in in_q could check the TCBs
+          //       for whether the packet's relevant to us.
           in_q.Enqueue(eth_p);
-          Console.Write (")");
         }
-
-// FIXME clean this up
-//          TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
-//
-//          if (ip_p.DestinationAddress.Equals(ip_address)30/*FIXME nonsense*/) {
-////            //if (tcp_p.Syn) {
-////              var dst_mac = eth_p.DestinationHwAddress;
-////              eth_p.DestinationHwAddress = eth_p.SourceHwAddress;
-////              eth_p.SourceHwAddress = dst_mac;
-////              var dst_ip = ip_p.DestinationAddress;
-////              ip_p.DestinationAddress = ip_p.SourceAddress;
-////              ip_p.SourceAddress = dst_ip;
-////              var dst_port = tcp_p.DestinationPort;
-////              tcp_p.DestinationPort = tcp_p.SourcePort;
-////              tcp_p.SourcePort = dst_port;
-////
-////              tcp_p.Rst = true;
-////
-////              // Rather than sending the packet now, we enqueue it for sending
-////              // when the timer expires.
-//////              device.SendPacket(eth_p);
-////              out_q.Enqueue(eth_p);
-//            //}
-//          }
       }
 
-      // FIXME might be more efficient to send RSTs through here rather than
-      //       through timer.
-      /*
-      packet = eth_p;
-      return (new ForwardingDecision.SinglePortForward(in_port));
-      */
       return ForwardingDecision.Drop.Instance;
+    }
+
+    private int find_free_TCB() {
+      // FIXME linear search not efficient.
+      for (int i = 0; i < max_conn; i++) {
+        if (tcbs[i].state == TCP_State.Free) {
+          return i;
+        }
+      }
+
+      return -1;
     }
 
     public Result<SockID> socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot) {
       // Add TCB if there's space.
-//      throw new Exception("TODO");
-      SockID sid = new SockID(0);    
+      int free_TCB;
+      lock (this) {
+        free_TCB = find_free_TCB();
+        if (free_TCB < 0) {
+          return new Result<SockID> (null, Error.ENOSP);
+        }
+
+        tcbs[free_TCB].state = TCP_State.Closed;
+      }
+
+      SockID sid = new SockID((uint)free_TCB);
       return new Result<SockID> (sid, null);
     }
 
