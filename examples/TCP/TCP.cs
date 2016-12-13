@@ -38,6 +38,7 @@ namespace Pax_TCP {
     uint max_backlog;
     IPAddress ip_address;
     PhysicalAddress mac_address;
+    bool running = false; // FIXME having to check this slows things down much?
 
     int interval = 5000; //FIXME const
     Timer timer; // FIXME we're going to need more than one
@@ -64,20 +65,22 @@ namespace Pax_TCP {
 
     override public ForwardingDecision process_packet (int in_port, ref Packet packet)
     {
-      if (packet is EthernetPacket &&
+      if (running && packet is EthernetPacket &&
         packet.Encapsulates(typeof(IPv4Packet), typeof(TcpPacket)))
       {
-          EthernetPacket eth_p = (EthernetPacket)packet;
-          IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+        Console.Write ("(");
+        EthernetPacket eth_p = (EthernetPacket)packet;
+        IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
 
-          if (ip_p.DestinationAddress.Equals(ip_address)) {
-            in_q.Enqueue(eth_p);
-          }
+        if (ip_p.DestinationAddress.Equals(ip_address)) {
+          in_q.Enqueue(eth_p);
+          Console.Write (")");
+        }
 
 // FIXME clean this up
 //          TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 //
-//          if (ip_p.DestinationAddress.Equals(ip_address) && tcp_p.DestinationPort == 30/*FIXME nonsense*/) {
+//          if (ip_p.DestinationAddress.Equals(ip_address)30/*FIXME nonsense*/) {
 ////            //if (tcp_p.Syn) {
 ////              var dst_mac = eth_p.DestinationHwAddress;
 ////              eth_p.DestinationHwAddress = eth_p.SourceHwAddress;
@@ -110,27 +113,36 @@ namespace Pax_TCP {
 
     public Result<SockID> socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot) {
       // Add TCB if there's space.
-      throw new Exception("TODO");
+//      throw new Exception("TODO");
+      SockID sid = new SockID(0);    
+      return new Result<SockID> (sid, null);
     }
 
     public Result<Unit> bind (SockID sid, SockAddr_In address) {
+      // FIXME doesn't make sense to initialise TCP to an IP address, to then
+      //       only accept to bind connection to that address -- one of the
+      //       parameters can be dropped.
+      Debug.Assert(ip_address.Equals(address.address));
       // Update TCB (as long as connection isn't live!)
       // Check that we can use address+port?
-      throw new Exception("TODO");
+//      throw new Exception("TODO");
+      return new Result<Unit> (Unit.Value, null);
     }
 
     public Result<Unit> listen (SockID sid) {
       // Lookup TCB etc
       // Set to LISTEN state
-      throw new Exception("TODO");
+//      throw new Exception("TODO");
+      return new Result<Unit> (Unit.Value, null);
     }
 
     public Result<SockID> accept (SockID sid, out SockAddr_In address) {
       // FIXME this must be blocking, right?
       // FIXME shall we add a parameter over which is can be shutdown, and a
       //       function to call when the shutdown request arrives?
-      throw new Exception("TODO");
+//      throw new Exception("TODO");
       // Look up the TCB
+while (true) {}
     }
 
     public Result<int> write (SockID sid, byte[] buf, uint count) {
@@ -171,15 +183,24 @@ namespace Pax_TCP {
     }
 
     public void Stop () {
+      running = false;
       if (timer != null) {timer.Dispose();}
       Console.WriteLine ("TCPuny stopped");
     }
 
     public void Start () {
       Console.WriteLine ("TCPuny starting");
+      running = true;
       timer = new Timer(Flush, null, 0, interval);
       // FIXME start a loop whereby we dequeue packets from in_q and process
       //       them.
+      Packet p;
+      while (running) {
+        while (in_q.TryDequeue (out p)) {
+          device.SendPacket(p);
+          Console.Write (".");
+        }
+      }
     }
 
     public void Flush (Object o) {
