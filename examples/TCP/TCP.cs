@@ -61,6 +61,20 @@ namespace Pax_TCP {
       tcbs = new TCB[max_conn];
       for (int i = 0; i < max_conn; i++) {
         tcbs[i].state = TCP_State.Free;
+        tcbs[i].remote_address = null;
+        tcbs[i].remote_port = 0;
+        tcbs[i].local_port = 0;
+
+        // FIXME add a NaN?
+        tcbs[i].unacked_send = 0;
+        tcbs[i].next_send = 0;
+        tcbs[i].send_window_size = 0; // FIXME what?
+        tcbs[i].retransmit_count = 0;
+        tcbs[i].sending_max_seg_size = 0; // FIXME what?
+
+        // FIXME consts -- make buffer sizes into parameters.
+        tcbs[i].receive_buffer = new Packet[100];
+        tcbs[i].send_buffer = new Packet[100];
       }
     }
 
@@ -114,9 +128,20 @@ namespace Pax_TCP {
       //       only accept to bind connection to that address -- one of the
       //       parameters can be dropped.
       Debug.Assert(ip_address.Equals(address.address));
-      // Update TCB (as long as connection isn't live!)
-      // Check that we can use address+port?
+      // FIXME check that address+port isn't already bound (by this TCP
+      //       instance, by consulting the TCBs).
+
+      
+      if (tcbs[sid.sockid].state != TCP_State.Closed) {
+        return new Result<Unit> (Unit.Value, Error.EFAULT);//FIXME is this the right code?
+      }
+
+      tcbs[sid.sockid].local_port = address.port;
+      // NOTE we don't use address.address here, maybe we should drop that value
+      //      since it's redundant?
+
 //      throw new Exception("TODO");
+      // Update TCB (as long as connection isn't live!)
       return new Result<Unit> (Unit.Value, null);
     }
 

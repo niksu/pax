@@ -66,7 +66,7 @@ public class TCwraP : IBerkeleySocket {
         throw new Exception("Can only handle IPEndPoint");
       }
 
-      address = new SockAddr_In ((uint)ep.Port/*FIXME cast*/, ep.Address);
+      address = new SockAddr_In ((ushort)ep.Port/*FIXME cast*/, ep.Address);
 
       sid = (SockID)(new SockID_dotNET(client_s));
       return new Result<SockID> (sid, null);

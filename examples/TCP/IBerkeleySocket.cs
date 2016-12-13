@@ -125,9 +125,9 @@ namespace Pax_TCP {
 
   // FIXME specialised this to work on IPv4
   public class SockAddr_In {
-    public readonly uint port;
+    public readonly ushort port;
     public readonly IPAddress address;
-    public SockAddr_In (uint port, IPAddress address) {
+    public SockAddr_In (ushort port, IPAddress address) {
       this.port = port;
       this.address = address;
     }

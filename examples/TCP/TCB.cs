@@ -21,8 +21,8 @@ namespace Pax_TCP {
   public struct TCB {
     public TCP_State state;
     public IPAddress remote_address;
-    public short remote_port;
-    public short local_port;
+    public ushort remote_port;
+    public ushort local_port;
     public tcpseq unacked_send;
     public tcpseq next_send;
     public ulong send_window_size;

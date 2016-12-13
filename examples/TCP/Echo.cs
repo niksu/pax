@@ -23,7 +23,7 @@ public class Echo_Server {
   SockAddr_In my_addr;
   private bool verbose = false;
 
-  public Echo_Server (IBerkeleySocket tcp, uint port, IPAddress address, bool verbose) {
+  public Echo_Server (IBerkeleySocket tcp, ushort port, IPAddress address, bool verbose) {
     this.verbose = verbose;
     this.tcp = tcp;
     my_sock = tcp.socket(Internet_Domain.AF_Inet, Internet_Type.Sock_Stream, Internet_Protocol.TCP).value_exc();
@@ -80,7 +80,7 @@ public class Echo_Server {
 public class NonPax_Echo_Server {
   public static int Main (string[] args) {
     IPAddress address = null;
-    uint port = 7; //default Internet port for Echo.
+    ushort port = 7; //default Internet port for Echo.
     bool verbose = false;
     uint max_conn = 100;
     uint max_backlog = 1024;
@@ -88,7 +88,7 @@ public class NonPax_Echo_Server {
     OptionSet p = new OptionSet ()
       .Add ("v", _ => verbose = true)
       .Add ("address=", (String s) => address = IPAddress.Parse(s))
-      .Add ("port=", (uint pt) => port = pt)
+      .Add ("port=", (ushort pt) => port = pt)
       .Add ("max_conn=", (uint i) => max_conn = i)
       .Add ("max_backlog=", (uint i) => max_backlog = i);
     p.Parse(args).ToArray();
