@@ -131,7 +131,6 @@ namespace Pax_TCP {
       // FIXME check that address+port isn't already bound (by this TCP
       //       instance, by consulting the TCBs).
 
-      
       if (tcbs[sid.sockid].state != TCP_State.Closed) {
         return new Result<Unit> (Unit.Value, Error.EFAULT);//FIXME is this the right code?
       }
@@ -140,8 +139,6 @@ namespace Pax_TCP {
       // NOTE we don't use address.address here, maybe we should drop that value
       //      since it's redundant?
 
-//      throw new Exception("TODO");
-      // Update TCB (as long as connection isn't live!)
       return new Result<Unit> (Unit.Value, null);
     }
 
