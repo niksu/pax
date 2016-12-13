@@ -132,30 +132,29 @@ public class Pax_Echo_Server : IActive, IPacketProcessor {
     this.port = port;
     this.max_conn = max_conn;
     this.max_backlog = max_backlog;
-
-    // Instantiate the TCP implementation
-    tcp = new TCPuny (max_conn, max_backlog, ip_address, mac_address);
-
-    // FIXME factor out, since same code appears in NonPax_Echo_Server
-    Console.WriteLine("Starting Echo server at " + ip_address.ToString() + ":" + port.ToString());
-    Console.WriteLine("Max. connections " + max_conn.ToString() + ", max. backlog " + max_backlog.ToString());
-
-    server = new Echo_Server(tcp, port, ip_address, verbose);
   }
 
   public void PreStart (ICaptureDevice device) {
+    Console.WriteLine("Instantiating TCP");
+    Console.WriteLine("Max. connections " + max_conn.ToString() + ", max. backlog " + max_backlog.ToString());
+    // Instantiate the TCP implementation
+    tcp = new TCPuny (max_conn, max_backlog, ip_address, mac_address);
     tcp.PreStart(device);
   }
 
   public void Start () {
+    Console.WriteLine("Starting TCP");
     Thread t = new Thread (new ThreadStart (tcp.Start));
     t.Start();
 
+    Console.WriteLine("Starting Echo server at " + ip_address.ToString() + ":" + port.ToString());
+    server = new Echo_Server(tcp, port, ip_address, verbose);
     server.start();
   }
 
   public void Stop () {
     tcp.Stop();
+    Console.WriteLine("Stopped TCP");
   }
 
   public void packetHandler (object sender, CaptureEventArgs e) {
