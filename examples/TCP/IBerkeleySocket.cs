@@ -23,6 +23,11 @@ namespace Pax_TCP {
   public enum Error {EACCES, EADDRINUSE, EBADF, EINVAL, ENOTSOCK, EOPNOTSUPP, EINTR, EIO,
     EAGAIN, EWOULDBLOCK, EDESTADDRREQ, EDQUOT, EFAULT, EFBIG, ENOSP, EPERM, EPIPE};
 
+  // FIXME this is crude -- since it's possible to have "stale" references to
+  //       "old" sockets (i.e., offsets in the TCB array) get pointing to "new"
+  //       sockets (when the TCB at that offset happens to be in the expected
+  //       state). Perhaps this could be fixed by adding a unique number
+  //       to each SockID instance, to ensure freshness.
   public class SockID {
     public SockID (uint sockid) {
       this.sockid = sockid;
