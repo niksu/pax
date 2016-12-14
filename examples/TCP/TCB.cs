@@ -5,7 +5,9 @@ Nik Sultana, Cambridge University Computer Lab, December 2016
 Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 */
 
+using System;
 using System.Net;
+using System.Diagnostics;
 //using SharpPcap;
 using PacketDotNet;
 
@@ -19,6 +21,8 @@ namespace Pax_TCP {
   //      or the local IP address, since that info seems redundant in this
   //      implementation.
   public class TCB {
+    public static IPAddress local_address = null;
+
     public TCP_State state = TCP_State.Free;
     public IPAddress remote_address = null;
     public ushort remote_port = 0;
@@ -41,10 +45,51 @@ namespace Pax_TCP {
 //    timer
 
     // FIXME add nullary constructor that initialises TCB.
+    public TCB() {
+      Debug.Assert(TCB.local_address != null);
+    }
 
-    public static int lookup (TCB[] tcbs, Packet p) {
+    // Negative values indicate that the lookup failed.
+    public static int lookup (TCB[] tcbs, Packet packet) {
+      int listener = -1;
+      int non_listener = -1;
 
-      return -1;
+      EthernetPacket eth_p = (EthernetPacket)packet;
+      IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+      TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
+
+      for (int i = 0; i < tcbs.Length; i++) {
+        if (tcbs[i].state == TCP_State.Free) {
+          continue;
+        }
+
+        if (! TCB.local_address.Equals(ip_p.DestinationAddress) ||
+            tcp_p.DestinationPort != tcbs[i].local_port) {
+          continue;
+        }
+
+        if (tcbs[i].state == TCP_State.Listen) {
+          if (listener < 0) {
+            listener = i;
+          } else {
+            throw new Exception("Multiple listeners on same port");
+          }
+        } else {
+
+          if (! tcbs[i].remote_address.Equals(ip_p.SourceAddress) ||
+              tcp_p.SourcePort != tcbs[i].remote_port) {
+            continue;
+          }
+
+          if (non_listener < 0) {
+            non_listener = i;
+          } else {
+            throw new Exception("Multiple non-listeners on same port");
+          }
+        }
+      }
+
+      return (non_listener < 0 ? listener : non_listener);
     }
   }
 }

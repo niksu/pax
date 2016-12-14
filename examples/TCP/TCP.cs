@@ -62,6 +62,8 @@ namespace Pax_TCP {
       this.ip_address = ip_address;
       this.mac_address = mac_address;
 
+      TCB.local_address = ip_address;
+
       tcbs = new TCB[max_conn];
       for (int i = 0; i < max_conn; i++) {
         tcbs[i] = new TCB();
