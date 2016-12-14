@@ -64,21 +64,7 @@ namespace Pax_TCP {
 
       tcbs = new TCB[max_conn];
       for (int i = 0; i < max_conn; i++) {
-        tcbs[i].state = TCP_State.Free;
-        tcbs[i].remote_address = null;
-        tcbs[i].remote_port = 0;
-        tcbs[i].local_port = 0;
-
-        // FIXME add a NaN?
-        tcbs[i].unacked_send = 0;
-        tcbs[i].next_send = 0;
-        tcbs[i].send_window_size = 0; // FIXME what?
-        tcbs[i].retransmit_count = 0;
-        tcbs[i].sending_max_seg_size = 0; // FIXME what?
-
-        // FIXME consts -- make buffer sizes into parameters.
-        tcbs[i].receive_buffer = new Packet[100];
-        tcbs[i].send_buffer = new Packet[100];
+        tcbs[i] = new TCB();
       }
     }
 

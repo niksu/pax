@@ -19,20 +19,21 @@ namespace Pax_TCP {
   //      or the local IP address, since that info seems redundant in this
   //      implementation.
   public class TCB {
-    public TCP_State state;
-    public IPAddress remote_address;
-    public ushort remote_port;
-    public ushort local_port;
-    public tcpseq unacked_send;
-    public tcpseq next_send;
-    public ulong send_window_size;
+    public TCP_State state = TCP_State.Free;
+    public IPAddress remote_address = null;
+    public ushort remote_port = 0;
+    public ushort local_port = 0;
+    public tcpseq unacked_send = 0; // FIXME add NaN value for some fields?
+    public tcpseq next_send = 0;
+    public ulong send_window_size = 0; // FIXME is this a sensible value?
 
     public uint retransmit_count;
 
-    public uint sending_max_seg_size;
+    public uint sending_max_seg_size = 0; // FIXME is this a sensible value?
 
-    public Packet[] receive_buffer;
-    public Packet[] send_buffer;
+    // FIXME consts -- make buffer sizes into parameters.
+    public Packet[] receive_buffer = new Packet[100];
+    public Packet[] send_buffer = new Packet[100];
 
 //    seq
 //    ack
