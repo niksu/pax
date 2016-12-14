@@ -41,8 +41,7 @@ namespace Pax_TCP {
 
     uint max_InQ_size; // FIXME make parameter
 
-    ConcurrentQueue<Packet> in_q = new ConcurrentQueue<Packet>();
-//    ConcurrentQueue<Tuple<Packet, TCB>> in_q = new ConcurrentQueue<Tuple<Packet, TCB>>();
+    ConcurrentQueue<Tuple<Packet, TCB>> in_q = new ConcurrentQueue<Tuple<Packet, TCB>>();
     ConcurrentQueue<Packet> out_q = new ConcurrentQueue<Packet>();
     ConcurrentQueue<TCB> conn_q = new ConcurrentQueue<TCB>();
 
@@ -79,17 +78,15 @@ namespace Pax_TCP {
         IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
 
         if (ip_p.DestinationAddress.Equals(ip_address)) {
-          // FIXME before putting this in in_q could check the TCBs
-          //       for whether the packet's relevant to us.
-
-          // FIXME out_q a RST if no matching TCB exists (for our address),
-          //       if the interface is set in "monopoly" mode.
-
           // NOTE we silently drop the segment if the queue's full.
           if (in_q.Count <= max_InQ_size) {
-            // FIXME check eth_p's checksum before adding it to the queue.
-//            in_q.Enqueue(new Tuple <Packet, TCB>(eth_p, null));
-            in_q.Enqueue(eth_p);
+            int tcb_i = TCB.lookup (tcbs, packet);
+            // FIXME Could out_q a RST if no matching TCB exists (for our address),
+            //       if the interface is set in "monopoly" mode.
+            if (tcb_i >= 0) {
+              // FIXME check eth_p's checksum before adding it to the queue.
+              in_q.Enqueue(new Tuple <Packet, TCB>(eth_p, tcbs[tcb_i]));
+            }
           }
         }
       }
@@ -235,7 +232,7 @@ namespace Pax_TCP {
       Thread t = new Thread (new ThreadStart (this.DispatchOutputSegments));
       t.Start();
 
-      Packet p;
+      Tuple<Packet,TCB> p;
       while (running) {
         while (in_q.TryDequeue (out p)) {
 //          if in listening mode, make a tcb and added it to the conn_q
