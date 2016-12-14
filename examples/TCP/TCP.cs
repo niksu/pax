@@ -94,22 +94,11 @@ namespace Pax_TCP {
       return ForwardingDecision.Drop.Instance;
     }
 
-    private int find_free_TCB() {
-      // FIXME linear search not efficient.
-      for (int i = 0; i < max_conn; i++) {
-        if (tcbs[i].state == TCP_State.Free) {
-          return i;
-        }
-      }
-
-      return -1;
-    }
-
     public Result<SockID> socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot) {
       // Add TCB if there's space.
       int free_TCB;
       lock (this) {
-        free_TCB = find_free_TCB();
+        free_TCB = TCB.find_free_TCB(tcbs);
         if (free_TCB < 0) {
           return new Result<SockID> (null, Error.ENOSP);
         }
@@ -166,7 +155,7 @@ namespace Pax_TCP {
       while (true) {
         if (conn_q.TryDequeue (out tcb)) {
           lock (this) {
-            free_TCB = find_free_TCB();
+            free_TCB = TCB.find_free_TCB(tcbs);
             if (free_TCB < 0) {
               return new Result<SockID> (null, Error.ENOSP);
             }

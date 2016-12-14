@@ -91,5 +91,16 @@ namespace Pax_TCP {
 
       return (non_listener < 0 ? listener : non_listener);
     }
+
+    public static int find_free_TCB(TCB[] tcbs) {
+      // FIXME linear search not efficient.
+      for (int i = 0; i < tcbs.Length; i++) { // NOTE assuming that tcbs.Length == max_conn
+        if (tcbs[i].state == TCP_State.Free) {
+          return i;
+        }
+      }
+
+      return -1;
+    }
   }
 }
