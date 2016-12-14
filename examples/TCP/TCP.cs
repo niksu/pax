@@ -39,7 +39,10 @@ namespace Pax_TCP {
     int interval = 5000; //FIXME const
     Timer timer; // FIXME we're going to need more than one
 
+    uint max_InQ_size; // FIXME make parameter
+
     ConcurrentQueue<Packet> in_q = new ConcurrentQueue<Packet>();
+//    ConcurrentQueue<Tuple<Packet, TCB>> in_q = new ConcurrentQueue<Tuple<Packet, TCB>>();
     ConcurrentQueue<Packet> out_q = new ConcurrentQueue<Packet>();
     ConcurrentQueue<TCB> conn_q = new ConcurrentQueue<TCB>();
 
@@ -90,7 +93,16 @@ namespace Pax_TCP {
         if (ip_p.DestinationAddress.Equals(ip_address)) {
           // FIXME before putting this in in_q could check the TCBs
           //       for whether the packet's relevant to us.
-          in_q.Enqueue(eth_p);
+
+          // FIXME out_q a RST if no matching TCB exists (for our address),
+          //       if the interface is set in "monopoly" mode.
+
+          // NOTE we silently drop the segment if the queue's full.
+          if (in_q.Count <= max_InQ_size) {
+            // FIXME check eth_p's checksum before adding it to the queue.
+//            in_q.Enqueue(new Tuple <Packet, TCB>(eth_p, null));
+            in_q.Enqueue(eth_p);
+          }
         }
       }
 
@@ -228,15 +240,48 @@ namespace Pax_TCP {
 
     public void Start () {
       Console.WriteLine ("TCPuny starting");
+
       running = true;
       timer = new Timer(Flush, null, 0, interval);
-      // FIXME start a loop whereby we dequeue packets from in_q and process
-      //       them.
+
+      Thread t = new Thread (new ThreadStart (this.DispatchOutputSegments));
+      t.Start();
+
       Packet p;
       while (running) {
         while (in_q.TryDequeue (out p)) {
+//          if in listening mode, make a tcb and added it to the conn_q
+//          depending on stuff, perhaps send a rst (on out_q)
+
+/*
+for each packet
+work out which tcb it relates to
+  (if none, then ignore the packet,
+   or send RST?)
+otherwise slot the segment in the receive window
+  (and send ACK. as improvement could delay the ACKs)
+put payload in the receive buffer
+  if the segment is simply an ACK then nothing gets added to the receive buffer,
+  but the TCB might be updated (if ACK isn't dup for example)
+
+segmentation:
+then put into packets
+and put them in the send window
+put entire send window in out_q
+when get ACKs, slide the window
+*/
+
+        }
+      }
+    }
+
+    public void DispatchOutputSegments () {
+      Packet p;
+      while (running) {
+        while (running && out_q.TryDequeue (out p)) {
+          // FIXME start retransmission timer if we're sending a
+          //       payload-carrying segment..
           device.SendPacket(p);
-          Console.Write (".");
         }
       }
     }

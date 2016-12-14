@@ -18,7 +18,7 @@ namespace Pax_TCP {
   // NOTE unlike "usual" TCB i don't store a reference to the network interface
   //      or the local IP address, since that info seems redundant in this
   //      implementation.
-  public struct TCB {
+  public class TCB {
     public TCP_State state;
     public IPAddress remote_address;
     public ushort remote_port;
@@ -38,5 +38,12 @@ namespace Pax_TCP {
 //    ack
 //    window
 //    timer
+
+    // FIXME add nullary constructor that initialises TCB.
+
+    public static int lookup (TCB[] tcbs, Packet p) {
+
+      return -1;
+    }
   }
 }
