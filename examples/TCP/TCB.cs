@@ -8,7 +8,6 @@ Use of this source code is governed by the Apache 2.0 license; see LICENSE.
 using System;
 using System.Net;
 using System.Diagnostics;
-//using SharpPcap;
 using PacketDotNet;
 
 using tcpseq = System.UInt32;
