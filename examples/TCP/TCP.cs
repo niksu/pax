@@ -41,8 +41,8 @@ namespace Pax_TCP {
 
     uint max_InQ_size; // FIXME make parameter
 
-    ConcurrentQueue<Tuple<Packet, TCB>> in_q = new ConcurrentQueue<Tuple<Packet, TCB>>();
-    ConcurrentQueue<Packet> out_q = new ConcurrentQueue<Packet>();
+    ConcurrentQueue<Tuple<Packet,TCB>> in_q = new ConcurrentQueue<Tuple<Packet,TCB>>();
+    ConcurrentQueue<Tuple<Packet,TCB>> out_q = new ConcurrentQueue<Tuple<Packet,TCB>>();
     ConcurrentQueue<TCB> conn_q = new ConcurrentQueue<TCB>();
 
     TCB[] tcbs;
@@ -76,6 +76,8 @@ namespace Pax_TCP {
       {
         EthernetPacket eth_p = (EthernetPacket)packet;
         IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+        // FIXME check version and checksum of eth_p and ip_p, as well as size
+        //       (declared in IP header).
 
         if (ip_p.DestinationAddress.Equals(ip_address)) {
           // NOTE we silently drop the segment if the queue's full.
@@ -250,22 +252,22 @@ when get ACKs, slide the window
     }
 
     public void DispatchOutputSegments () {
-      Packet p;
+      Tuple<Packet,TCB> p;
       while (running) {
         while (running && out_q.TryDequeue (out p)) {
           // FIXME start retransmission timer if we're sending a
           //       payload-carrying segment..
-          device.SendPacket(p);
+          device.SendPacket(p.Item1);
         }
       }
     }
 
     public void Flush (Object o) {
-      Packet p;
-      while (out_q.TryDequeue (out p)) {
-        device.SendPacket(p);
-        Console.Write (".");
-      }
+      //Packet p;
+      //while (out_q.TryDequeue (out p)) {
+      //  device.SendPacket(p);
+      //  Console.Write (".");
+      //}
     }
   }
 }
