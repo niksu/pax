@@ -53,7 +53,8 @@ namespace Pax_TCP {
         // FIXME do we really want ip_address and mac_address given at this
         //       stage? i'd expect ip_address to be given at "bind" step,
         //       and mac_address from the config.
-        IPAddress ip_address, PhysicalAddress mac_address) {
+        IPAddress ip_address, PhysicalAddress mac_address,
+        uint receive_buffer_size, uint send_buffer_size) {
       this.max_conn = max_conn;
       this.max_backlog = max_backlog;
       // We get our addresses via the constructor.
@@ -65,7 +66,7 @@ namespace Pax_TCP {
 
       tcbs = new TCB[max_conn];
       for (int i = 0; i < max_conn; i++) {
-        tcbs[i] = new TCB();
+        tcbs[i] = new TCB(receive_buffer_size, send_buffer_size);
       }
     }
 

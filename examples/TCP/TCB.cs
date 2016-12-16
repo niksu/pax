@@ -34,9 +34,8 @@ namespace Pax_TCP {
 
     public uint sending_max_seg_size = 0; // FIXME is this a sensible value?
 
-    // FIXME consts -- make buffer sizes into parameters.
-    public Packet[] receive_buffer = new Packet[100];
-    public Packet[] send_buffer = new Packet[100];
+    public Packet[] receive_buffer;
+    public Packet[] send_buffer;
 
 //    seq
 //    ack
@@ -44,8 +43,12 @@ namespace Pax_TCP {
 //    timer
 
     // FIXME add nullary constructor that initialises TCB.
-    public TCB() {
+    public TCB(uint receive_buffer_size, uint send_buffer_size) {
       Debug.Assert(TCB.local_address != null);
+      Debug.Assert(receive_buffer_size > 0);
+      Debug.Assert(send_buffer_size > 0);
+      receive_buffer = new Packet[receive_buffer_size];
+      send_buffer = new Packet[send_buffer_size];
     }
 
     // Negative values indicate that the lookup failed.

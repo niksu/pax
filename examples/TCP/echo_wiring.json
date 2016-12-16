@@ -7,7 +7,9 @@
         "ip_address": "127.0.0.1",
         "port": "7000",
         "max_conn": "100",
-        "max_backlog": "10"
+        "max_backlog": "10",
+        "receive_buffer_size": "10",
+        "send_buffer_size": "10"
       }
     }
   ],
