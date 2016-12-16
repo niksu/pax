@@ -123,6 +123,7 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
   uint max_backlog;
   uint receive_buffer_size;
   uint send_buffer_size;
+  uint max_InQ_size;
 
   IActiveBerkeleySocket tcp;
   Echo_Server server;
@@ -136,13 +137,14 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
     this.max_backlog = max_backlog;
     this.receive_buffer_size = receive_buffer_size;
     this.send_buffer_size = send_buffer_size;
+    this.max_InQ_size = max_InQ_size;
   }
 
   public void PreStart (ICaptureDevice device) {
     Console.WriteLine("Instantiating TCP");
     Console.WriteLine("Max. connections " + max_conn.ToString() + ", max. backlog " + max_backlog.ToString());
     // Instantiate the TCP implementation
-    tcp = new TCPuny (max_conn, max_backlog, ip_address, mac_address, receive_buffer_size, send_buffer_size);
+    tcp = new TCPuny (max_conn, max_backlog, ip_address, mac_address, receive_buffer_size, send_buffer_size, max_InQ_size);
     tcp.PreStart(device);
   }
 

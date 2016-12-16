@@ -39,7 +39,7 @@ namespace Pax_TCP {
     int interval = 5000; //FIXME const
     Timer timer; // FIXME we're going to need more than one
 
-    uint max_InQ_size; // FIXME make parameter
+    uint max_InQ_size;
 
     ConcurrentQueue<Tuple<Packet,TCB>> in_q = new ConcurrentQueue<Tuple<Packet,TCB>>();
     ConcurrentQueue<Tuple<Packet,TCB>> out_q = new ConcurrentQueue<Tuple<Packet,TCB>>();
@@ -54,13 +54,14 @@ namespace Pax_TCP {
         //       stage? i'd expect ip_address to be given at "bind" step,
         //       and mac_address from the config.
         IPAddress ip_address, PhysicalAddress mac_address,
-        uint receive_buffer_size, uint send_buffer_size) {
+        uint receive_buffer_size, uint send_buffer_size, uint max_InQ_size) {
       this.max_conn = max_conn;
       this.max_backlog = max_backlog;
       // We get our addresses via the constructor.
       // NOTE we learn about "device" via "PreStart".
       this.ip_address = ip_address;
       this.mac_address = mac_address;
+      this.max_InQ_size = max_InQ_size;
 
       TCB.local_address = ip_address;
 
