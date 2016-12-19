@@ -33,12 +33,10 @@ namespace Pax_TCP {
     Timer_State state;
     Timer timer = new Timer();
 
-    // FIXME add nullary constructor that initialises TCB.
     public TimerCB() {
       Debug.Assert(TimerCB.timer_q != null);
       this.state = Timer_State.Free;
       timer.Elapsed += act;
-      timer.Enabled = true;
       timer.AutoReset = false;
     }
 
@@ -53,11 +51,15 @@ namespace Pax_TCP {
     }
 
     public void start() {
+      Debug.Assert(!timer.Enabled); // timer shouldn't already be running.
+      Debug.Assert(this.state != Timer_State.Free);
       timer.Start();
       this.state = Timer_State.Started;
     }
 
     private void stop() {
+      Debug.Assert(timer.Enabled); // timer should already be running.
+      Debug.Assert(this.state != Timer_State.Free);
       timer.Stop();
       this.state = Timer_State.Stopped;
     }
@@ -65,10 +67,15 @@ namespace Pax_TCP {
     public void free() {
       this.stop();
       this.state = Timer_State.Free;
+      // FIXME how to ensure that TCB etc don't have stale reference to this
+      //       timer resource, now that it has been freed?
     }
 
     private void act(Object source, ElapsedEventArgs e) {
+      this.free();
       // FIXME carry out action.
+      //       action will involve enqueuing a command on timer_q, that will be
+      //       executed by a separate thread.
       throw new Exception("TODO");
     }
 
