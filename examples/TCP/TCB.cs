@@ -97,6 +97,7 @@ namespace Pax_TCP {
     public static int find_free_TCB(TCB[] tcbs) {
       // FIXME linear search not efficient.
       for (int i = 0; i < tcbs.Length; i++) { // NOTE assuming that tcbs.Length == max_conn
+        // FIXME protect against race conditions
         if (tcbs[i].state == TCP_State.Free) {
           return i;
         }
