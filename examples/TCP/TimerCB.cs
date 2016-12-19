@@ -9,38 +9,42 @@ using System;
 using System.Net;
 using System.Diagnostics;
 using System.Collections.Concurrent;
-using System.Threading;
+using System.Timers;
 using PacketDotNet;
 
 namespace Pax_TCP {
   public enum Timer_State { Free, Started, Stopped }
 
   /*
-    set: set the interval value. default = 0.
-    start: start the timer with the set interval value
-    stop: stop the timer
-    reset: restart timer with the most recently set interval value -- dropped this since didn't seem necessary
-    free: stop and mark free
-    when timer expires, it:
-      1. runs code
-      and optionally (depending on parameter)
-      2. restarts
+    set_interval: set the interval value.
+    set_action: set the action to carry out when timer expires.
+    start: start the timer with the set interval value. asserts that interval > 0 and that an action has been set.
+    stop: stop the timer -- i don't think we need this to be public, so at the moment it's private.
+    free: stop and mark free.
+    when timer expires, it carries out some action, and runs "free".
+
+    as for cross-referencing between different types of data, i think:
+    * need reference from packets to related timers (for retransmission)
+    * and from TCB to packets (relating to that connection)
   */
   public class TimerCB {
     public static ConcurrentQueue<Tuple<Packet,TimerCB>> timer_q;
 
     Timer_State state;
-    uint interval;
-    Timer timer;
+    Timer timer = new Timer();
 
     // FIXME add nullary constructor that initialises TCB.
     public TimerCB() {
       Debug.Assert(TimerCB.timer_q != null);
       this.state = Timer_State.Free;
+      timer.Elapsed += act;
+      timer.Enabled = true;
+      timer.AutoReset = false;
     }
 
-    public void set_interval (uint interval) {
-      this.interval = interval;
+    public void set_interval (int interval) {
+      Debug.Assert(interval > 0);
+      timer.Interval = interval;
     }
 
     public void set_action (/*FIXME how to encode action information*/) {
@@ -48,24 +52,22 @@ namespace Pax_TCP {
       throw new Exception("TODO");
     }
 
-    public void stop() {
-      // timer.
-      this.state = Timer_State.Stopped;
-      throw new Exception("TODO");
+    public void start() {
+      timer.Start();
+      this.state = Timer_State.Started;
     }
 
-    public void start() {
-      // timer = new Timer(Flush, null, 0, interval);
-      this.state = Timer_State.Started;
-      throw new Exception("TODO");
+    private void stop() {
+      timer.Stop();
+      this.state = Timer_State.Stopped;
     }
 
     public void free() {
-      stop();
+      this.stop();
       this.state = Timer_State.Free;
     }
 
-    private void act(Object o) {
+    private void act(Object source, ElapsedEventArgs e) {
       // FIXME carry out action.
       throw new Exception("TODO");
     }
@@ -80,6 +82,7 @@ namespace Pax_TCP {
     public static int find_free_TimerCB(TimerCB[] timer_cbs) {
       // FIXME linear search not efficient.
       for (int i = 0; i < timer_cbs.Length; i++) { // NOTE assuming that timer_cbs.Length == max_timers
+        // FIXME protect against race conditions
         if (timer_cbs[i].state == Timer_State.Free) {
           return i;
         }
