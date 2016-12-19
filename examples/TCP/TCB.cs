@@ -42,7 +42,6 @@ namespace Pax_TCP {
 //    window
 //    timer
 
-    // FIXME add nullary constructor that initialises TCB.
     public TCB(uint receive_buffer_size, uint send_buffer_size) {
       Debug.Assert(TCB.local_address != null);
       Debug.Assert(receive_buffer_size > 0);
