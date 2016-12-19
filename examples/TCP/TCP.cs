@@ -36,16 +36,16 @@ namespace Pax_TCP {
 
     uint next_sock_id = 0;
 
-    int interval = 5000; //FIXME const
-    Timer timer; // FIXME we're going to need more than one
-
     uint max_InQ_size;
+    uint max_timers;
 
     ConcurrentQueue<Tuple<Packet,TCB>> in_q = new ConcurrentQueue<Tuple<Packet,TCB>>();
     ConcurrentQueue<Tuple<Packet,TCB>> out_q = new ConcurrentQueue<Tuple<Packet,TCB>>();
+    ConcurrentQueue<Tuple<Packet,TimerCB>> timer_q = new ConcurrentQueue<Tuple<Packet,TimerCB>>();
     ConcurrentQueue<TCB> conn_q = new ConcurrentQueue<TCB>();
 
     TCB[] tcbs;
+    TimerCB[] timer_cbs;
 
     // FIXME need to work through logic of how TCPuny is started, as well as how
     //       the user application initialises it.
@@ -54,7 +54,8 @@ namespace Pax_TCP {
         //       stage? i'd expect ip_address to be given at "bind" step,
         //       and mac_address from the config.
         IPAddress ip_address, PhysicalAddress mac_address,
-        uint receive_buffer_size, uint send_buffer_size, uint max_InQ_size) {
+        uint receive_buffer_size, uint send_buffer_size, uint max_InQ_size,
+        uint max_timers) {
       this.max_conn = max_conn;
       this.max_backlog = max_backlog;
       // We get our addresses via the constructor.
@@ -62,12 +63,19 @@ namespace Pax_TCP {
       this.ip_address = ip_address;
       this.mac_address = mac_address;
       this.max_InQ_size = max_InQ_size;
+      this.max_timers = max_timers;
 
       TCB.local_address = ip_address;
+      TimerCB.timer_q = this.timer_q;
 
       tcbs = new TCB[max_conn];
       for (int i = 0; i < max_conn; i++) {
         tcbs[i] = new TCB(receive_buffer_size, send_buffer_size);
+      }
+
+      timer_cbs = new TimerCB[max_timers];
+      for (int i = 0; i < max_timers; i++) {
+        timer_cbs[i] = new TimerCB();
       }
     }
 
@@ -212,16 +220,14 @@ namespace Pax_TCP {
 
     public void Stop () {
       running = false;
-      if (timer != null) {timer.Dispose();}
+      // FIXME to be more fastidious could release all resources e.g., those
+      //       held by timers.
       Console.WriteLine ("TCPuny stopped");
     }
 
     public void Start () {
       Console.WriteLine ("TCPuny starting");
-
       running = true;
-      timer = new Timer(Flush, null, 0, interval);
-
       Thread t = new Thread (new ThreadStart (this.DispatchOutputSegments));
       t.Start();
 
@@ -262,14 +268,6 @@ when get ACKs, slide the window
           device.SendPacket(p.Item1);
         }
       }
-    }
-
-    public void Flush (Object o) {
-      //Packet p;
-      //while (out_q.TryDequeue (out p)) {
-      //  device.SendPacket(p);
-      //  Console.Write (".");
-      //}
     }
   }
 }

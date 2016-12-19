@@ -32,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TCP\IBerkeleySocket.cs" />
+    <Compile Include="TCP\TimerCB.cs" />
     <Compile Include="TCP\TCB.cs" />
     <Compile Include="TCP\TCP.cs" />
     <Compile Include="TCP\TCwraP.cs" />

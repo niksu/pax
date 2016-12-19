@@ -124,12 +124,14 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
   uint receive_buffer_size;
   uint send_buffer_size;
   uint max_InQ_size;
+  uint max_timers;
 
   IActiveBerkeleySocket tcp;
   Echo_Server server;
 
   public Pax_Echo_Server (PhysicalAddress mac_address, IPAddress ip_address, ushort port,
-   uint max_conn, uint max_backlog, uint receive_buffer_size, uint send_buffer_size) {
+   uint max_conn, uint max_backlog, uint receive_buffer_size, uint send_buffer_size,
+   uint max_InQ_size, uint max_timers) {
     this.mac_address = mac_address;
     this.ip_address = ip_address;
     this.port = port;
@@ -138,13 +140,14 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
     this.receive_buffer_size = receive_buffer_size;
     this.send_buffer_size = send_buffer_size;
     this.max_InQ_size = max_InQ_size;
+    this.max_timers = max_timers;
   }
 
   public void PreStart (ICaptureDevice device) {
     Console.WriteLine("Instantiating TCP");
     Console.WriteLine("Max. connections " + max_conn.ToString() + ", max. backlog " + max_backlog.ToString());
     // Instantiate the TCP implementation
-    tcp = new TCPuny (max_conn, max_backlog, ip_address, mac_address, receive_buffer_size, send_buffer_size, max_InQ_size);
+    tcp = new TCPuny (max_conn, max_backlog, ip_address, mac_address, receive_buffer_size, send_buffer_size, max_InQ_size, max_timers);
     tcp.PreStart(device);
   }
 
