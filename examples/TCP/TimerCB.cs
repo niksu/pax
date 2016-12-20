@@ -14,6 +14,7 @@ using PacketDotNet;
 
 namespace Pax_TCP {
   public enum Timer_State { Free, Started, Stopped }
+  public enum Action { Retransmit, FreeTCB }
 
   /*
     set_interval: set the interval value.
@@ -30,6 +31,9 @@ namespace Pax_TCP {
   public class TimerCB {
     public static ConcurrentQueue<Tuple<Packet,TimerCB>> timer_q;
 
+    private Object obj;
+    private Action action;
+
     Timer_State state;
     Timer timer = new Timer();
 
@@ -45,9 +49,18 @@ namespace Pax_TCP {
       timer.Interval = interval;
     }
 
-    public void set_action (/*FIXME how to encode action information*/) {
-      // FIXME how to store action info.
-      throw new Exception("TODO");
+    public void set_action (Action action, Object obj) {
+      Debug.Assert((obj is TCB || obj is Packet) && obj != null);
+      this.action = action;
+      this.obj = obj;
+    }
+
+    public Action get_action () {
+      return this.action;
+    }
+
+    public Action get_object () {
+      return this.obj;
     }
 
     public void start() {
@@ -72,13 +85,22 @@ namespace Pax_TCP {
     }
 
     private void act(Object source, ElapsedEventArgs e) {
-      this.free();
-      // FIXME carry out action.
-      //       action will involve enqueuing a command on timer_q, that will be
-      //       executed by a separate thread.
-      throw new Exception("TODO");
-    }
+      timer_q.Enqueue(new Tuple <Packet, TCB>(p.Item1, null/*FIXME lookup TCB*/));
 
+      this.free();
+      // Action involve enqueuing a command on timer_q, that will be
+      // executed by a separate thread.
+      switch (this.action) {
+        case Action.Retransmit:
+          break;
+
+        case Action.FreeTCB:
+          break;
+
+        default:
+          throw new Exception("Impossible");
+      }
+    }
 
     // Negative values indicate that the lookup failed.
     public static int lookup (TimerCB[] timer_cbs, Packet packet) {
