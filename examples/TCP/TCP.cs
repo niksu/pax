@@ -43,7 +43,7 @@ namespace Pax_TCP {
     uint max_InQ_size;
     uint max_timers;
 
-    ConcurrentQueue<Tuple<Packet,TCB>> in_q = new ConcurrentQueue<Tuple<Packet,TCB>>();
+    ConcurrentQueue<Tuple<TcpPacket,TCB>> in_q = new ConcurrentQueue<Tuple<TcpPacket,TCB>>();
     ConcurrentQueue<Tuple<Packet,TCB>> out_q = new ConcurrentQueue<Tuple<Packet,TCB>>();
     ConcurrentQueue<Tuple<Packet,TimerCB>> timer_q = new ConcurrentQueue<Tuple<Packet,TimerCB>>();
     ConcurrentQueue<TCB> conn_q = new ConcurrentQueue<TCB>();
@@ -97,12 +97,26 @@ namespace Pax_TCP {
           // NOTE we silently drop the segment if the queue's full.
           if (in_q.Count <= max_InQ_size) {
             int tcb_i = TCB.lookup (tcbs, packet);
-            // FIXME Could out_q a RST if no matching TCB exists (for our address),
-            //       if the interface is set in "monopoly" mode.
-            if (tcb_i >= 0) {
-              // FIXME check eth_p's checksum before adding it to the queue.
-              in_q.Enqueue(new Tuple <Packet, TCB>(eth_p, tcbs[tcb_i]));
+            TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
+
+            if (tcb_i < 0 && tcp_p.Syn) {
+              tcb_i = TCB.find_free_TCB(tcbs);
+
+              // We're going to discard the ethernet and ip headers, so
+              // we'll copy this info to the TCB.
+              tcbs[tcb_i].remote_address = ip_p.SourceAddress;
+              tcbs[tcb_i].remote_port = tcp_p.SourcePort;
+
+            } else {
+              // We ignore the packet if we don't know what to do with it.
+              // FIXME Could out_q a RST if no matching TCB exists (for our
+              //       address), if the interface is set in "monopoly" mode.
+
+              return ForwardingDecision.Drop.Instance;
             }
+
+            // FIXME check packet checksums before adding it to the queue.
+            in_q.Enqueue(new Tuple <TcpPacket, TCB>(tcp_p, tcbs[tcb_i]));
           }
         }
       }
@@ -233,7 +247,7 @@ namespace Pax_TCP {
       t = new Thread (new ThreadStart (this.HandleTimerEvents));
       t.Start();
 
-      Tuple<Packet,TCB> p;
+      Tuple<TcpPacket,TCB> p;
       while (running) {
         while (in_q.TryDequeue (out p)) {
 //          if in listening mode, make a tcb and added it to the conn_q
