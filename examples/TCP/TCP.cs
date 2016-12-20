@@ -22,10 +22,14 @@ namespace Pax_TCP {
   //   with which we've been registered.
   // * the Berkeley socket functions are called from the applications using TCP.
   //   we return to them based on the settings (non/blocking) and protocol
-  //   state (e.g., buffer contents, or socket's closed, etc) and heuristics (e.g., wait until buffer is more full).
+  //   state (e.g., buffer contents, or socket's closed, etc) and heuristics
+  //   (e.g., wait until buffer is more full).
   // * timers for checking up on things -- i.e., retransmitting a segment if it
-  //   has not yet been acknowledged..
-  //   timers are set by timers (e.g., retransmit) and by Berkeley socket functions (write).
+  //   has not yet been acknowledged.
+  //   Timers are set by by the output thread (DispatchOutputSegments) on behalf
+  //    of earlier decisions which themselves might have been the result of timer
+  //    expiry (e.g., retransmit) or Berkeley socket functions being called
+  //    (write).
   public class TCPuny : PacketMonitor, IActiveBerkeleySocket {
     ICaptureDevice device = null; // NOTE if this is made into an array, we can model multipath behaviour?
     uint max_conn;
