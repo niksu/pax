@@ -223,14 +223,14 @@ and, in parallel used tcpdump  -- with a suitable filter -- to see what the gene
 $ sudo tcpdump -nvvv "host 10.0.0.4"
 tcpdump: data link type PKTAP
 tcpdump: listening on pktap, link-type PKTAP (Packet Tap), capture size 65535 bytes
-18:47:58.688820 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40, bad cksum 0 (->66c8)!)
-    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x0000 (incorrect -> 0x9bc7), seq 0, win 0, length 0
-18:47:58.783990 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40, bad cksum 0 (->66c8)!)
-    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x0000 (incorrect -> 0x9bc7), seq 0, win 0, length 0
-18:47:58.886173 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40, bad cksum 0 (->66c8)!)
-    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x0000 (incorrect -> 0x9bc7), seq 0, win 0, length 0
-18:47:58.987158 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40, bad cksum 0 (->66c8)!)
-    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x0000 (incorrect -> 0x9bc7), seq 0, win 0, length 0
-18:47:59.087415 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40, bad cksum 0 (->66c8)!)
-    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x0000 (incorrect -> 0x9bc7), seq 0, win 0, length 0
+20:52:29.872721 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40)
+    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x9bc7 (correct), seq 0, win 0, length 0
+20:52:29.966521 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40)
+    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x9bc7 (correct), seq 0, win 0, length 0
+20:52:30.069319 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40)
+    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x9bc7 (correct), seq 0, win 0, length 0
+20:52:30.169720 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40)
+    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x9bc7 (correct), seq 0, win 0, length 0
+20:52:30.269609 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40)
+    10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x9bc7 (correct), seq 0, win 0, length 0
 ```

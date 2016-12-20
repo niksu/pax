@@ -55,6 +55,9 @@ public class Generator : IActive, IPacketProcessor {
     var eth_p = new EthernetPacket(src_mac, dst_mac, EthernetPacketType.None);
     eth_p.PayloadPacket = ip_p;
     ip_p.PayloadPacket = tcp_p;
+    tcp_p.UpdateTCPChecksum();
+    ip_p.UpdateIPChecksum();
+    eth_p.UpdateCalculatedValues();
     return eth_p;
   }
 
