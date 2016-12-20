@@ -99,20 +99,23 @@ namespace Pax_TCP {
             int tcb_i = TCB.lookup (tcbs, packet);
             TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
-            if (tcb_i < 0 && tcp_p.Syn) {
-              tcb_i = TCB.find_free_TCB(tcbs);
+            if (tcb_i < 0) {
+              // This must be a new connection since there's no TCB for it.
+              if (tcp_p.Syn) {
+                tcb_i = TCB.find_free_TCB(tcbs);
 
-              // We're going to discard the ethernet and ip headers, so
-              // we'll copy this info to the TCB.
-              tcbs[tcb_i].remote_address = ip_p.SourceAddress;
-              tcbs[tcb_i].remote_port = tcp_p.SourcePort;
+                // We're going to discard the ethernet and ip headers, so
+                // we'll copy this info to the TCB.
+                tcbs[tcb_i].remote_address = ip_p.SourceAddress;
+                tcbs[tcb_i].remote_port = tcp_p.SourcePort;
 
-            } else {
-              // We ignore the packet if we don't know what to do with it.
-              // FIXME Could out_q a RST if no matching TCB exists (for our
-              //       address), if the interface is set in "monopoly" mode.
+              } else {
+                // We ignore the packet if we don't know what to do with it.
+                // FIXME Could out_q a RST if no matching TCB exists (for our
+                //       address), if the interface is set in "monopoly" mode.
 
-              return ForwardingDecision.Drop.Instance;
+                return ForwardingDecision.Drop.Instance;
+              }
             }
 
             // FIXME check packet checksums before adding it to the queue.
