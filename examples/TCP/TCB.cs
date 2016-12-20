@@ -50,6 +50,7 @@ namespace Pax_TCP {
       send_buffer = new Packet[send_buffer_size];
     }
 
+    // Demultiplexes a TCP segment to determine the TCB.
     // Negative values indicate that the lookup failed.
     public static int lookup (TCB[] tcbs, Packet packet) {
       int listener = -1;
@@ -96,9 +97,14 @@ namespace Pax_TCP {
     public static int find_free_TCB(TCB[] tcbs) {
       // FIXME linear search not efficient.
       for (int i = 0; i < tcbs.Length; i++) { // NOTE assuming that tcbs.Length == max_conn
-        // FIXME protect against race conditions
-        if (tcbs[i].state == TCP_State.Free) {
-          return i;
+        // FIXME a more fine-grained locking approach would involve "getting
+        //       back to this later" if it's currently locked, to avoid
+        //       spuriously running out of TCBs.
+        lock (tcbs[i]) {
+          if (tcbs[i].state == TCP_State.Free) {
+            tcbs[i].state = TCP_State.Closed;
+            return i;
+          }
         }
       }
 

@@ -113,13 +113,9 @@ namespace Pax_TCP {
     public Result<SockID> socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot) {
       // Add TCB if there's space.
       int free_TCB;
-      lock (this) {
-        free_TCB = TCB.find_free_TCB(tcbs);
-        if (free_TCB < 0) {
-          return new Result<SockID> (null, Error.ENOSP);
-        }
-
-        tcbs[free_TCB].state = TCP_State.Closed;
+      free_TCB = TCB.find_free_TCB(tcbs);
+      if (free_TCB < 0) {
+        return new Result<SockID> (null, Error.ENOSP);
       }
 
       SockID sid = new SockID((uint)free_TCB);
