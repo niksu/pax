@@ -284,7 +284,8 @@ when get ACKs, slide the window
       // all open connections
       for (int i = 0; i < max_conn; i++) {
         lock (tcbs[i]) {
-          if (tcbs[i].tcp_state() != TCP_State.Free) {
+          if ((tcbs[i].tcp_state() != TCP_State.Free) &&
+              (tcbs[i].tcp_state() != TCP_State.Listen)) {
             send_RST(tcbs[i].local_port, tcbs[i].remote_port, tcbs[i].remote_address);
 
             // Set all TCBs to Free (even those in Listen state), and release
