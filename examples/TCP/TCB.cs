@@ -122,7 +122,7 @@ namespace Pax_TCP {
         //       spuriously running out of TCBs.
         lock (tcbs[i]) {
           if (tcbs[i].state == TCP_State.Free) {
-            tcbs[i].state = TCP_State.Closed;
+            tcbs[i].acquire();
             return i;
           }
         }
