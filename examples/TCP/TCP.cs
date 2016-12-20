@@ -44,6 +44,7 @@ namespace Pax_TCP {
     uint max_InQ_size;
     uint max_timers;
     uint max_tcb_timers;
+    bool monopoly = false;
 
     // By design we minimise the scope of logic as much as possible, trying to
     // limit it to making small changes to data, and moving information between
@@ -64,7 +65,7 @@ namespace Pax_TCP {
         //       and mac_address from the config.
         IPAddress ip_address, PhysicalAddress my_mac_address, PhysicalAddress
         gateway_mac_address, uint receive_buffer_size, uint send_buffer_size,
-        uint max_InQ_size, uint max_timers, uint max_tcb_timers) {
+        uint max_InQ_size, uint max_timers, uint max_tcb_timers, bool monopoly) {
       this.max_conn = max_conn;
       this.max_backlog = max_backlog;
       // We get our addresses via the constructor.
@@ -75,6 +76,7 @@ namespace Pax_TCP {
       this.max_InQ_size = max_InQ_size;
       this.max_timers = max_timers;
       this.max_tcb_timers = max_tcb_timers;
+      this.monopoly = monopoly;
 
       TCB.local_address = ip_address;
       TimerCB.timer_q = this.timer_q;
@@ -122,11 +124,14 @@ namespace Pax_TCP {
                 // we'll copy this info to the TCB.
                 tcbs[tcb_i].remote_address = ip_p.SourceAddress;
                 tcbs[tcb_i].remote_port = tcp_p.SourcePort;
-
               } else {
                 // We ignore the packet if we don't know what to do with it.
-                // FIXME Could out_q a RST if no matching TCB exists (for our
-                //       address), if the interface is set in "monopoly" mode.
+
+                if (monopoly) {
+                  // If the interface is set in "monopoly" mode then we out_q a
+                  // RST since no matching TCB exists (for our address).
+                  send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress);
+                }
 
                 return ForwardingDecision.Drop.Instance;
               }
