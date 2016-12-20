@@ -99,7 +99,14 @@ namespace Pax_TCP {
             int tcb_i = TCB.lookup (tcbs, packet);
             TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
-            if (tcb_i < 0) {
+            if (tcb_i >= 0) {
+              // Quickly check if this is a reset, in which case we release
+              // resources related to the connection.
+              if (tcp_p.Rst) {
+                tcbs[tcb_i].free();
+                return ForwardingDecision.Drop.Instance;
+              }
+            } else {
               // This must be a new connection since there's no TCB for it.
               if (tcp_p.Syn) {
                 tcb_i = TCB.find_free_TCB(tcbs);
