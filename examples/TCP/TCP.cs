@@ -256,8 +256,20 @@ when get ACKs, slide the window
 
     public void Stop () {
       running = false;
-      // FIXME to be more fastidious could release all resources e.g., those
-      //       held by timers.
+      // There's no time to close connections nicely, so we send a RST to
+      // all open connections
+      for (int i = 0; i < max_conn; i++) {
+        lock (tcbs[i]) {
+          if (tcbs[i].tcp_state() != TCP_State.Free) {
+            // FIXME send RST
+
+            // Set all TCBs to Free (even those in Listen state), and release
+            // all resources e.g., those held by timers.
+            tcbs[i].free();
+          }
+        }
+      }
+
       Console.WriteLine ("TCPuny stopped");
     }
 
@@ -345,7 +357,7 @@ put payload in the receive buffer
       while (running) {
         while (running && out_q.TryDequeue (out p)) {
           // FIXME start retransmission timer if we're sending a
-          //       payload-carrying segment..
+          //       payload-carrying segment -- unless RST is set!
           device.SendPacket(p.Item1);
         }
       }
