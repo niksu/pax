@@ -37,6 +37,8 @@ namespace Pax_TCP {
     public Packet[] receive_buffer;
     public Packet[] send_buffer;
 
+    public TimerCB[] timers; // FIXME maximum number of allocated timers per TCB -- add as configuration parameter, and allocate this array at TCB initialisation.
+
 //    seq
 //    ack
 //    window
@@ -58,8 +60,16 @@ namespace Pax_TCP {
 
     public void free() {
       Debug.Assert(this.state != TCP_State.Free);
+
+      // Free up timer resources.
+      // FIXME linear time, not efficient.
+      for (int i = 0; i < timers.Length; i++) {
+        if (timers[i] != null) {
+          timers[i].free();
+        }
+      }
+
       this.state = TCP_State.Free;
-      // FIXME free up timer resources!
     }
 
     public TCB(uint receive_buffer_size, uint send_buffer_size) {
