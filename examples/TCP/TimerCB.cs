@@ -29,9 +29,10 @@ namespace Pax_TCP {
     * and from TCB to packets (relating to that connection)
   */
   public class TimerCB {
-    public static ConcurrentQueue<Tuple<Packet,TimerCB>> timer_q;
+    public static ConcurrentQueue<Tuple<Packet, TCB, TimerCB>> timer_q;
 
-    private Object obj;
+    private Packet packet;
+    private TCB tcb;
     private Action action;
 
     Timer_State state;
@@ -49,18 +50,23 @@ namespace Pax_TCP {
       timer.Interval = interval;
     }
 
-    public void set_action (Action action, Object obj) {
-      Debug.Assert((obj is TCB || obj is Packet) && obj != null);
+    public void set_action (Action action, Packet packet, TCB tcb) {
+      Debug.Assert((packet != null) || (tcb != null));
       this.action = action;
-      this.obj = obj;
+      this.packet = packet;
+      this.tcb = tcb;
     }
 
     public Action get_action () {
       return this.action;
     }
 
-    public Action get_object () {
-      return this.obj;
+    public Packet get_packet () {
+      return this.packet;
+    }
+
+    public TCB get_tcb () {
+      return this.tcb;
     }
 
     public void start() {
@@ -71,7 +77,6 @@ namespace Pax_TCP {
     }
 
     private void stop() {
-      Debug.Assert(timer.Enabled); // timer should already be running.
       Debug.Assert(this.state != Timer_State.Free);
       timer.Stop();
       this.state = Timer_State.Stopped;
@@ -85,21 +90,8 @@ namespace Pax_TCP {
     }
 
     private void act(Object source, ElapsedEventArgs e) {
-      timer_q.Enqueue(new Tuple <Packet, TCB>(p.Item1, null/*FIXME lookup TCB*/));
-
-      this.free();
-      // Action involve enqueuing a command on timer_q, that will be
-      // executed by a separate thread.
-      switch (this.action) {
-        case Action.Retransmit:
-          break;
-
-        case Action.FreeTCB:
-          break;
-
-        default:
-          throw new Exception("Impossible");
-      }
+      this.stop();
+      timer_q.Enqueue(new Tuple <Packet, TCB, TimerCB>(packet, tcb, this));
     }
 
     // Negative values indicate that the lookup failed.

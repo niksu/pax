@@ -46,9 +46,9 @@ namespace Pax_TCP {
     // By design we minimise the scope of logic as much as possible, trying to
     // limit it to making small changes to data, and moving information between
     // queues between such specialised data processors.
-    ConcurrentQueue<Tuple<TcpPacket,TCB>> in_q = new ConcurrentQueue<Tuple<TcpPacket,TCB>>();
-    ConcurrentQueue<Tuple<Packet,TCB>> out_q = new ConcurrentQueue<Tuple<Packet,TCB>>();
-    ConcurrentQueue<Tuple<Packet,TimerCB>> timer_q = new ConcurrentQueue<Tuple<Packet,TimerCB>>();
+    ConcurrentQueue<Tuple<TcpPacket, TCB>> in_q = new ConcurrentQueue<Tuple<TcpPacket, TCB>>();
+    ConcurrentQueue<Tuple<Packet, TCB>> out_q = new ConcurrentQueue<Tuple<Packet, TCB>>();
+    ConcurrentQueue<Tuple<Packet, TCB, TimerCB>> timer_q = new ConcurrentQueue<Tuple<Packet, TCB, TimerCB>>();
     ConcurrentQueue<TCB> conn_q = new ConcurrentQueue<TCB>();
 
     TCB[] tcbs;
@@ -350,12 +350,32 @@ put payload in the receive buffer
     }
 
     public void HandleTimerEvents () {
-      Tuple<Packet,TimerCB> p;
+      Tuple<Packet, TCB, TimerCB> p;
       while (running) {
         while (running && timer_q.TryDequeue (out p)) {
-          // FIXME fill in the logic. Retransmission will involve putting the
-          //       packet on the out_q.
-          out_q.Enqueue(new Tuple <Packet, TCB>(p.Item1, null/*FIXME lookup TCB*/));
+          Packet packet = p.Item1;
+          TCB tcb = p.Item2;
+          TimerCB timer = p.Item3;
+
+          // Action involve enqueuing a command on timer_q, that will be
+          // executed by a separate thread.
+          switch (timer.get_action()) {
+            case Action.Retransmit:
+              // FIXME increment retransmission count in TCB.
+
+              // A new timer will be started upon retransmission.
+              out_q.Enqueue(new Tuple <Packet, TCB>(packet, tcb));
+              break;
+
+            case Action.FreeTCB:
+              tcb.free();
+              break;
+
+            default:
+              throw new Exception("Impossible");
+          }
+
+          timer.free();
         }
       }
     }
