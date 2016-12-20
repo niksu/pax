@@ -263,7 +263,7 @@ when get ACKs, slide the window
       for (int i = 0; i < max_conn; i++) {
         lock (tcbs[i]) {
           if (tcbs[i].tcp_state() != TCP_State.Free) {
-            // FIXME send RST
+            send_RST(tcbs[i].local_port, tcbs[i].remote_port, tcbs[i].remote_address);
 
             // Set all TCBs to Free (even those in Listen state), and release
             // all resources e.g., those held by timers.
@@ -358,8 +358,15 @@ put payload in the receive buffer
       Tuple<Packet,TCB> p;
       while (running) {
         while (running && out_q.TryDequeue (out p)) {
-          // FIXME start retransmission timer if we're sending a
-          //       payload-carrying segment -- unless RST is set!
+          EthernetPacket eth_p = (EthernetPacket)p.Item1;
+          IpPacket ip_p = ((IpPacket)(p.Item1.PayloadPacket));
+          TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
+
+          // FIXME also check that if we're sending a payload-carrying segment
+          if (!tcp_p.Rst) {
+            // FIXME start retransmission timer
+          }
+
           device.SendPacket(p.Item1);
         }
       }
@@ -394,6 +401,18 @@ put payload in the receive buffer
           timer.free();
         }
       }
+    }
+
+    // FIXME should have memory pre-allocated for packet generation.
+    private void send_RST(ushort src_port, ushort dst_port, IPAddress dst_ip) {
+      var tcp_p = new TcpPacket(src_port, dst_port);
+      var ip_p = new IPv4Packet(ip_address, dst_ip);
+      var eth_p = new EthernetPacket(my_mac_address, gateway_mac_address, EthernetPacketType.None);
+      eth_p.PayloadPacket = ip_p;
+      ip_p.PayloadPacket = tcp_p;
+      tcp_p.Rst = true;
+      eth_p.UpdateCalculatedValues();
+      out_q.Enqueue(new Tuple <Packet, TCB>(eth_p, null));
     }
   }
 }
