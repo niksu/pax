@@ -33,7 +33,13 @@ namespace Pax_TCP {
     public tcpseq next_send = 0;
     public ulong send_window_size = 0; // FIXME is this a sensible value?
 
-    public uint retransmit_count;
+    // For TCBs derived from Listen TCBs, for the former to point to the latter.
+    // This allows us to keep track of the backlog of connections.
+    // FIXME check if that's the correct rationale above.
+    public readonly TCB parent_tcb; // FIXME set this value in the code below.
+
+    // FIXME is this value incremented only, or also decayed in time?
+    public uint retransmit_count = 0;
 
     public uint sending_max_seg_size = 0; // FIXME is this a sensible value?
 
