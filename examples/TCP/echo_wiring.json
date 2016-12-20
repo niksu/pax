@@ -3,7 +3,8 @@
     {
       "class_name": "Pax_Echo_Server",
       "args": {
-        "mac_address": "02-00-00-00-00-01",
+        "my_mac_address": "02-00-00-00-00-01",
+        "gateway_mac_address": "02-00-00-00-00-02",
         "ip_address": "127.0.0.1",
         "port": "7000",
         "max_conn": "100",

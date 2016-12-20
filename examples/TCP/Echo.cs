@@ -118,7 +118,8 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
   // FIXME currently no way of assigning defaults to Pax parameters in a wiring.json file?
   ushort port;
   IPAddress ip_address;
-  PhysicalAddress mac_address;
+  PhysicalAddress my_mac_address;
+  PhysicalAddress gateway_mac_address;
   uint max_conn;
   uint max_backlog;
   uint receive_buffer_size;
@@ -130,10 +131,12 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
   IActiveBerkeleySocket tcp;
   Echo_Server server;
 
-  public Pax_Echo_Server (PhysicalAddress mac_address, IPAddress ip_address, ushort port,
-   uint max_conn, uint max_backlog, uint receive_buffer_size, uint send_buffer_size,
-   uint max_InQ_size, uint max_timers, uint max_tcb_timers) {
-    this.mac_address = mac_address;
+  public Pax_Echo_Server (PhysicalAddress my_mac_address, PhysicalAddress
+      gateway_mac_address, IPAddress ip_address, ushort port, uint max_conn,
+      uint max_backlog, uint receive_buffer_size, uint send_buffer_size, uint
+      max_InQ_size, uint max_timers, uint max_tcb_timers) {
+    this.my_mac_address = my_mac_address;
+    this.gateway_mac_address = gateway_mac_address;
     this.ip_address = ip_address;
     this.port = port;
     this.max_conn = max_conn;
@@ -149,9 +152,9 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
     Console.WriteLine("Instantiating TCP");
     Console.WriteLine("Max. connections " + max_conn.ToString() + ", max. backlog " + max_backlog.ToString());
     // Instantiate the TCP implementation
-    tcp = new TCPuny (max_conn, max_backlog, ip_address, mac_address,
-        receive_buffer_size, send_buffer_size, max_InQ_size, max_timers,
-        max_tcb_timers);
+    tcp = new TCPuny (max_conn, max_backlog, ip_address, my_mac_address,
+        gateway_mac_address, receive_buffer_size, send_buffer_size,
+        max_InQ_size, max_timers, max_tcb_timers);
     tcp.PreStart(device);
   }
 

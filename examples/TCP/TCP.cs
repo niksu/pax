@@ -35,7 +35,8 @@ namespace Pax_TCP {
     uint max_conn;
     uint max_backlog;
     IPAddress ip_address;
-    PhysicalAddress mac_address;
+    PhysicalAddress my_mac_address;
+    PhysicalAddress gateway_mac_address;
     bool running = false; // FIXME having to check this slows things down much?
 
     uint next_sock_id = 0;
@@ -61,15 +62,16 @@ namespace Pax_TCP {
         // FIXME do we really want ip_address and mac_address given at this
         //       stage? i'd expect ip_address to be given at "bind" step,
         //       and mac_address from the config.
-        IPAddress ip_address, PhysicalAddress mac_address,
-        uint receive_buffer_size, uint send_buffer_size, uint max_InQ_size,
-        uint max_timers, uint max_tcb_timers) {
+        IPAddress ip_address, PhysicalAddress my_mac_address, PhysicalAddress
+        gateway_mac_address, uint receive_buffer_size, uint send_buffer_size,
+        uint max_InQ_size, uint max_timers, uint max_tcb_timers) {
       this.max_conn = max_conn;
       this.max_backlog = max_backlog;
       // We get our addresses via the constructor.
       // NOTE we learn about "device" via "PreStart".
       this.ip_address = ip_address;
-      this.mac_address = mac_address;
+      this.my_mac_address = my_mac_address;
+      this.gateway_mac_address = gateway_mac_address;
       this.max_InQ_size = max_InQ_size;
       this.max_timers = max_timers;
       this.max_tcb_timers = max_tcb_timers;
