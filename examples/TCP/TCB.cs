@@ -72,12 +72,14 @@ namespace Pax_TCP {
       this.state = TCP_State.Free;
     }
 
-    public TCB(uint receive_buffer_size, uint send_buffer_size) {
+    public TCB(uint receive_buffer_size, uint send_buffer_size, uint max_tcb_timers) {
       Debug.Assert(TCB.local_address != null);
       Debug.Assert(receive_buffer_size > 0);
       Debug.Assert(send_buffer_size > 0);
+      Debug.Assert(max_tcb_timers > 0);
       receive_buffer = new Packet[receive_buffer_size];
       send_buffer = new Packet[send_buffer_size];
+      timers = new TimerCB[max_tcb_timers];
     }
 
     // Demultiplexes a TCP segment to determine the TCB.

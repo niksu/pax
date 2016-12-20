@@ -42,6 +42,7 @@ namespace Pax_TCP {
 
     uint max_InQ_size;
     uint max_timers;
+    uint max_tcb_timers;
 
     // By design we minimise the scope of logic as much as possible, trying to
     // limit it to making small changes to data, and moving information between
@@ -62,7 +63,7 @@ namespace Pax_TCP {
         //       and mac_address from the config.
         IPAddress ip_address, PhysicalAddress mac_address,
         uint receive_buffer_size, uint send_buffer_size, uint max_InQ_size,
-        uint max_timers) {
+        uint max_timers, uint max_tcb_timers) {
       this.max_conn = max_conn;
       this.max_backlog = max_backlog;
       // We get our addresses via the constructor.
@@ -71,13 +72,14 @@ namespace Pax_TCP {
       this.mac_address = mac_address;
       this.max_InQ_size = max_InQ_size;
       this.max_timers = max_timers;
+      this.max_tcb_timers = max_tcb_timers;
 
       TCB.local_address = ip_address;
       TimerCB.timer_q = this.timer_q;
 
       tcbs = new TCB[max_conn];
       for (int i = 0; i < max_conn; i++) {
-        tcbs[i] = new TCB(receive_buffer_size, send_buffer_size);
+        tcbs[i] = new TCB(receive_buffer_size, send_buffer_size, max_tcb_timers);
       }
 
       timer_cbs = new TimerCB[max_timers];
