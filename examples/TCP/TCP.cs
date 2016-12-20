@@ -230,6 +230,8 @@ namespace Pax_TCP {
       running = true;
       Thread t = new Thread (new ThreadStart (this.DispatchOutputSegments));
       t.Start();
+      t = new Thread (new ThreadStart (this.HandleTimerEvents));
+      t.Start();
 
       Tuple<Packet,TCB> p;
       while (running) {
@@ -266,6 +268,19 @@ when get ACKs, slide the window
           // FIXME start retransmission timer if we're sending a
           //       payload-carrying segment..
           device.SendPacket(p.Item1);
+        }
+      }
+    }
+
+    public void HandleTimerEvents () {
+      Tuple<Packet,TimerCB> p;
+      while (running) {
+        while (running && timer_q.TryDequeue (out p)) {
+          // We minimise the scope of logic, and limit it to making small
+          // changes, and moving information between queues.
+          // FIXME fill in the logic. Retransmission will involve putting the
+          //       packet on the out_q.
+          out_q.Enqueue(new Tuple <Packet, TCB>(p.Item1, null/*FIXME lookup TCB*/));
         }
       }
     }
