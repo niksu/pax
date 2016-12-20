@@ -205,6 +205,13 @@ namespace Pax_TCP {
       // (Block if necessary, otherwise return 0)
       // FIXME use heuristics to avoid sending small packets?
       // FIXME start retransmission timer immediately?
+/*
+segmentation:
+then put into packets
+and put them in the send window
+put entire send window in out_q
+when get ACKs, slide the window
+*/
       throw new Exception("TODO");
     }
 
@@ -250,27 +257,70 @@ namespace Pax_TCP {
       Tuple<TcpPacket,TCB> p;
       while (running) {
         while (in_q.TryDequeue (out p)) {
-//          if in listening mode, make a tcb and added it to the conn_q
-//          depending on stuff, perhaps send a rst (on out_q)
+          TcpPacket segment = p.Item1;
+          TCB tcb = p.Item2;
 
+          Debug.Assert(tcb.state != TCP_State.Free);
+
+          switch (tcb.state) {
+            case TCP_State.Closed:
+            // FIXME think about using conn_q for backlog.
+            //       i.e., is it too early to have assigned a TCB?
+//if in listening mode, make a tcb and added it to the conn_q
+//depending on stuff, perhaps send a rst (on out_q)
+              throw new Exception("TODO: Closed");
+              break;
+
+            case TCP_State.Listen:
+              throw new Exception("TODO: Listen");
+              break;
+
+            case TCP_State.SynSent:
+              throw new Exception("TODO: SynSent");
+              break;
+
+            case TCP_State.SynRcvd:
+              throw new Exception("TODO: SynRcvd");
+              break;
+
+            case TCP_State.Established:
+              throw new Exception("TODO: Established");
 /*
-for each packet
-work out which tcb it relates to
-  (if none, then ignore the packet,
-   or send RST?)
-otherwise slot the segment in the receive window
+slot the segment in the receive window
   (and send ACK. as improvement could delay the ACKs)
 put payload in the receive buffer
   if the segment is simply an ACK then nothing gets added to the receive buffer,
   but the TCB might be updated (if ACK isn't dup for example)
-
-segmentation:
-then put into packets
-and put them in the send window
-put entire send window in out_q
-when get ACKs, slide the window
 */
+              break;
 
+            case TCP_State.FinWait1:
+              throw new Exception("TODO: FinWait1");
+              break;
+
+            case TCP_State.FinWait2:
+              throw new Exception("TODO: FinWait2");
+              break;
+
+            case TCP_State.CloseWait:
+              throw new Exception("TODO: CloseWait");
+              break;
+
+            case TCP_State.LastAck:
+              throw new Exception("TODO: LastAck");
+              break;
+
+            case TCP_State.Closing:
+              throw new Exception("TODO: Closing");
+              break;
+
+            case TCP_State.TimeWait:
+              throw new Exception("TODO: TimeWait");
+              break;
+
+            default:
+              throw new Exception("Impossible");
+          }
         }
       }
     }
