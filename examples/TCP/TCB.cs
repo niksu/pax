@@ -35,8 +35,8 @@ namespace Pax_TCP {
 
     // For TCBs derived from Listen TCBs, for the former to point to the latter.
     // This allows us to keep track of the backlog of connections.
-    // FIXME check if that's the correct rationale above.
-    public readonly TCB parent_tcb; // FIXME set this value in the code below.
+    // FIXME check if that's the correct rationale above -- should abandon idea of using conn_q in TCP.cs?
+    public TCB parent_tcb;
 
     // FIXME is this value incremented only, or also decayed in time?
     public uint retransmit_count = 0;
@@ -50,6 +50,11 @@ namespace Pax_TCP {
 
     public TCP_State tcp_state() {
       return this.state;
+    }
+
+    public void state_to_synrcvd() {
+      Debug.Assert(this.state == TCP_State.Closed);
+      this.state = TCP_State.SynRcvd;
     }
 
     public void state_to_listen() {

@@ -49,7 +49,7 @@ namespace Pax_TCP {
     // By design we minimise the scope of logic as much as possible, trying to
     // limit it to making small changes to data, and moving information between
     // queues between such specialised data processors.
-    ConcurrentQueue<Tuple<TcpPacket, TCB>> in_q = new ConcurrentQueue<Tuple<TcpPacket, TCB>>();
+    ConcurrentQueue<Tuple<Packet, TCB>> in_q = new ConcurrentQueue<Tuple<Packet, TCB>>();
     ConcurrentQueue<Tuple<Packet, TCB>> out_q = new ConcurrentQueue<Tuple<Packet, TCB>>();
     ConcurrentQueue<Tuple<Packet, TCB, TimerCB>> timer_q = new ConcurrentQueue<Tuple<Packet, TCB, TimerCB>>();
     ConcurrentQueue<TCB> conn_q = new ConcurrentQueue<TCB>();
@@ -116,29 +116,19 @@ namespace Pax_TCP {
                 return ForwardingDecision.Drop.Instance;
               }
             } else {
-              // This must be a new connection since there's no TCB for it.
-              if (tcp_p.Syn) {
-                tcb_i = TCB.find_free_TCB(tcbs);
+              // We ignore the packet if we don't know what to do with it.
 
-                // We're going to discard the ethernet and ip headers, so
-                // we'll copy this info to the TCB.
-                tcbs[tcb_i].remote_address = ip_p.SourceAddress;
-                tcbs[tcb_i].remote_port = tcp_p.SourcePort;
-              } else {
-                // We ignore the packet if we don't know what to do with it.
-
-                if (monopoly) {
-                  // If the interface is set in "monopoly" mode then we out_q a
-                  // RST since no matching TCB exists (for our address).
-                  send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress);
-                }
-
-                return ForwardingDecision.Drop.Instance;
+              if (monopoly) {
+                // If the interface is set in "monopoly" mode then we out_q a
+                // RST since no matching TCB exists (for our address).
+                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress);
               }
+
+              return ForwardingDecision.Drop.Instance;
             }
 
             // FIXME check packet checksums before adding it to the queue.
-            in_q.Enqueue(new Tuple <TcpPacket, TCB>(tcp_p, tcbs[tcb_i]));
+            in_q.Enqueue(new Tuple <Packet, TCB>(packet, tcbs[tcb_i]));
           }
         }
       }
@@ -306,25 +296,43 @@ when get ACKs, slide the window
       t = new Thread (new ThreadStart (this.HandleTimerEvents));
       t.Start();
 
-      Tuple<TcpPacket,TCB> p;
+      Tuple<Packet,TCB> p;
       while (running) {
         while (in_q.TryDequeue (out p)) {
-          TcpPacket segment = p.Item1;
           TCB tcb = p.Item2;
+
+          EthernetPacket eth_p = (EthernetPacket)p.Item1;
+          IpPacket ip_p = ((IpPacket)(p.Item1.PayloadPacket));
+          TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
           Debug.Assert(tcb.tcp_state() != TCP_State.Free);
 
           switch (tcb.tcp_state()) {
             case TCP_State.Closed:
-            // FIXME think about using conn_q for backlog.
-            //       i.e., is it too early to have assigned a TCB?
-//if in listening mode, make a tcb and added it to the conn_q
-//depending on stuff, perhaps send a rst (on out_q)
-              throw new Exception("TODO: Closed");
+              throw new Exception("Impossible");
               break;
 
             case TCP_State.Listen:
-              throw new Exception("TODO: Listen");
+
+              if (tcp_p.Syn) {
+                int tcb_i = TCB.find_free_TCB(tcbs);
+
+                // We're going to discard the ethernet and ip headers, so
+                // we'll copy this info to the TCB.
+                tcbs[tcb_i].remote_address = ip_p.SourceAddress;
+                tcbs[tcb_i].remote_port = tcp_p.SourcePort;
+                tcbs[tcb_i].state_to_synrcvd();
+                tcbs[tcb_i].parent_tcb = tcb;
+                // FIXME send Syn+Ack       
+              } else {
+                // We don't check If the interface is set in "monopoly" mode to
+                // send a RST since this TCP instance is listening on this port,
+                // so we expect to at least have control over this port (but not
+                // over the whole interface -- i.e., we leave other ports
+                // alone).
+                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress);
+              }
+
               break;
 
             case TCP_State.SynRcvd:
