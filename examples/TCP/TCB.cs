@@ -22,7 +22,7 @@ namespace Pax_TCP {
   public class TCB {
     public static IPAddress local_address = null;
 
-    public TCP_State state = TCP_State.Free;
+    private TCP_State state = TCP_State.Free;
     public IPAddress remote_address = null;
     public ushort remote_port = 0;
     public ushort local_port = 0;
@@ -41,6 +41,26 @@ namespace Pax_TCP {
 //    ack
 //    window
 //    timer
+
+    public TCP_State tcp_state() {
+      return this.state;
+    }
+
+    public void state_to_listen() {
+      Debug.Assert(this.state == TCP_State.Closed);
+      this.state = TCP_State.Listen;
+    }
+
+    public void acquire() {
+      Debug.Assert(this.state == TCP_State.Free);
+      this.state = TCP_State.Closed;
+    }
+
+    public void free() {
+      Debug.Assert(this.state != TCP_State.Free);
+      this.state = TCP_State.Free;
+      // FIXME free up timer resources!
+    }
 
     public TCB(uint receive_buffer_size, uint send_buffer_size) {
       Debug.Assert(TCB.local_address != null);

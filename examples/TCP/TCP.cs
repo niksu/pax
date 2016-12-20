@@ -144,7 +144,7 @@ namespace Pax_TCP {
       // FIXME check that address+port isn't already bound (by this TCP
       //       instance, by consulting the TCBs).
 
-      if (tcbs[sid.sockid].state != TCP_State.Closed) {
+      if (tcbs[sid.sockid].tcp_state() != TCP_State.Closed) {
         return new Result<Unit> (Unit.Value, Error.EFAULT);//FIXME is this the right code?
       }
 
@@ -156,12 +156,12 @@ namespace Pax_TCP {
     }
 
     public Result<Unit> listen (SockID sid) {
-      if (tcbs[sid.sockid].state != TCP_State.Closed ||
+      if (tcbs[sid.sockid].tcp_state() != TCP_State.Closed ||
           tcbs[sid.sockid].local_port == 0) {
         return new Result<Unit> (Unit.Value, Error.EFAULT);//FIXME is this the right code?
       }
 
-      tcbs[sid.sockid].state = TCP_State.Listen;
+      tcbs[sid.sockid].state_to_listen();
       return new Result<Unit> (Unit.Value, null);
     }
 
@@ -172,7 +172,7 @@ namespace Pax_TCP {
 
       address = SockAddr_In.none;
 
-      if (tcbs[sid.sockid].state != TCP_State.Listen) {
+      if (tcbs[sid.sockid].tcp_state() != TCP_State.Listen) {
         return new Result<SockID> (null, Error.EFAULT);//FIXME is this the right code?
       }
 
@@ -260,9 +260,9 @@ when get ACKs, slide the window
           TcpPacket segment = p.Item1;
           TCB tcb = p.Item2;
 
-          Debug.Assert(tcb.state != TCP_State.Free);
+          Debug.Assert(tcb.tcp_state() != TCP_State.Free);
 
-          switch (tcb.state) {
+          switch (tcb.tcp_state()) {
             case TCP_State.Closed:
             // FIXME think about using conn_q for backlog.
             //       i.e., is it too early to have assigned a TCB?
