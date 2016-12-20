@@ -214,6 +214,13 @@ namespace Pax_TCP {
 
     public Result<int> write (SockID sid, byte[] buf, uint count) {
       Debug.Assert(count > 0);
+
+      if ((tcbs[sid.sockid].tcp_state() != TCP_State.Established) &&
+          (tcbs[sid.sockid].tcp_state() != TCP_State.CloseWait)) {
+        // We shouldn't write if the other side won't read.
+        return new Result<int> (-1, Error.EFAULT);//FIXME is this the right code?
+      }
+
       // Look up the TCB
       // Check whether we're blocking or non-blocking
       // Check how many bytes we can fit into the send buffer, commit to it.
@@ -234,6 +241,16 @@ when get ACKs, slide the window
 
     public Result<int> read (SockID sid, byte[] buf, uint count) {
       Debug.Assert(count > 0);
+
+      // FIXME should return whatever's in the buffer before checking connection state?
+      if ((tcbs[sid.sockid].tcp_state() != TCP_State.Established) &&
+          (tcbs[sid.sockid].tcp_state() != TCP_State.FinWait1) &&
+          (tcbs[sid.sockid].tcp_state() != TCP_State.FinWait2) &&
+          (tcbs[sid.sockid].tcp_state() != TCP_State.CloseWait)) {
+        // We should continue reading until the very end.
+        return new Result<int> (-1, Error.EFAULT);//FIXME is this the right code?
+      }
+
       // Look up the TCB
       // Check whether we're blocking or non-blocking
       // Check how many bytes we can send, commit to it.
