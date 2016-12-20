@@ -321,10 +321,6 @@ when get ACKs, slide the window
               throw new Exception("TODO: Listen");
               break;
 
-            case TCP_State.SynSent:
-              throw new Exception("TODO: SynSent");
-              break;
-
             case TCP_State.SynRcvd:
               throw new Exception("TODO: SynRcvd");
               break;

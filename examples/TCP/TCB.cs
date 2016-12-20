@@ -13,7 +13,9 @@ using PacketDotNet;
 using tcpseq = System.UInt32;
 
 namespace Pax_TCP {
-  public enum TCP_State { Free, Closed, Listen, SynSent, SynRcvd, Established,
+  // NOTE we don't include SynSent this this implementation of TCP doesn't
+  //      support "active open".
+  public enum TCP_State { Free, Closed, Listen, SynRcvd, Established,
     FinWait1, FinWait2, CloseWait, LastAck, Closing, TimeWait }
 
   // NOTE unlike "usual" TCB i don't store a reference to the network interface
@@ -26,6 +28,7 @@ namespace Pax_TCP {
     public IPAddress remote_address = null;
     public ushort remote_port = 0;
     public ushort local_port = 0;
+
     public tcpseq unacked_send = 0; // FIXME add NaN value for some fields?
     public tcpseq next_send = 0;
     public ulong send_window_size = 0; // FIXME is this a sensible value?
@@ -38,11 +41,6 @@ namespace Pax_TCP {
     public Packet[] send_buffer;
 
     public TimerCB[] timers; // FIXME maximum number of allocated timers per TCB -- add as configuration parameter, and allocate this array at TCB initialisation.
-
-//    seq
-//    ack
-//    window
-//    timer
 
     public TCP_State tcp_state() {
       return this.state;
