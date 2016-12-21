@@ -45,6 +45,7 @@ namespace Pax_TCP {
     uint max_timers;
     uint max_tcb_timers;
     bool monopoly = false;
+    UInt16 max_window_size;
 
     // By design we minimise the scope of logic as much as possible, trying to
     // limit it to making small changes to data, and moving information between
@@ -65,7 +66,8 @@ namespace Pax_TCP {
         //       and mac_address from the config.
         IPAddress ip_address, PhysicalAddress my_mac_address, PhysicalAddress
         gateway_mac_address, uint receive_buffer_size, uint send_buffer_size,
-        uint max_InQ_size, uint max_timers, uint max_tcb_timers, bool monopoly) {
+        uint max_InQ_size, uint max_timers, uint max_tcb_timers, bool monopoly,
+        UInt16 max_window_size) {
       this.max_conn = max_conn;
       this.max_backlog = max_backlog;
       // We get our addresses via the constructor.
@@ -77,6 +79,7 @@ namespace Pax_TCP {
       this.max_timers = max_timers;
       this.max_tcb_timers = max_tcb_timers;
       this.monopoly = monopoly;
+      this.max_window_size = max_window_size;
 
       TCB.local_address = ip_address;
       TimerCB.timer_q = this.timer_q;
@@ -431,13 +434,16 @@ put payload in the receive buffer
     }
 
     // FIXME should have memory pre-allocated for packet generation.
-    // FIXME set other info such as window size.
     private Packet raw_packet(ushort src_port, ushort dst_port, IPAddress dst_ip) {
       var tcp_p = new TcpPacket(src_port, dst_port);
       var ip_p = new IPv4Packet(ip_address, dst_ip);
       var eth_p = new EthernetPacket(my_mac_address, gateway_mac_address, EthernetPacketType.None);
       eth_p.PayloadPacket = ip_p;
       ip_p.PayloadPacket = tcp_p;
+
+      // FIXME window size is static
+      tcp_p.WindowSize = max_window_size;
+
       return eth_p;
     }
 
