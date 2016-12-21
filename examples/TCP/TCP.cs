@@ -375,11 +375,28 @@ put payload in the receive buffer
               break;
 
             case TCP_State.Closing:
-              throw new Exception("TODO: Closing");
+              if (tcp_p.Rst) {
+                tcb.free();
+              } else if (tcp_p.Syn) {
+                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress, tcp_p.AcknowledgmentNumber, 0, false);
+                tcb.free();
+              } else {
+                // FIXME ack any data received?
+                // FIXME check that FIN has been ACK'd, and if so then
+                //       call tcb.state_to_timewait();
+              }
               break;
 
             case TCP_State.TimeWait:
-              throw new Exception("TODO: TimeWait");
+              if (tcp_p.Rst) {
+                tcb.free();
+              } else if (tcp_p.Syn) {
+                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress, tcp_p.AcknowledgmentNumber, 0, false);
+                tcb.free();
+              } else {
+                // FIXME resend acknowledgement?
+                // FIXME reschedule 2MSL deletion of the TCB
+              }
               break;
 
             default:

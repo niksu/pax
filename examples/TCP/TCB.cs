@@ -54,6 +54,11 @@ namespace Pax_TCP {
       return this.state;
     }
 
+    public void state_to_timewait() {
+      Debug.Assert(this.state == TCP_State.Closing);
+      this.state = TCP_State.TimeWait;
+    }
+
     public void state_to_synrcvd() {
       Debug.Assert(this.state == TCP_State.Closed);
       this.state = TCP_State.SynRcvd;
