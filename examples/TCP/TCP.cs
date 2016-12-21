@@ -121,7 +121,7 @@ namespace Pax_TCP {
               if (monopoly) {
                 // If the interface is set in "monopoly" mode then we out_q a
                 // RST since no matching TCB exists (for our address).
-                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress);
+                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress, tcp_p.AcknowledgmentNumber, 0, false);
               }
 
               return ForwardingDecision.Drop.Instance;
@@ -276,7 +276,7 @@ when get ACKs, slide the window
         lock (tcbs[i]) {
           if ((tcbs[i].tcp_state() != TCP_State.Free) &&
               (tcbs[i].tcp_state() != TCP_State.Listen)) {
-            send_RST(tcbs[i].local_port, tcbs[i].remote_port, tcbs[i].remote_address);
+            send_RST(tcbs[i].local_port, tcbs[i].remote_port, tcbs[i].remote_address, 0, tcbs[i].next_ack, true);
 
             // Set all TCBs to Free (even those in Listen state), and release
             // all resources e.g., those held by timers.
@@ -330,7 +330,7 @@ when get ACKs, slide the window
                 // so we expect to at least have control over this port (but not
                 // over the whole interface -- i.e., we leave other ports
                 // alone).
-                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress);
+                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress, tcp_p.AcknowledgmentNumber, 0, false);
               }
 
               break;
@@ -452,13 +452,16 @@ put payload in the receive buffer
       out_q.Enqueue(new Tuple <Packet, TCB>(eth_p, null));
     }
 
-    private void send_RST(ushort src_port, ushort dst_port, IPAddress dst_ip) {
+    private void send_RST(ushort src_port, ushort dst_port, IPAddress dst_ip, uint seq_no, uint ack_no, bool set_ack) {
       Packet packet = raw_packet(src_port, dst_port, dst_ip);
       EthernetPacket eth_p = (EthernetPacket)packet;
       IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
       TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
       tcp_p.Rst = true;
+      tcp_p.SequenceNumber = seq_no;
+      tcp_p.AcknowledgmentNumber = ack_no;
+      tcp_p.Ack = set_ack;
 
       send_packet(packet);
     }

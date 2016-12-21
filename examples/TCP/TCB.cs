@@ -33,6 +33,8 @@ namespace Pax_TCP {
     public tcpseq next_send = 0;
     public ulong send_window_size = 0; // FIXME is this a sensible value?
 
+    public tcpseq next_ack = 0; // FIXME not sure this is the right name -- check the docs.
+
     // For TCBs derived from Listen TCBs, for the former to point to the latter.
     // This allows us to keep track of the backlog of connections.
     // FIXME check if that's the correct rationale above -- should abandon idea of using conn_q in TCP.cs?
