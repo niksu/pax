@@ -431,15 +431,36 @@ put payload in the receive buffer
     }
 
     // FIXME should have memory pre-allocated for packet generation.
-    private void send_RST(ushort src_port, ushort dst_port, IPAddress dst_ip) {
+    private Packet raw_packet(ushort src_port, ushort dst_port, IPAddress dst_ip) {
       var tcp_p = new TcpPacket(src_port, dst_port);
       var ip_p = new IPv4Packet(ip_address, dst_ip);
       var eth_p = new EthernetPacket(my_mac_address, gateway_mac_address, EthernetPacketType.None);
       eth_p.PayloadPacket = ip_p;
       ip_p.PayloadPacket = tcp_p;
-      tcp_p.Rst = true;
+      return eth_p;
+    }
+
+    private void send_packet(Packet packet) {
+      EthernetPacket eth_p = (EthernetPacket)packet;
+      IPv4Packet ip_p = ((IPv4Packet)(packet.PayloadPacket));
+      TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
+
+      tcp_p.UpdateTCPChecksum();
+      ip_p.UpdateIPChecksum();
       eth_p.UpdateCalculatedValues();
+
       out_q.Enqueue(new Tuple <Packet, TCB>(eth_p, null));
+    }
+
+    private void send_RST(ushort src_port, ushort dst_port, IPAddress dst_ip) {
+      Packet packet = raw_packet(src_port, dst_port, dst_ip);
+      EthernetPacket eth_p = (EthernetPacket)packet;
+      IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+      TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
+
+      tcp_p.Rst = true;
+
+      send_packet(packet);
     }
   }
 }
