@@ -431,6 +431,7 @@ put payload in the receive buffer
     }
 
     // FIXME should have memory pre-allocated for packet generation.
+    // FIXME set other info such as window size.
     private Packet raw_packet(ushort src_port, ushort dst_port, IPAddress dst_ip) {
       var tcp_p = new TcpPacket(src_port, dst_port);
       var ip_p = new IPv4Packet(ip_address, dst_ip);
