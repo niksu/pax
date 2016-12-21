@@ -30,7 +30,7 @@ namespace Pax_TCP {
     public ushort local_port = 0;
 
     public tcpseq unacked_send = 0; // FIXME add NaN value for some fields?
-    public tcpseq next_send = 0;
+    public tcpseq next_send = 0; // FIXME randomize?
     public ulong send_window_size = 0; // FIXME is this a sensible value?
 
     public tcpseq next_ack = 0; // FIXME not sure this is the right name -- check the docs.

@@ -324,9 +324,14 @@ when get ACKs, slide the window
                 // we'll copy this info to the TCB.
                 tcbs[tcb_i].remote_address = ip_p.SourceAddress;
                 tcbs[tcb_i].remote_port = tcp_p.SourcePort;
-                tcbs[tcb_i].state_to_synrcvd();
                 tcbs[tcb_i].parent_tcb = tcb;
-                // FIXME send Syn+Ack       
+                tcbs[tcb_i].next_ack = tcp_p.SequenceNumber;
+                tcbs[tcb_i].state_to_synrcvd();
+
+                // FIXME check if we've already SYNACK'd, in which case cancel retransmission timer?
+
+                send_SYNACK(tcbs[tcb_i].local_port, tcbs[tcb_i].remote_port,
+                    tcbs[tcb_i].remote_address, tcbs[tcb_i].next_send, tcbs[tcb_i].next_ack);
               } else {
                 // We don't check If the interface is set in "monopoly" mode to
                 // send a RST since this TCP instance is listening on this port,
@@ -469,6 +474,20 @@ put payload in the receive buffer
       tcp_p.SequenceNumber = seq_no;
       tcp_p.AcknowledgmentNumber = ack_no;
       tcp_p.Ack = set_ack;
+
+      send_packet(packet);
+    }
+
+    private void send_SYNACK(ushort src_port, ushort dst_port, IPAddress dst_ip, uint seq_no, uint ack_no) {
+      Packet packet = raw_packet(src_port, dst_port, dst_ip);
+      EthernetPacket eth_p = (EthernetPacket)packet;
+      IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+      TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
+
+      tcp_p.Syn = true;
+      tcp_p.Ack = true;
+      tcp_p.SequenceNumber = seq_no;
+      tcp_p.AcknowledgmentNumber = ack_no;
 
       send_packet(packet);
     }
