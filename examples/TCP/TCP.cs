@@ -340,6 +340,11 @@ when get ACKs, slide the window
                 // over the whole interface -- i.e., we leave other ports
                 // alone).
                 send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress, tcp_p.AcknowledgmentNumber, 0, false);
+
+                // I think we can be this aggressive (sending RST), since it
+                // can't be that segments got reordered such that data segments
+                // arrived before the completion of the handshake, since those
+                // segments wouldn't know which ack numbers to carry.
               }
 
               break;
