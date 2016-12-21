@@ -328,8 +328,6 @@ when get ACKs, slide the window
                 tcbs[tcb_i].next_ack = tcp_p.SequenceNumber;
                 tcbs[tcb_i].state_to_synrcvd();
 
-                // FIXME check if we've already SYNACK'd, in which case cancel retransmission timer?
-
                 send_SYNACK(tcbs[tcb_i].local_port, tcbs[tcb_i].remote_port,
                     tcbs[tcb_i].remote_address, tcbs[tcb_i].next_send, tcbs[tcb_i].next_ack);
               } else {
@@ -344,6 +342,8 @@ when get ACKs, slide the window
               break;
 
             case TCP_State.SynRcvd:
+              // FIXME handle SYNACK retransmission if we get a SYN in this state.
+
               throw new Exception("TODO: SynRcvd");
               break;
 
