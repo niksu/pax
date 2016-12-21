@@ -129,6 +129,7 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
   uint max_tcb_timers;
   bool monopoly;
   UInt16 max_window_size;
+  uint max_segment_size;
 
   IActiveBerkeleySocket tcp;
   Echo_Server server;
@@ -137,7 +138,7 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
       gateway_mac_address, IPAddress ip_address, ushort port, uint max_conn,
       uint max_backlog, uint receive_buffer_size, uint send_buffer_size, uint
       max_InQ_size, uint max_timers, uint max_tcb_timers, bool monopoly,
-      UInt16 max_window_size) {
+      UInt16 max_window_size, uint max_segment_size) {
     this.my_mac_address = my_mac_address;
     this.gateway_mac_address = gateway_mac_address;
     this.ip_address = ip_address;
@@ -151,6 +152,7 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
     this.max_tcb_timers = max_tcb_timers;
     this.monopoly = monopoly;
     this.max_window_size = max_window_size;
+    this.max_segment_size = max_segment_size;
   }
 
   public void PreStart (ICaptureDevice device) {
@@ -159,7 +161,8 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
     // Instantiate the TCP implementation
     tcp = new TCPuny (max_conn, max_backlog, ip_address, my_mac_address,
         gateway_mac_address, receive_buffer_size, send_buffer_size,
-        max_InQ_size, max_timers, max_tcb_timers, monopoly, max_window_size);
+        max_InQ_size, max_timers, max_tcb_timers, monopoly, max_window_size,
+        max_segment_size);
     tcp.PreStart(device);
   }
 

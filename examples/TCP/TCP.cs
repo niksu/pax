@@ -46,6 +46,7 @@ namespace Pax_TCP {
     uint max_tcb_timers;
     bool monopoly = false;
     UInt16 max_window_size;
+    uint max_segment_size;
 
     // By design we minimise the scope of logic as much as possible, trying to
     // limit it to making small changes to data, and moving information between
@@ -67,7 +68,7 @@ namespace Pax_TCP {
         IPAddress ip_address, PhysicalAddress my_mac_address, PhysicalAddress
         gateway_mac_address, uint receive_buffer_size, uint send_buffer_size,
         uint max_InQ_size, uint max_timers, uint max_tcb_timers, bool monopoly,
-        UInt16 max_window_size) {
+        UInt16 max_window_size, uint max_segment_size) {
       this.max_conn = max_conn;
       this.max_backlog = max_backlog;
       // We get our addresses via the constructor.
@@ -80,13 +81,15 @@ namespace Pax_TCP {
       this.max_tcb_timers = max_tcb_timers;
       this.monopoly = monopoly;
       this.max_window_size = max_window_size;
+      this.max_segment_size = max_segment_size;
 
       TCB.local_address = ip_address;
       TimerCB.timer_q = this.timer_q;
 
       tcbs = new TCB[max_conn];
       for (int i = 0; i < max_conn; i++) {
-        tcbs[i] = new TCB(receive_buffer_size, send_buffer_size, max_tcb_timers);
+        tcbs[i] = new TCB(receive_buffer_size, send_buffer_size, max_tcb_timers,
+            max_segment_size);
       }
 
       timer_cbs = new TimerCB[max_timers];

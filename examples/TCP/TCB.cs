@@ -28,6 +28,8 @@ namespace Pax_TCP {
     public IPAddress remote_address = null;
     public ushort remote_port = 0;
     public ushort local_port = 0;
+    private uint max_segment_size;
+    private uint segment_size;
 
     public tcpseq unacked_send = 0; // FIXME add NaN value for some fields?
     public tcpseq next_send = 0; // FIXME randomize?
@@ -88,7 +90,8 @@ namespace Pax_TCP {
       this.state = TCP_State.Free;
     }
 
-    public TCB(uint receive_buffer_size, uint send_buffer_size, uint max_tcb_timers) {
+    public TCB(uint receive_buffer_size, uint send_buffer_size,
+        uint max_tcb_timers, uint max_segment_size) {
       Debug.Assert(TCB.local_address != null);
       Debug.Assert(receive_buffer_size > 0);
       Debug.Assert(send_buffer_size > 0);
@@ -96,6 +99,10 @@ namespace Pax_TCP {
       receive_buffer = new Packet[receive_buffer_size];
       send_buffer = new Packet[send_buffer_size];
       timers = new TimerCB[max_tcb_timers];
+      this.max_segment_size = max_segment_size;
+
+      // FIXME currently we don't varys segment size.
+      this.segment_size = this.max_segment_size;
     }
 
     // Demultiplexes a TCP segment to determine the TCB.
