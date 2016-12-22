@@ -29,7 +29,6 @@ namespace Pax_TCP {
     public ushort remote_port = 0;
     public ushort local_port = 0;
     private uint max_segment_size; // FIXME could split this into two, for receive and send.
-    private uint segment_size; // FIXME could split this into two, for receive and send.
 
     // Send sequence variables
     public tcpseq unacknowledged_send;
@@ -127,9 +126,6 @@ namespace Pax_TCP {
       this.max_segment_size = max_segment_size;
 
       initialise_segment_sequence();
-
-      // FIXME currently we don't vary segment size.
-      this.segment_size = this.max_segment_size;
     }
 
     // Demultiplexes a TCP segment to determine the TCB.
