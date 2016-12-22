@@ -48,8 +48,7 @@ namespace Pax_TCP {
 // FIXME measure in bytes or in packets?
     public tcpseq initial_receive_sequence;
     // FIXME "receive window"?
-    public Packet[] receive_buffer; // FIXME use byte buffer instead?
-
+    public byte?[] receive_buffer;
 
     // For TCBs derived from Listen TCBs, for the former to point to the latter.
     // This allows us to keep track of the backlog of connections.
@@ -112,7 +111,7 @@ namespace Pax_TCP {
       Debug.Assert(send_buffer_size > 0);
       Debug.Assert(max_tcb_timers > 0);
 
-      receive_buffer = new Packet[receive_buffer_size];
+      receive_buffer = new byte?[receive_buffer_size];
       for (int i = 0; i < receive_buffer_size; i++) {
         receive_buffer[i] = null;
       }
@@ -123,6 +122,10 @@ namespace Pax_TCP {
       }
 
       timers = new TimerCB[max_tcb_timers];
+      for (int i = 0; i < max_tcb_timers; i++) {
+        timers[i] = null;
+      }
+
       this.max_segment_size = max_segment_size;
 
       initialise_segment_sequence();
