@@ -1,14 +1,19 @@
 # TCPuny: a C# implementation of TCP
 
-TCPuny exposes a Berkeley-style socket interface ([IBerkeleySocket.cs](IBerkeleySocket.cs))
-for applications to send and receive byte streams over an unreliably network,
-handling the following on the application's behalf:
+TCPuny exposes a Berkeley-style socket interface
+([IBerkeleySocket.cs](IBerkeleySocket.cs)) for applications to send and receive
+byte streams over an unreliably network, handling the following on the
+application's behalf:
 * loss (through retransmission)
 * delivery of duplicates
 * out-of-order delivery
 
+Other than implementing TCP in C#, the goal of this work is to be explicit
+about the resources available to C#, to allocate those resources up-front, and
+to operate strictly within the resources available.
 
-# Design
+
+# Design (TODO)
 Diagram showing the different entities: packet processing, active parts, user=program.
   TCP thread [TCPuny.cs](TCPuny.cs)
    supported by others [TCB.cs](TCB.cs), [TimerCB.cs](TimerCB.cs).
@@ -75,9 +80,7 @@ This implementation can be improved and extended in various ways. Currently:
 * doesn't support flags like URG and PSH.
 * ignores control messages (via ICMP)
 * doesn't provide any support for host naming (to be resolved via DNS) or ARP.
-* only supports passive open (no active open, and thus no simultaneous open or
-  self-connect).
+* only supports passive open (no active open, and thus no simultaneous open or self-connect).
 * more timers could be added, e.g., for keepalive, persist, fin-wait2.
 * no Nagle algorithm (for batching sends),
-* only supports immediate ACKing (no delaying).
-  (note: vulnerable to so-called "silly window syndrome").
+* only supports immediate ACKing (no delaying). (note: this makes it vulnerable to so-called "silly window syndrome").
