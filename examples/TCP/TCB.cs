@@ -28,14 +28,29 @@ namespace Pax_TCP {
     public IPAddress remote_address = null;
     public ushort remote_port = 0;
     public ushort local_port = 0;
-    private uint max_segment_size;
-    private uint segment_size;
+    private uint max_segment_size; // FIXME could split this into two, for receive and send.
+    private uint segment_size; // FIXME could split this into two, for receive and send.
 
-    public tcpseq unacked_send = 0; // FIXME add NaN value for some fields?
-    public tcpseq next_send = 0; // FIXME randomize?
-    public ulong send_window_size = 0; // FIXME is this a sensible value?
+    // Send sequence variables
+    public tcpseq unacknowledged_send;
+    public tcpseq next_send;
+    public UInt16 send_window_size; // as advertised to us by peer.
+    public tcpseq seq_of_most_recent_window;
+    public tcpseq ack_of_most_recent_window;
+    public tcpseq initial_send_sequence;
+    public tcpseq max_seq_so_far_send;
+    // FIXME "send window"?
+    public Packet[] send_buffer; // FIXME use byte buffer instead?
 
-    public tcpseq next_ack = 0; // FIXME not sure this is the right name -- check the docs.
+    // Receive sequence variables
+    public tcpseq receive_next;
+    public UInt16 receiver_window_size; // as we advertised to peer.
+// FIXME same as receive_buffer_size?
+// FIXME measure in bytes or in packets?
+    public tcpseq initial_receive_sequence;
+    // FIXME "receive window"?
+    public Packet[] receive_buffer; // FIXME use byte buffer instead?
+
 
     // For TCBs derived from Listen TCBs, for the former to point to the latter.
     // This allows us to keep track of the backlog of connections.
@@ -45,12 +60,12 @@ namespace Pax_TCP {
     // FIXME is this value incremented only, or also decayed in time?
     public uint retransmit_count = 0;
 
-    public uint sending_max_seg_size = 0; // FIXME is this a sensible value?
-
-    public Packet[] receive_buffer;
-    public Packet[] send_buffer;
-
     public TimerCB[] timers; // FIXME maximum number of allocated timers per TCB -- add as configuration parameter, and allocate this array at TCB initialisation.
+
+    private void initialise_segment_sequence() {
+      // FIXME randomize;
+      this.initial_send_sequence = 0;
+    }
 
     public TCP_State tcp_state() {
       return this.state;
@@ -92,16 +107,28 @@ namespace Pax_TCP {
 
     public TCB(uint receive_buffer_size, uint send_buffer_size,
         uint max_tcb_timers, uint max_segment_size) {
+
       Debug.Assert(TCB.local_address != null);
       Debug.Assert(receive_buffer_size > 0);
       Debug.Assert(send_buffer_size > 0);
       Debug.Assert(max_tcb_timers > 0);
+
       receive_buffer = new Packet[receive_buffer_size];
+      for (int i = 0; i < receive_buffer_size; i++) {
+        receive_buffer[i] = null;
+      }
+
       send_buffer = new Packet[send_buffer_size];
+      for (int i = 0; i < send_buffer_size; i++) {
+        send_buffer[i] = null;
+      }
+
       timers = new TimerCB[max_tcb_timers];
       this.max_segment_size = max_segment_size;
 
-      // FIXME currently we don't varys segment size.
+      initialise_segment_sequence();
+
+      // FIXME currently we don't vary segment size.
       this.segment_size = this.max_segment_size;
     }
 

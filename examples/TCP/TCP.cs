@@ -282,7 +282,7 @@ when get ACKs, slide the window
         lock (tcbs[i]) {
           if ((tcbs[i].tcp_state() != TCP_State.Free) &&
               (tcbs[i].tcp_state() != TCP_State.Listen)) {
-            send_RST(tcbs[i].local_port, tcbs[i].remote_port, tcbs[i].remote_address, 0, tcbs[i].next_ack, true);
+            send_RST(tcbs[i].local_port, tcbs[i].remote_port, tcbs[i].remote_address, 0, tcbs[i].seq_of_most_recent_window, true);
 
             // Set all TCBs to Free (even those in Listen state), and release
             // all resources e.g., those held by timers.
@@ -328,11 +328,19 @@ when get ACKs, slide the window
                 tcbs[tcb_i].remote_address = ip_p.SourceAddress;
                 tcbs[tcb_i].remote_port = tcp_p.SourcePort;
                 tcbs[tcb_i].parent_tcb = tcb;
-                tcbs[tcb_i].next_ack = tcp_p.SequenceNumber;
+
+                // FIXME start a timer to remove this record if we don't hear
+                //       anything more for, say, 75 seconds.
                 tcbs[tcb_i].state_to_synrcvd();
 
+                tcbs[tcb_i].seq_of_most_recent_window = tcp_p.SequenceNumber;
+                tcbs[tcb_i].ack_of_most_recent_window = tcbs[tcb_i].initial_send_sequence;
+                tcbs[tcb_i].receive_next = tcp_p.SequenceNumber;
+                tcbs[tcb_i].send_window_size = tcp_p.WindowSize;
+
                 send_SYNACK(tcbs[tcb_i].local_port, tcbs[tcb_i].remote_port,
-                    tcbs[tcb_i].remote_address, tcbs[tcb_i].next_send, tcbs[tcb_i].next_ack);
+                    tcbs[tcb_i].remote_address, tcbs[tcb_i].next_send,
+                    tcbs[tcb_i].seq_of_most_recent_window);
               } else {
                 // We don't check If the interface is set in "monopoly" mode to
                 // send a RST since this TCP instance is listening on this port,
