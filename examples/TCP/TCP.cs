@@ -334,13 +334,18 @@ when get ACKs, slide the window
                 tcbs[tcb_i].state_to_synrcvd();
 
                 tcbs[tcb_i].seq_of_most_recent_window = tcp_p.SequenceNumber;
-                tcbs[tcb_i].ack_of_most_recent_window = tcbs[tcb_i].initial_send_sequence;
-                tcbs[tcb_i].receive_next = tcp_p.SequenceNumber;
+                tcbs[tcb_i].receive_next = tcp_p.SequenceNumber + 1;
                 tcbs[tcb_i].send_window_size = tcp_p.WindowSize;
 
+                //tcbs[tcb_i].ack_of_most_recent_window = tcbs[tcb_i].initial_send_sequence;
+                tcbs[tcb_i].next_send = tcbs[tcb_i].initial_send_sequence;
+
                 send_SYNACK(tcbs[tcb_i].local_port, tcbs[tcb_i].remote_port,
-                    tcbs[tcb_i].remote_address, tcbs[tcb_i].next_send,
-                    tcbs[tcb_i].seq_of_most_recent_window);
+                    tcbs[tcb_i].remote_address,
+                    tcbs[tcb_i].next_send,
+                    tcbs[tcb_i].receive_next);
+
+                tcbs[tcb_i].receive_next++;
               } else {
                 // We don't check If the interface is set in "monopoly" mode to
                 // send a RST since this TCP instance is listening on this port,
