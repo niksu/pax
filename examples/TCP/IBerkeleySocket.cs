@@ -12,6 +12,23 @@ using System.Net;
 using Pax;
 
 namespace Pax_TCP {
+  /* FIXME right now I only care about servers, therefore don't include
+     functions like "connect", "gethostbyname", and "gethostbyaddr" in the API.
+     For simplicity, I don't include "getsockopt", "setsockopt", "select", and
+     "poll" either.
+     Also i exclude "sendto", "recvfrom", "send", and "recv", again for prototyping.
+  */
+  public interface IBerkeleySocket {
+    Result<SockID> socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot);
+    Result<Unit> bind (SockID sid, SockAddr_In address);
+    Result<Unit> listen (SockID sid); // NOTE we let the "backlog" parameter be implicit for prototyping reasons; it's a parameter of TCP, not the interface.
+    Result<SockID> accept (SockID sid, out SockAddr_In address);
+    Result<int> write (SockID sid, byte[] buf, uint count);
+    Result<int> read (SockID sid, byte[] buf, uint count);
+    Result<Unit> close (SockID sid);
+  }
+
+  public interface IActiveBerkeleySocket: IBerkeleySocket, IActive {}
 
   public enum Unit { Value };
 
@@ -142,22 +159,4 @@ namespace Pax_TCP {
     }
     // FIXME specify equality?
   }
-
-  /* FIXME right now I only care about servers, therefore don't include
-     functions like "connect", "gethostbyname", and "gethostbyaddr" in the API.
-     For simplicity, I don't include "getsockopt", "setsockopt", "select", and
-     "poll" either.
-     Also i exclude "sendto", "recvfrom", "send", and "recv", again for prototyping.
-  */
-  public interface IBerkeleySocket {
-    Result<SockID> socket (Internet_Domain domain, Internet_Type type, Internet_Protocol prot);
-    Result<Unit> bind (SockID sid, SockAddr_In address);
-    Result<Unit> listen (SockID sid); // NOTE we let the "backlog" parameter be implicit for prototyping reasons; it's a parameter of TCP, not the interface.
-    Result<SockID> accept (SockID sid, out SockAddr_In address);
-    Result<int> write (SockID sid, byte[] buf, uint count);
-    Result<int> read (SockID sid, byte[] buf, uint count);
-    Result<Unit> close (SockID sid);
-  }
-
-  public interface IActiveBerkeleySocket: IBerkeleySocket, IActive {}
 }
