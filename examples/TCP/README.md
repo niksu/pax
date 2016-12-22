@@ -20,8 +20,7 @@ Diagram showing the different entities: packet processing, active parts, user=pr
   Sockets interface [IBerkeleySocket.cs](IBerkeleySocket.cs)
   Program thread (client, server, peer, ...)
 
-Three sorts of timer events:
-* connection-establishment: expiry after SYN (remove TCB)
+Two sorts of timer events:
 * retransmission
 * 2MSL to remove TCB
 
@@ -40,10 +39,10 @@ Factored the implementation:
 
 
 # Configuration
-**Activate IP forwarding.** This is done in an OS-specific manner. For example on OSX:
-```
-sysctl -w net.inet.ip.forwarding=1
-```
+**Activate IP forwarding.** This is done in an OS-specific manner.
+For example on OSX type `$ sysctl -w net.inet.ip.forwarding=1`
+and on Linux `$ sysctl -w net.ipv4.ip_forward=1` to enable IP forwarding
+temporarily.
 You also need to make sure that any firewalls are configured to permit the
 traffic you want TCPuny to receive and send.
 
@@ -81,6 +80,6 @@ This implementation can be improved and extended in various ways. Currently:
 * ignores control messages (via ICMP)
 * doesn't provide any support for host naming (to be resolved via DNS) or ARP.
 * only supports passive open (no active open, and thus no simultaneous open or self-connect).
-* more timers could be added, e.g., for keepalive, persist, fin-wait2.
+* more timers could be added, e.g., for connection-establishment (expiry after SYN, remove TCB), keepalive, persist, fin-wait2.
 * no Nagle algorithm (for batching sends),
 * only supports immediate ACKing (no delaying). (note: this makes it vulnerable to so-called "silly window syndrome").
