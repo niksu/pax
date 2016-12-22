@@ -320,7 +320,7 @@ when get ACKs, slide the window
 
             case TCP_State.Listen:
 
-              if (tcp_p.Syn) {
+              if (tcp_p.Syn && !tcp_p.Ack) {
                 int tcb_i = TCB.find_free_TCB(tcbs);
 
                 // We're going to discard the ethernet and ip headers, so
@@ -337,7 +337,6 @@ when get ACKs, slide the window
                 tcbs[tcb_i].receive_next = tcp_p.SequenceNumber + 1;
                 tcbs[tcb_i].send_window_size = tcp_p.WindowSize;
 
-                //tcbs[tcb_i].ack_of_most_recent_window = tcbs[tcb_i].initial_send_sequence;
                 tcbs[tcb_i].next_send = tcbs[tcb_i].initial_send_sequence;
 
                 send_SYNACK(tcbs[tcb_i].local_port, tcbs[tcb_i].remote_port,
