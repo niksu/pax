@@ -127,7 +127,9 @@ namespace Pax_TCP {
               if (monopoly) {
                 // If the interface is set in "monopoly" mode then we out_q a
                 // RST since no matching TCB exists (for our address).
-                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress, tcp_p.AcknowledgmentNumber, 0, false);
+                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress,
+                    tcp_p.AcknowledgmentNumber/*FIXME is this the right value?*/,
+                    0, false);
               }
 
               return ForwardingDecision.Drop.Instance;
@@ -282,7 +284,9 @@ when get ACKs, slide the window
         lock (tcbs[i]) {
           if ((tcbs[i].tcp_state() != TCP_State.Free) &&
               (tcbs[i].tcp_state() != TCP_State.Listen)) {
-            send_RST(tcbs[i].local_port, tcbs[i].remote_port, tcbs[i].remote_address, 0, tcbs[i].seq_of_most_recent_window, true);
+            send_RST(tcbs[i].local_port, tcbs[i].remote_port, tcbs[i].remote_address,
+                tcbs[i].next_send++,
+                tcbs[i].receive_next, true);
 
             // Set all TCBs to Free (even those in Listen state), and release
             // all resources e.g., those held by timers.
@@ -351,7 +355,9 @@ when get ACKs, slide the window
                 // so we expect to at least have control over this port (but not
                 // over the whole interface -- i.e., we leave other ports
                 // alone).
-                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress, tcp_p.AcknowledgmentNumber, 0, false);
+                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress,
+                    tcp_p.AcknowledgmentNumber/*FIXME is this the right value?*/,
+                    0, false);
 
                 // I think we can be this aggressive (sending RST), since it
                 // can't be that segments got reordered such that data segments
@@ -398,7 +404,9 @@ put payload in the receive buffer
               if (tcp_p.Rst) {
                 tcb.free();
               } else if (tcp_p.Syn) {
-                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress, tcp_p.AcknowledgmentNumber, 0, false);
+                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress,
+                    tcp_p.AcknowledgmentNumber/*FIXME is this the right value?*/,
+                    0, false);
                 tcb.free();
               } else {
                 // FIXME ack any data received?
@@ -411,7 +419,9 @@ put payload in the receive buffer
               if (tcp_p.Rst) {
                 tcb.free();
               } else if (tcp_p.Syn) {
-                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress, tcp_p.AcknowledgmentNumber, 0, false);
+                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress,
+                    tcp_p.AcknowledgmentNumber/*FIXME is this the right value?*/,
+                    0, false);
                 tcb.free();
               } else {
                 // FIXME resend acknowledgement?
