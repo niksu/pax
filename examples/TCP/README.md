@@ -50,7 +50,7 @@ traffic you want TCPuny to receive and send.
 It's important to set the correct MAC and IP addresses, otherwise outgoing
 packets might be misrouted or dropped. You can check your MAC address using
 `ifconfig` and get an idea of who you've been interacting locally by using
-`arp`.
+`arp`. To view MAC addresses when using `tcpdump` use the `-e` flag.
 
 
 # Example
