@@ -47,6 +47,10 @@ You also need to make sure that any firewalls are configured to permit the
 traffic you want TCPuny to receive and send.
 
 **Configure TCPuny**. For an example see [echo_wiring.json](echo_wiring.json).
+It's important to set the correct MAC and IP addresses, otherwise outgoing
+packets might be misrouted or dropped. You can check your MAC address using
+`ifconfig` and get an idea of who you've been interacting locally by using
+`arp`.
 
 
 # Example
