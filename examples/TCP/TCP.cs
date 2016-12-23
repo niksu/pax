@@ -287,7 +287,7 @@ when get ACKs, slide the window
               (tcbs[i].tcp_state() != TCP_State.Listen)) {
             send_RST(tcbs[i].local_port, tcbs[i].remote_port, tcbs[i].remote_address,
                 tcbs[i].next_send++,
-                tcbs[i].receive_next, true);
+                tcbs[i].next_receive, true);
 
             // Set all TCBs to Free (even those in Listen state), and release
             // all resources e.g., those held by timers.
@@ -352,7 +352,7 @@ when get ACKs, slide the window
                 tcbs[tcb_i].state_to_synrcvd();
 
                 tcbs[tcb_i].seq_of_most_recent_window = tcp_p.SequenceNumber;
-                tcbs[tcb_i].receive_next = tcp_p.SequenceNumber + 1;
+                tcbs[tcb_i].next_receive = tcp_p.SequenceNumber + 1;
                 tcbs[tcb_i].send_window_size = tcp_p.WindowSize;
                 tcbs[tcb_i].receive_window_size = max_window_size; // FIXME might want to start with smaller window.
 
@@ -361,10 +361,10 @@ when get ACKs, slide the window
                 send_SYNACK(tcbs[tcb_i].local_port, tcbs[tcb_i].remote_port,
                     tcbs[tcb_i].remote_address,
                     tcbs[tcb_i].next_send,
-                    tcbs[tcb_i].receive_next,
+                    tcbs[tcb_i].next_receive,
                     tcbs[tcb_i].receive_window_size);
 
-                tcbs[tcb_i].receive_next++;
+                tcbs[tcb_i].next_receive++;
 
 #if DEBUG
                 Console.WriteLine("Initiating connection");
@@ -413,7 +413,7 @@ when get ACKs, slide the window
                 tcbs[tcb_i].state_to_synrcvd();
 
                 tcbs[tcb_i].seq_of_most_recent_window = tcp_p.SequenceNumber;
-                tcbs[tcb_i].receive_next = tcp_p.SequenceNumber + 1;
+                tcbs[tcb_i].next_receive = tcp_p.SequenceNumber + 1;
                 tcbs[tcb_i].send_window_size = tcp_p.WindowSize;
 
                 tcbs[tcb_i].next_send = tcbs[tcb_i].initial_send_sequence;

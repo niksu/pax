@@ -42,7 +42,7 @@ namespace Pax_TCP {
     public Packet[] send_buffer; // NOTE saves effort over using a byte buffer -- we resend packets directly from the buffer.
 
     // Receive sequence variables
-    public tcpseq receive_next;
+    public tcpseq next_receive;
     public UInt16 receive_window_size; // as we advertised to peer.
     public tcpseq initial_receive_sequence;
     public byte?[] receive_buffer;
