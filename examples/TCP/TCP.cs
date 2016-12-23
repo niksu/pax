@@ -354,13 +354,15 @@ when get ACKs, slide the window
                 tcbs[tcb_i].seq_of_most_recent_window = tcp_p.SequenceNumber;
                 tcbs[tcb_i].receive_next = tcp_p.SequenceNumber + 1;
                 tcbs[tcb_i].send_window_size = tcp_p.WindowSize;
+                tcbs[tcb_i].receive_window_size = max_window_size; // FIXME might want to start with smaller window.
 
                 tcbs[tcb_i].next_send = tcbs[tcb_i].initial_send_sequence;
 
                 send_SYNACK(tcbs[tcb_i].local_port, tcbs[tcb_i].remote_port,
                     tcbs[tcb_i].remote_address,
                     tcbs[tcb_i].next_send,
-                    tcbs[tcb_i].receive_next);
+                    tcbs[tcb_i].receive_next,
+                    tcbs[tcb_i].receive_window_size);
 
                 tcbs[tcb_i].receive_next++;
 
@@ -533,15 +535,15 @@ put payload in the receive buffer
     }
 
     // FIXME should have memory pre-allocated for packet generation.
-    private Packet raw_packet(ushort src_port, ushort dst_port, IPAddress dst_ip) {
+    private Packet raw_packet(ushort src_port, ushort dst_port, IPAddress dst_ip,
+        UInt16 receive_window_size) {
       var tcp_p = new TcpPacket(src_port, dst_port);
       var ip_p = new IPv4Packet(ip_address, dst_ip);
       var eth_p = new EthernetPacket(my_mac_address, gateway_mac_address, EthernetPacketType.None);
       eth_p.PayloadPacket = ip_p;
       ip_p.PayloadPacket = tcp_p;
 
-      // FIXME window size is static
-      tcp_p.WindowSize = max_window_size;
+      tcp_p.WindowSize = receive_window_size;
 
       return eth_p;
     }
@@ -560,12 +562,11 @@ put payload in the receive buffer
 
     private void send_RST(ushort src_port, ushort dst_port, IPAddress dst_ip, uint seq_no, uint ack_no, bool set_ack) {
       // FIXME is there a nice way of unpacking packets?
-      Packet packet = raw_packet(src_port, dst_port, dst_ip);
+      Packet packet = raw_packet(src_port, dst_port, dst_ip, 0);
       EthernetPacket eth_p = (EthernetPacket)packet;
       IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
       TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
-      tcp_p.WindowSize = 0;
       tcp_p.Rst = true;
       tcp_p.SequenceNumber = seq_no;
       tcp_p.AcknowledgmentNumber = ack_no;
@@ -574,8 +575,9 @@ put payload in the receive buffer
       send_packet(packet);
     }
 
-    private void send_SYNACK(ushort src_port, ushort dst_port, IPAddress dst_ip, uint seq_no, uint ack_no) {
-      Packet packet = raw_packet(src_port, dst_port, dst_ip);
+    private void send_SYNACK(ushort src_port, ushort dst_port, IPAddress dst_ip,
+        uint seq_no, uint ack_no, UInt16 receive_window_size) {
+      Packet packet = raw_packet(src_port, dst_port, dst_ip, receive_window_size);
       EthernetPacket eth_p = (EthernetPacket)packet;
       IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
       TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));

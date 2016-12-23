@@ -39,16 +39,12 @@ namespace Pax_TCP {
     public tcpseq ack_of_most_recent_window;
     public tcpseq initial_send_sequence;
     public tcpseq max_seq_so_far_send;
-    // FIXME "send window"?
-    public Packet[] send_buffer; // FIXME use byte buffer instead?
+    public Packet[] send_buffer; // NOTE saves effort over using a byte buffer -- we resend packets directly from the buffer.
 
     // Receive sequence variables
     public tcpseq receive_next;
-    public UInt16 receiver_window_size; // as we advertised to peer.
-// FIXME same as receive_buffer_size?
-// FIXME measure in bytes or in packets?
+    public UInt16 receive_window_size; // as we advertised to peer.
     public tcpseq initial_receive_sequence;
-    // FIXME "receive window"?
     public byte?[] receive_buffer;
 
     // For TCBs derived from Listen TCBs, for the former to point to the latter.
