@@ -88,8 +88,8 @@ namespace Pax_TCP {
 
       tcbs = new TCB[max_conn];
       for (int i = 0; i < max_conn; i++) {
-        tcbs[i] = new TCB(receive_buffer_size, send_buffer_size, max_tcb_timers,
-            max_segment_size);
+        tcbs[i] = new TCB((uint)i, receive_buffer_size, send_buffer_size,
+            max_tcb_timers, max_segment_size);
       }
 
       timer_cbs = new TimerCB[max_timers];
@@ -111,7 +111,12 @@ namespace Pax_TCP {
         if (ip_p.DestinationAddress.Equals(ip_address)) {
           // NOTE we silently drop the segment if the queue's full.
           if (in_q.Count <= max_InQ_size) {
-            int tcb_i = TCB.lookup (tcbs, packet);
+            int tcb_i = -1; // FIXME const
+
+            lock (tcbs) { // FIXME coarse-grained?
+              tcb_i = TCB.lookup (tcbs, packet);
+            }
+
             TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
             if (tcb_i >= 0) {
@@ -134,6 +139,10 @@ namespace Pax_TCP {
 
               return ForwardingDecision.Drop.Instance;
             }
+
+#if DEBUG
+            Console.Write(">");
+#endif
 
             // FIXME check packet checksums before adding it to the queue.
             in_q.Enqueue(new Tuple <Packet, TCB>(packet, tcbs[tcb_i]));
@@ -200,17 +209,9 @@ namespace Pax_TCP {
       TCB tcb;
       while (true) {
         if (conn_q.TryDequeue (out tcb)) {
-          lock (this) {
-            free_TCB = TCB.find_free_TCB(tcbs);
-            if (free_TCB < 0) {
-              return new Result<SockID> (null, Error.ENOSP);
-            }
-
-            tcbs[free_TCB] = tcb;
-          }
-
+          // FIXME need to ensure that tcb is relevant to sid.
           address = new SockAddr_In (tcb.remote_port, tcb.remote_address);
-          return new Result<SockID> (new SockID((uint)free_TCB), null);
+          return new Result<SockID> (new SockID(tcb.index), null);
         }
       }
     }
@@ -309,10 +310,11 @@ when get ACKs, slide the window
       Tuple<Packet,TCB> p;
       while (running) {
         while (in_q.TryDequeue (out p)) {
+          Packet packet = p.Item1;
           TCB tcb = p.Item2;
 
-          EthernetPacket eth_p = (EthernetPacket)p.Item1;
-          IpPacket ip_p = ((IpPacket)(p.Item1.PayloadPacket));
+          EthernetPacket eth_p = (EthernetPacket)packet;
+          IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
           TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
           Debug.Assert(tcb.tcp_state() != TCP_State.Free);
@@ -323,18 +325,30 @@ when get ACKs, slide the window
               break;
 
             case TCP_State.Listen:
-
               if (tcp_p.Syn && !tcp_p.Ack) {
-                int tcb_i = TCB.find_free_TCB(tcbs);
+                Debug.Assert(tcb.tcp_state() == TCP_State.Listen);
 
-                // We're going to discard the ethernet and ip headers, so
-                // we'll copy this info to the TCB.
+                int tcb_i = TCB.lookup (tcbs, packet, true);
+                if (tcb_i >= 0) {
+                  // FIXME not efficient approach!
+                  // If a TCB already exists then we put this back on the queue
+                  // and have it reference the TCB we found.
+                  in_q.Enqueue(new Tuple <Packet, TCB>(packet, tcbs[tcb_i]));
+                  break;
+                }
+
+                tcb_i = TCB.find_free_TCB(tcbs);
+
+                // FIXME discard the ethernet and ip headers since we copy this info to the TCB?
                 tcbs[tcb_i].remote_address = ip_p.SourceAddress;
                 tcbs[tcb_i].remote_port = tcp_p.SourcePort;
-                tcbs[tcb_i].parent_tcb = tcb;
 
-                // FIXME start a timer to remove this record if we don't hear
-                //       anything more for, say, 75 seconds.
+                tcbs[tcb_i].parent_tcb = tcb;
+                tcbs[tcb_i].local_port = tcb.local_port;
+
+                // FIXME start a timer (so-called connection-establishment
+                //       timer) to remove this record if we don't hear anything
+                //       more from the other peer.
                 tcbs[tcb_i].state_to_synrcvd();
 
                 tcbs[tcb_i].seq_of_most_recent_window = tcp_p.SequenceNumber;
@@ -349,6 +363,10 @@ when get ACKs, slide the window
                     tcbs[tcb_i].receive_next);
 
                 tcbs[tcb_i].receive_next++;
+
+#if DEBUG
+                Console.WriteLine("Initiating connection");
+#endif
               } else {
                 // We don't check If the interface is set in "monopoly" mode to
                 // send a RST since this TCP instance is listening on this port,
@@ -356,8 +374,9 @@ when get ACKs, slide the window
                 // over the whole interface -- i.e., we leave other ports
                 // alone).
                 send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress,
-                    tcp_p.AcknowledgmentNumber/*FIXME is this the right value?*/,
-                    0, false);
+                    tcp_p.AcknowledgmentNumber,
+                    tcp_p.SequenceNumber + 1, true);
+                tcb.free();
 
                 // I think we can be this aggressive (sending RST), since it
                 // can't be that segments got reordered such that data segments
@@ -368,9 +387,37 @@ when get ACKs, slide the window
               break;
 
             case TCP_State.SynRcvd:
-              // FIXME handle SYNACK retransmission if we get a SYN in this state.
+              if (tcp_p.Rst) {
+                Debug.Assert(tcb != null);
+                tcb.free();
+              } else if (tcp_p.Fin) {
+                // Kill the connection -- illegal transition.
+                send_RST(tcp_p.DestinationPort, tcp_p.SourcePort, ip_p.SourceAddress,
+                    tcp_p.AcknowledgmentNumber/*FIXME is this the right value?*/,
+                    0, false);
+                tcb.free();
+              } else if (tcp_p.Syn) {
+                // FIXME handle SYNACK retransmission if we get a SYN in this state.
+                //       reset SYNACK timer.
+              } else if (tcp_p.Ack) {
+                // FIXME advance to Established.
+                //       communicate to "accept" that it can proceed.
+                //       buffer any payload data.
 
-              throw new Exception("TODO: SynRcvd");
+                // Check if the packet can be accepted -- falls within receive
+                // window.
+                //
+/*
+                tcbs[tcb_i].state_to_synrcvd();
+
+                tcbs[tcb_i].seq_of_most_recent_window = tcp_p.SequenceNumber;
+                tcbs[tcb_i].receive_next = tcp_p.SequenceNumber + 1;
+                tcbs[tcb_i].send_window_size = tcp_p.WindowSize;
+
+                tcbs[tcb_i].next_send = tcbs[tcb_i].initial_send_sequence;
+*/
+              }
+
               break;
 
             case TCP_State.Established:
@@ -512,11 +559,13 @@ put payload in the receive buffer
     }
 
     private void send_RST(ushort src_port, ushort dst_port, IPAddress dst_ip, uint seq_no, uint ack_no, bool set_ack) {
+      // FIXME is there a nice way of unpacking packets?
       Packet packet = raw_packet(src_port, dst_port, dst_ip);
       EthernetPacket eth_p = (EthernetPacket)packet;
       IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
       TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
+      tcp_p.WindowSize = 0;
       tcp_p.Rst = true;
       tcp_p.SequenceNumber = seq_no;
       tcp_p.AcknowledgmentNumber = ack_no;
@@ -531,10 +580,10 @@ put payload in the receive buffer
       IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
       TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
-      tcp_p.Syn = true;
-      tcp_p.Ack = true;
       tcp_p.SequenceNumber = seq_no;
+      tcp_p.Syn = true;
       tcp_p.AcknowledgmentNumber = ack_no;
+      tcp_p.Ack = true;
 
       send_packet(packet);
     }

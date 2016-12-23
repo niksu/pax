@@ -22,6 +22,7 @@ namespace Pax_TCP {
   //      or the local IP address, since that info seems redundant in this
   //      implementation.
   public class TCB {
+    public readonly uint index;
     public static IPAddress local_address = null;
 
     private TCP_State state = TCP_State.Free;
@@ -103,13 +104,15 @@ namespace Pax_TCP {
       this.state = TCP_State.Free;
     }
 
-    public TCB(uint receive_buffer_size, uint send_buffer_size,
+    public TCB(uint index, uint receive_buffer_size, uint send_buffer_size,
         uint max_tcb_timers, uint max_segment_size) {
 
       Debug.Assert(TCB.local_address != null);
       Debug.Assert(receive_buffer_size > 0);
       Debug.Assert(send_buffer_size > 0);
       Debug.Assert(max_tcb_timers > 0);
+
+      this.index = index;
 
       receive_buffer = new byte?[receive_buffer_size];
       for (int i = 0; i < receive_buffer_size; i++) {
@@ -133,7 +136,8 @@ namespace Pax_TCP {
 
     // Demultiplexes a TCP segment to determine the TCB.
     // Negative values indicate that the lookup failed.
-    public static int lookup (TCB[] tcbs, Packet packet) {
+    public static int lookup (TCB[] tcbs, Packet packet,
+        bool expect_to_find = false) {
       int listener = -1;
       int non_listener = -1;
 
@@ -146,23 +150,28 @@ namespace Pax_TCP {
           continue;
         }
 
-        if (! TCB.local_address.Equals(ip_p.DestinationAddress) ||
-            tcp_p.DestinationPort != tcbs[i].local_port) {
+        if ((!TCB.local_address.Equals(ip_p.DestinationAddress)) ||
+            tcbs[i].local_port != tcp_p.DestinationPort) {
           continue;
         }
 
         if (tcbs[i].state == TCP_State.Listen) {
+          Debug.Assert(TCB.local_address.Equals(ip_p.DestinationAddress) &&
+            tcbs[i].local_port == tcp_p.DestinationPort);
+
           if (listener < 0) {
             listener = i;
           } else {
             throw new Exception("Multiple listeners on same port");
           }
         } else {
-
-          if (! tcbs[i].remote_address.Equals(ip_p.SourceAddress) ||
-              tcp_p.SourcePort != tcbs[i].remote_port) {
+          if ((!tcbs[i].remote_address.Equals(ip_p.SourceAddress)) ||
+              tcbs[i].remote_port != tcp_p.SourcePort) {
             continue;
           }
+
+          Debug.Assert(tcbs[i].remote_address.Equals(ip_p.SourceAddress) &&
+              tcbs[i].remote_port == tcp_p.SourcePort);
 
           if (non_listener < 0) {
             non_listener = i;
@@ -172,19 +181,25 @@ namespace Pax_TCP {
         }
       }
 
-      return (non_listener < 0 ? listener : non_listener);
+      return (non_listener < 0
+              ? (expect_to_find
+                 ? -1
+                 : listener)
+              : non_listener);
     }
 
     public static int find_free_TCB(TCB[] tcbs) {
-      // FIXME linear search not efficient.
-      for (int i = 0; i < tcbs.Length; i++) { // NOTE assuming that tcbs.Length == max_conn
-        // FIXME a more fine-grained locking approach would involve "getting
-        //       back to this later" if it's currently locked, to avoid
-        //       spuriously running out of TCBs.
-        lock (tcbs[i]) {
-          if (tcbs[i].state == TCP_State.Free) {
-            tcbs[i].acquire();
-            return i;
+      lock (tcbs) { // FIXME coarse-grained?
+        // FIXME linear search not efficient.
+        for (int i = 0; i < tcbs.Length; i++) { // NOTE assuming that tcbs.Length == max_conn
+          // FIXME a more fine-grained locking approach would involve "getting
+          //       back to this later" if it's currently locked, to avoid
+          //       spuriously running out of TCBs.
+          lock (tcbs[i]) {
+            if (tcbs[i].state == TCP_State.Free) {
+              tcbs[i].acquire();
+              return i;
+            }
           }
         }
       }
