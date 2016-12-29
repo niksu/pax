@@ -402,13 +402,16 @@ when get ACKs, slide the window
                 // FIXME handle SYNACK retransmission if we get a SYN in this state.
                 //       reset SYNACK timer.
               } else if (tcp_p.Ack) {
-                // FIXME advance to Established.
-                //       communicate to "accept" that it can proceed.
-                //       buffer any payload data.
+                // FIXME buffer any payload data.
 
-                // Check if the packet can be accepted -- falls within receive
-                // window.
-                //
+                // FIXME Check if the packet can be accepted -- falls within
+                //       receive window.
+
+                tcb.send_window_size = tcp_p.WindowSize;
+                tcb.state_to_established();
+
+                // FIXME communicate to "accept" that it can proceed.
+
 /*
                 tcbs[tcb_i].state_to_synrcvd();
 
@@ -423,7 +426,6 @@ when get ACKs, slide the window
               break;
 
             case TCP_State.Established:
-              throw new Exception("TODO: Established");
 /*
 slot the segment in the receive window
   (and send ACK. as improvement could delay the ACKs)
@@ -431,6 +433,18 @@ put payload in the receive buffer
   if the segment is simply an ACK then nothing gets added to the receive buffer,
   but the TCB might be updated (if ACK isn't dup for example)
 */
+
+              tcb.seq_of_most_recent_window = tcp_p.SequenceNumber;
+              tcb.ack_of_most_recent_window = tcp_p.AcknowledgmentNumber;
+              tcb.next_receive = tcp_p.SequenceNumber +
+                (uint)tcp_p.PayloadData.Length/*FIXME cast*/ + 1;
+              tcb.send_window_size = tcp_p.WindowSize;
+
+              send_ACK(tcb.local_port, tcb.remote_port,
+                  tcb.remote_address,
+                  tcb.next_send,
+                  tcb.next_receive,
+                  tcb.receive_window_size);
               break;
 
             case TCP_State.FinWait1:
@@ -584,6 +598,20 @@ put payload in the receive buffer
 
       tcp_p.SequenceNumber = seq_no;
       tcp_p.Syn = true;
+      tcp_p.AcknowledgmentNumber = ack_no;
+      tcp_p.Ack = true;
+
+      send_packet(packet);
+    }
+
+    private void send_ACK(ushort src_port, ushort dst_port, IPAddress dst_ip,
+        uint seq_no, uint ack_no, UInt16 receive_window_size) {
+      Packet packet = raw_packet(src_port, dst_port, dst_ip, receive_window_size);
+      EthernetPacket eth_p = (EthernetPacket)packet;
+      IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+      TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
+
+      tcp_p.SequenceNumber = seq_no;
       tcp_p.AcknowledgmentNumber = ack_no;
       tcp_p.Ack = true;
 

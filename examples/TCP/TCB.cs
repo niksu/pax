@@ -66,6 +66,11 @@ namespace Pax_TCP {
       return this.state;
     }
 
+    public void state_to_established() {
+      Debug.Assert(this.state == TCP_State.SynRcvd);
+      this.state = TCP_State.Established;
+    }
+
     public void state_to_timewait() {
       Debug.Assert(this.state == TCP_State.Closing);
       this.state = TCP_State.TimeWait;
