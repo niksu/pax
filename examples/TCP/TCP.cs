@@ -401,6 +401,7 @@ when get ACKs, slide the window
               } else if (tcp_p.Syn) {
                 // FIXME handle SYNACK retransmission if we get a SYN in this state.
                 //       reset SYNACK timer.
+                throw new Exception("Retransmitted SYN?");
               } else if (tcp_p.Ack) {
                 // FIXME buffer any payload data.
 
@@ -413,8 +414,6 @@ when get ACKs, slide the window
                 // FIXME communicate to "accept" that it can proceed.
 
 /*
-                tcbs[tcb_i].state_to_synrcvd();
-
                 tcbs[tcb_i].seq_of_most_recent_window = tcp_p.SequenceNumber;
                 tcbs[tcb_i].next_receive = tcp_p.SequenceNumber + 1;
                 tcbs[tcb_i].send_window_size = tcp_p.WindowSize;
