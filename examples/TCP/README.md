@@ -13,29 +13,12 @@ about the resources available to C#, to allocate those resources up-front, and
 to operate strictly within the resources available.
 
 
-# Design (TODO)
-Diagram showing the different entities: packet processing, active parts, user=program.
-  TCP thread [TCPuny.cs](TCPuny.cs)
-   supported by others [TCB.cs](TCB.cs), [TimerCB.cs](TimerCB.cs).
-  Sockets interface [IBerkeleySocket.cs](IBerkeleySocket.cs)
-  Program thread (client, server, peer, ...)
-
-Two sorts of timer events:
-* retransmission
-* 2MSL to remove TCB
-
-
-Factored the implementation:
-  - protocol parsing done by the time we see the packets
-  - interface with the program's thread. use Berkeley interface, since more
-    familiar to programmers.
-  - TCP machine, running in the TCP thread.
-      have multiple threads, and queues between them.
-      lookups
-        what data structures to maintain
-      timers -- using Timer queue. also point to what Jonny did in NAT.
-      interact with programs -- receiving and sending events
-  - what about h2n, ARP, addressing, etc?
+# Design
+* Programs (client, server, peer, ...) run in their own thread(s), e.g., [Echo.cs](Echo.cs).
+* TCP implementation uses a Berkeley-style interface with the program's thread. [IBerkeleySocket.cs](IBerkeleySocket.cs).
+* Protocol parsing is done by the time the TCP logic sees the packets.
+* One sort of timer event (retransmission), drawn from a finite resource set. [TimerCB.cs](TimerCB.cs)
+* The TCP machine is organised into multiple threads which communicate using queues. The implementation is mainly described in [TCPuny.cs](TCPuny.cs) and [TCB.cs](TCB.cs).
 
 
 # Configuration
@@ -77,6 +60,7 @@ $ telnet 127.0.0.1 7000
 
 # Limitations
 This implementation can be improved and extended in various ways. Currently:
+* implement connection closure (via FIN) -- currently i rely on RST to shut it down.
 * uses fixed-size segments -- no adaptation of MSS based on "distance" between peers.
 * no congestion control (and ssthresh, rto calculation).
 * doesn't support any options (e.g., mss, window scaling, fast open)
@@ -84,6 +68,7 @@ This implementation can be improved and extended in various ways. Currently:
 * ignores control messages (via ICMP)
 * doesn't provide any support for host naming (to be resolved via DNS) or ARP.
 * only supports passive open (no active open, and thus no simultaneous open or self-connect).
-* more timers could be added, e.g., for connection-establishment (expiry after SYN, remove TCB), keepalive, persist, fin-wait2.
+* more timers could be added, e.g., 2MSL to remove TCB, for connection-establishment (expiry after SYN, remove TCB), keepalive, persist, fin-wait2.
 * no Nagle algorithm (for batching sends),
 * only supports immediate ACKing (no delaying). (note: this makes it vulnerable to so-called "silly window syndrome").
+* all address info is provided statically in the config -- don't currently support ARP and DNS names.
