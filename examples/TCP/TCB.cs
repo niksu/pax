@@ -9,6 +9,7 @@ using System;
 using System.Net;
 using System.Diagnostics;
 using PacketDotNet;
+using System.Collections.Concurrent;
 
 using tcpseq = System.UInt32;
 
@@ -51,6 +52,7 @@ namespace Pax_TCP {
     // This allows us to keep track of the backlog of connections.
     // FIXME check if that's the correct rationale above -- should abandon idea of using conn_q in TCP.cs?
     public TCB parent_tcb;
+    public ConcurrentQueue<TCB> conn_q = new ConcurrentQueue<TCB>(); // FIXME bound the size of this queue.
 
     // FIXME is this value incremented only, or also decayed in time?
     public uint retransmit_count = 0;
@@ -60,6 +62,19 @@ namespace Pax_TCP {
     private void initialise_segment_sequence() {
       // FIXME randomize;
       this.initial_send_sequence = 0;
+    }
+
+    public bool is_in_receive_window(TcpPacket p) {
+      // FIXME this isn't entirely thought-out, e.g., when it come to wrap-around.
+      if (next_receive <= p.SequenceNumber &&
+          p.SequenceNumber <= next_receive + receive_buffer.Length &&
+          p.SequenceNumber + p.PayloadData.Length <= next_receive + receive_buffer.Length)
+        return true;
+      else return false;
+    }
+
+    public void buffer_in_receive_window(TcpPacket p) {
+      throw new Exception("TODO");
     }
 
     public TCP_State tcp_state() {

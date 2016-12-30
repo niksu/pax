@@ -54,7 +54,6 @@ namespace Pax_TCP {
     ConcurrentQueue<Tuple<Packet, TCB>> in_q = new ConcurrentQueue<Tuple<Packet, TCB>>();
     ConcurrentQueue<Tuple<Packet, TCB>> out_q = new ConcurrentQueue<Tuple<Packet, TCB>>();
     ConcurrentQueue<Tuple<Packet, TCB, TimerCB>> timer_q = new ConcurrentQueue<Tuple<Packet, TCB, TimerCB>>();
-    ConcurrentQueue<TCB> conn_q = new ConcurrentQueue<TCB>();
 
     TCB[] tcbs;
     TimerCB[] timer_cbs;
@@ -208,8 +207,7 @@ namespace Pax_TCP {
       int free_TCB;
       TCB tcb;
       while (true) {
-        if (conn_q.TryDequeue (out tcb)) {
-          // FIXME need to ensure that tcb is relevant to sid.
+        if (tcbs[sid.sockid].conn_q.TryDequeue (out tcb)) {
           address = new SockAddr_In (tcb.remote_port, tcb.remote_address);
           return new Result<SockID> (new SockID(tcb.index), null);
         }
@@ -403,23 +401,21 @@ when get ACKs, slide the window
                 //       reset SYNACK timer.
                 throw new Exception("Retransmitted SYN?");
               } else if (tcp_p.Ack) {
-                // FIXME buffer any payload data.
+                if (!tcb.is_in_receive_window(tcp_p)) {
+                  break;
+                }
 
-                // FIXME Check if the packet can be accepted -- falls within
-                //       receive window.
+                tcb.buffer_in_receive_window(tcp_p);
+/* FIXME advance the window?
+                tcbs[tcb_i].next_receive = tcp_p.SequenceNumber + 1;
+*/
 
                 tcb.send_window_size = tcp_p.WindowSize;
+                tcb.seq_of_most_recent_window = tcp_p.SequenceNumber;
                 tcb.state_to_established();
 
-                // FIXME communicate to "accept" that it can proceed.
-
-/*
-                tcbs[tcb_i].seq_of_most_recent_window = tcp_p.SequenceNumber;
-                tcbs[tcb_i].next_receive = tcp_p.SequenceNumber + 1;
-                tcbs[tcb_i].send_window_size = tcp_p.WindowSize;
-
-                tcbs[tcb_i].next_send = tcbs[tcb_i].initial_send_sequence;
-*/
+                // Communicate to "accept" that it can proceed.
+                tcb.parent_tcb.conn_q.Enqueue(tcb);
               }
 
               break;
