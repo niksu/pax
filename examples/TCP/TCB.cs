@@ -59,22 +59,53 @@ namespace Pax_TCP {
 
     public TimerCB[] timers; // FIXME maximum number of allocated timers per TCB -- add as configuration parameter, and allocate this array at TCB initialisation.
 
+    public ConcurrentQueue<byte> received_data_q = new ConcurrentQueue<byte>(); // FIXME bound the size of this queue? or is the size implicit based on the receive window size?
+
     private void initialise_segment_sequence() {
       // FIXME randomize;
       this.initial_send_sequence = 0;
     }
 
     public bool is_in_receive_window(TcpPacket p) {
-      // FIXME this isn't entirely thought-out, e.g., when it come to wrap-around.
-      if (next_receive <= p.SequenceNumber &&
-          p.SequenceNumber <= next_receive + receive_buffer.Length &&
-          p.SequenceNumber + p.PayloadData.Length <= next_receive + receive_buffer.Length)
-        return true;
-      else return false;
+      // See https://en.wikipedia.org/wiki/Serial_number_arithmetic
+      int distance = (int)(p.SequenceNumber - next_receive);
+      bool outcome = false;
+
+      if (distance == 0) {
+        outcome = true;
+      } else if (distance < 0) {
+        outcome = false;
+      } else
+        // It must be that "distance > 0".
+        if (distance < receive_buffer.Length &&
+            // The previous line checks that the start of the segment is within the receive window.
+            // The previous line checks that the end of the segment is within the receive window.
+            distance + p.PayloadData.Length < receive_buffer.Length) {
+          outcome = true;
+      } else {
+        // The segment is too far ahead, outside the receive window.
+        outcome = false;
+      }
+
+      return outcome;
     }
 
     public void buffer_in_receive_window(TcpPacket p) {
-      throw new Exception("TODO");
+      // FIXME implement ring buffer?
+//      Array.Copy  
+//
+    }
+
+    // Advances the receive window if possible, and as much as possible.
+    public void advance_receive_window() {
+      // FIXME this could use batching to improve efficiency, rather than
+      //       copying one byte at a time.
+      while (receive_buffer[next_receive] != null) {
+        // We copy receive_buffer[next_receive] to the application's read buffer via received_data_q.
+        received_data_q.Enqueue(receive_buffer[next_receive].Value);
+        receive_buffer[next_receive] = null; // Using null to indicate that the slot's available.
+        next_receive++;
+      }
     }
 
     public TCP_State tcp_state() {

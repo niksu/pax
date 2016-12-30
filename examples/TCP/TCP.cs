@@ -259,7 +259,25 @@ when get ACKs, slide the window
       // Extract that many bytes (updating the index), copying the bytes to 'buf'
       // Return the number of bytes we've extracted.
       // (Block if necessary, otherwise return 0)
-      throw new Exception("TODO");
+
+      int idx = 0;
+      byte b;
+      while (true) {
+        // FIXME not the cleanest code.
+        while (tcbs[sid.sockid].received_data_q.IsEmpty) {}
+
+        while (tcbs[sid.sockid].received_data_q.TryDequeue (out b)) {
+          buf[idx] = b;
+          idx++;
+          if (idx == count) {
+            break;
+          }
+        }
+
+        break;
+      }
+
+      return new Result<int> (idx + 1, null);
     }
 
     public Result<Unit> close (SockID sid) {
@@ -402,20 +420,24 @@ when get ACKs, slide the window
                 throw new Exception("Retransmitted SYN?");
               } else if (tcp_p.Ack) {
                 if (!tcb.is_in_receive_window(tcp_p)) {
+                  // Ignore segments that fall outside the receive window.
                   break;
                 }
 
+                // Update the receive window.
                 tcb.buffer_in_receive_window(tcp_p);
-/* FIXME advance the window?
-                tcbs[tcb_i].next_receive = tcp_p.SequenceNumber + 1;
-*/
+                tcb.advance_receive_window();
 
+                // Update the connection metadata.
                 tcb.send_window_size = tcp_p.WindowSize;
                 tcb.seq_of_most_recent_window = tcp_p.SequenceNumber;
+
                 tcb.state_to_established();
 
                 // Communicate to "accept" that it can proceed.
                 tcb.parent_tcb.conn_q.Enqueue(tcb);
+
+                // FIXME send ACK for any payload we've jut received.
               }
 
               break;
