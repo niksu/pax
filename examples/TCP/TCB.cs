@@ -59,16 +59,15 @@ namespace Pax_TCP {
 
     public TimerCB[] timers; // FIXME maximum number of allocated timers per TCB -- add as configuration parameter, and allocate this array at TCB initialisation.
 
-    public ConcurrentQueue<byte> received_data_q = new ConcurrentQueue<byte>(); // FIXME bound the size of this queue? or is the size implicit based on the receive window size?
-
     private void initialise_segment_sequence() {
       // FIXME randomize;
       this.initial_send_sequence = 0;
     }
 
-    public bool is_in_receive_window(TcpPacket p) {
+    // Checks if a segment falls in our receive window.
+    public bool is_in_receive_window(TcpPacket tcp_p) {
       // See https://en.wikipedia.org/wiki/Serial_number_arithmetic
-      int distance = (int)(p.SequenceNumber - next_receive);
+      int distance = (int)(tcp_p.SequenceNumber - next_receive);
       bool outcome = false;
 
       if (distance == 0) {
@@ -79,8 +78,8 @@ namespace Pax_TCP {
         // It must be that "distance > 0".
         if (distance < receive_buffer.Length &&
             // The previous line checks that the start of the segment is within the receive window.
-            // The previous line checks that the end of the segment is within the receive window.
-            distance + p.PayloadData.Length < receive_buffer.Length) {
+            // The next line checks that the end of the segment is within the receive window.
+            distance + tcp_p.PayloadData.Length < receive_buffer.Length) {
           outcome = true;
       } else {
         // The segment is too far ahead, outside the receive window.
@@ -90,22 +89,88 @@ namespace Pax_TCP {
       return outcome;
     }
 
-    public void buffer_in_receive_window(TcpPacket p) {
-      // FIXME implement ring buffer?
-//      Array.Copy  
-//
+    private long read_ptr;
+    private long write_ptr;
+
+    // Segment payload is added to receive buffer.
+    // NOTE we assume that is_in_receive_window has return 'true' for this
+    //      segment.
+    public void buffer_in_receive_window(TcpPacket tcp_p) {
+      // The segment size cannot exceed the size of the receive buffer. (We'll
+      // check how much of that buffer is available next, for storing the
+      // segment's payload.)
+      Debug.Assert(tcp_p.PayloadData.Length < receive_buffer.Length);
+
+     // FIXME check that we're not overwriting bytes that are between the read_ptr and the write_ptr,
+     //       since those should already have been ACKd.
+
+     long start_idx = tcp_p.SequenceNumber % receive_buffer.Length;
+     long end_idx = (tcp_p.SequenceNumber + tcp_p.PayloadData.Length) % receive_buffer.Length;
+
+      if (start_idx > end_idx)
+      {
+        // We wrap, so break the copy into two.
+        long segment1_length = receive_buffer.Length - start_idx;
+        long segment2_length = tcp_p.PayloadData.Length - segment1_length;
+        Debug.Assert(segment2_length == end_idx);
+        Array.Copy (tcp_p.PayloadData, 0, receive_buffer, start_idx, segment1_length);
+        Array.Copy (tcp_p.PayloadData, 0, receive_buffer, 0, segment2_length);
+      } else {
+        // We don't wrap, so the payload's bytes are contiguous in the receive buffer.
+        Array.Copy (tcp_p.PayloadData, 0, receive_buffer,
+         start_idx, tcp_p.PayloadData.Length);
+      }
     }
 
     // Advances the receive window if possible, and as much as possible.
-    public void advance_receive_window() {
-      // FIXME this could use batching to improve efficiency, rather than
-      //       copying one byte at a time.
-      while (receive_buffer[next_receive] != null) {
-        // We copy receive_buffer[next_receive] to the application's read buffer via received_data_q.
-        received_data_q.Enqueue(receive_buffer[next_receive].Value);
-        receive_buffer[next_receive] = null; // Using null to indicate that the slot's available.
+    // NOTE we assume that buffer_in_receive_window has been called for newly
+    //      received segments.
+    // NOTE advance_receive_window changes write_ptr, and checks against read_ptr,
+    //      whereas the 'read' function in TCP changes read_ptr, and checks against write_ptr.
+    public uint advance_receive_window() {
+      uint advance = 0; // how much have we advanced, this is returned to the caller.
+      // FIXME little protection against wrapping.
+
+      while (receive_buffer[write_ptr] != null) {
+        // Continuous non-null bytes in the receive_buffer are made readable to
+        // the client.
+
+        if (read_ptr == (write_ptr + 1) % receive_buffer.Length) {
+          // The receive buffer is full -- we must wait for the application to
+          // read before advancing the window.
+          break;
+        }
+
+        // FIXME locking?
+
+        write_ptr = (write_ptr + 1) % receive_buffer.Length;
         next_receive++;
+        advance++;
       }
+
+      return advance;
+    }
+
+    // Returns the number of bytes read.
+    public int blocking_read (byte[] buf, uint count) {
+      // FIXME instead of looping could perform some sort of wait for an event
+      //       indicating that the buffer's got something for us.
+      while (read_ptr == write_ptr) {}
+
+      int idx = 0;
+
+      // FIXME locking?
+      while (read_ptr != write_ptr) {
+        buf[idx] = receive_buffer[read_ptr].Value;
+        receive_buffer[read_ptr] = null; // Using null to indicate that the slot's available.
+        idx++;
+        read_ptr = (read_ptr + 1) % receive_buffer.Length;
+        if (idx == count) {
+          break;
+        }
+      }
+
+      return idx;
     }
 
     public TCP_State tcp_state() {
@@ -161,6 +226,8 @@ namespace Pax_TCP {
 
       this.index = index;
 
+      initialise_segment_sequence();
+
       receive_buffer = new byte?[receive_buffer_size];
       for (int i = 0; i < receive_buffer_size; i++) {
         receive_buffer[i] = null;
@@ -177,8 +244,10 @@ namespace Pax_TCP {
       }
 
       this.max_segment_size = max_segment_size;
+    }
 
-      initialise_segment_sequence();
+    public void initialise_receive_sequence(tcpseq initial_receive_sequence) {
+      this.read_ptr = this.write_ptr = this.initial_receive_sequence = initial_receive_sequence;
     }
 
     // Demultiplexes a TCP segment to determine the TCB.

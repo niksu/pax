@@ -260,24 +260,10 @@ when get ACKs, slide the window
       // Return the number of bytes we've extracted.
       // (Block if necessary, otherwise return 0)
 
-      int idx = 0;
-      byte b;
-      while (true) {
-        // FIXME not the cleanest code.
-        while (tcbs[sid.sockid].received_data_q.IsEmpty) {}
-
-        while (tcbs[sid.sockid].received_data_q.TryDequeue (out b)) {
-          buf[idx] = b;
-          idx++;
-          if (idx == count) {
-            break;
-          }
-        }
-
-        break;
-      }
-
-      return new Result<int> (idx + 1, null);
+      // FIXME check whether we should be non-blocking.
+      int result = tcbs[sid.sockid].blocking_read(buf, count);
+      Debug.Assert(result >= 0);
+      return new Result<int> (result, null);
     }
 
     public Result<Unit> close (SockID sid) {
@@ -368,6 +354,7 @@ when get ACKs, slide the window
                 tcbs[tcb_i].state_to_synrcvd();
 
                 tcbs[tcb_i].seq_of_most_recent_window = tcp_p.SequenceNumber;
+                tcbs[tcb_i].initialise_receive_sequence(tcp_p.SequenceNumber);
                 tcbs[tcb_i].next_receive = tcp_p.SequenceNumber + 1;
                 tcbs[tcb_i].send_window_size = tcp_p.WindowSize;
                 tcbs[tcb_i].receive_window_size = max_window_size; // FIXME might want to start with smaller window.
@@ -426,7 +413,14 @@ when get ACKs, slide the window
 
                 // Update the receive window.
                 tcb.buffer_in_receive_window(tcp_p);
-                tcb.advance_receive_window();
+                if (tcb.advance_receive_window() > 0) {
+                  // Send ACK for any payload we've jut received.
+                  send_ACK(tcb.local_port, tcb.remote_port,
+                      tcb.remote_address,
+                      tcb.next_send,
+                      tcb.next_receive,
+                      tcb.receive_window_size);
+                }
 
                 // Update the connection metadata.
                 tcb.send_window_size = tcp_p.WindowSize;
@@ -436,8 +430,6 @@ when get ACKs, slide the window
 
                 // Communicate to "accept" that it can proceed.
                 tcb.parent_tcb.conn_q.Enqueue(tcb);
-
-                // FIXME send ACK for any payload we've jut received.
               }
 
               break;
