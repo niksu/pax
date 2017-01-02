@@ -632,10 +632,10 @@ when get ACKs, slide the window
     }
 
     // FIXME should have memory pre-allocated for packet generation.
-    private Packet raw_packet(ushort src_port, ushort dst_port, IPAddress dst_ip,
-        UInt16 receive_window_size) {
-      var tcp_p = new TcpPacket(src_port, dst_port);
-      var ip_p = new IPv4Packet(ip_address, dst_ip);
+    private Packet raw_packet(out IPv4Packet ip_p, out TcpPacket tcp_p,
+        ushort src_port, ushort dst_port, IPAddress dst_ip, UInt16 receive_window_size) {
+      tcp_p = new TcpPacket(src_port, dst_port);
+      ip_p = new IPv4Packet(ip_address, dst_ip);
       var eth_p = new EthernetPacket(my_mac_address, gateway_mac_address, EthernetPacketType.None);
       eth_p.PayloadPacket = ip_p;
       ip_p.PayloadPacket = tcp_p;
@@ -662,11 +662,10 @@ when get ACKs, slide the window
     }
 
     private void send_RST(ushort src_port, ushort dst_port, IPAddress dst_ip, uint seq_no, uint ack_no, bool set_ack) {
-      // FIXME is there a nice way of unpacking packets?
-      Packet packet = raw_packet(src_port, dst_port, dst_ip, 0);
+      IPv4Packet ip_p;
+      TcpPacket tcp_p;
+      Packet packet = raw_packet(out ip_p, out tcp_p, src_port, dst_port, dst_ip, 0);
       EthernetPacket eth_p = (EthernetPacket)packet;
-      IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
-      TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
       tcp_p.Rst = true;
       tcp_p.SequenceNumber = seq_no;
@@ -678,10 +677,10 @@ when get ACKs, slide the window
 
     private void send_SYNACK(ushort src_port, ushort dst_port, IPAddress dst_ip,
         uint seq_no, uint ack_no, UInt16 receive_window_size) {
-      Packet packet = raw_packet(src_port, dst_port, dst_ip, receive_window_size);
+      IPv4Packet ip_p;
+      TcpPacket tcp_p;
+      Packet packet = raw_packet(out ip_p, out tcp_p, src_port, dst_port, dst_ip, receive_window_size);
       EthernetPacket eth_p = (EthernetPacket)packet;
-      IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
-      TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
       tcp_p.SequenceNumber = seq_no;
       tcp_p.Syn = true;
@@ -693,10 +692,10 @@ when get ACKs, slide the window
 
     private void send_ACK(ushort src_port, ushort dst_port, IPAddress dst_ip,
         uint seq_no, uint ack_no, UInt16 receive_window_size) {
-      Packet packet = raw_packet(src_port, dst_port, dst_ip, receive_window_size);
+      IPv4Packet ip_p;
+      TcpPacket tcp_p;
+      Packet packet = raw_packet(out ip_p, out tcp_p, src_port, dst_port, dst_ip, receive_window_size);
       EthernetPacket eth_p = (EthernetPacket)packet;
-      IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
-      TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
       tcp_p.SequenceNumber = seq_no;
       tcp_p.AcknowledgmentNumber = ack_no;
@@ -707,11 +706,11 @@ when get ACKs, slide the window
 
     // FIXME looks like i can factor these 'send_' functions?
     private void send_payload_ACK(ushort src_port, ushort dst_port, IPAddress dst_ip,
-        uint seq_no, uint ack_no, UInt16 receive_window_size, byte[] payload) {
-      Packet packet = raw_packet(src_port, dst_port, dst_ip, receive_window_size);
+        uint seq_no, uint ack_no, UInt16 receive_window_size, byte[] payload = null) {
+      IPv4Packet ip_p;
+      TcpPacket tcp_p;
+      Packet packet = raw_packet(out ip_p, out tcp_p, src_port, dst_port, dst_ip, receive_window_size);
       EthernetPacket eth_p = (EthernetPacket)packet;
-      IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
-      TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
       tcp_p.SequenceNumber = seq_no;
       tcp_p.AcknowledgmentNumber = ack_no;
