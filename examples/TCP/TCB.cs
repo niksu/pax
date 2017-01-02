@@ -78,25 +78,14 @@ namespace Pax_TCP {
       Console.WriteLine("is_in_receive_window distance = " + distance);
 #endif
 
-      if (distance == 0) {
-        // FIXME check that the segment will fit in receive buffer.
-        outcome = true;
-      } else if (distance < 0) {
+      if (distance < 0) {
         outcome = false;
-      } else
-        // It must be that "distance > 0".
-        if (distance > 0 &&
+      } else if (distance >= 0 &&
+            // Must also check that the segment will fit in receive buffer.
             distance < receive_buffer.Length &&
             // The previous line checks that the start of the segment is within the receive window.
-            // The next line checks that the payload is smaller than the receive buffer. This should be redundant, because of the line that follows it.
-            tcp_p.PayloadData.Length < receive_buffer.Length &&
             // The next line checks that the end of the segment is within the receive window.
             (distance + tcp_p.PayloadData.Length) < receive_buffer.Length) {
-#if DEBUG
-            Console.WriteLine("distance=" + distance);
-            Console.WriteLine("tcp_p.PayloadData.Length=" + tcp_p.PayloadData.Length);
-            Console.WriteLine("receive_buffer.Length=" + receive_buffer.Length);
-#endif
           outcome = true;
       } else {
         // The segment is (partly or entirely) too far ahead or behind (outside

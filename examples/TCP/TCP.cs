@@ -68,6 +68,18 @@ namespace Pax_TCP {
         gateway_mac_address, uint receive_buffer_size, uint send_buffer_size,
         uint max_InQ_size, uint max_timers, uint max_tcb_timers, bool monopoly,
         UInt16 max_window_size, uint max_segment_size) {
+
+      // Check for sensible configuration values.
+      if (max_window_size > receive_buffer_size) {
+        throw new Exception("Does not make sense: max_window_size > receive_buffer_size");
+      }
+      if (max_segment_size > max_window_size) {
+        throw new Exception("Does not make sense: max_window_size > receive_buffer_size");
+      }
+      if (max_segment_size > receive_buffer_size) {
+        throw new Exception("Does not make sense: max_segment_size > receive_buffer_size");
+      }
+
       this.max_conn = max_conn;
       this.max_backlog = max_backlog;
       // We get our addresses via the constructor.
