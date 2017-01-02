@@ -40,7 +40,11 @@ namespace Pax_TCP {
     public tcpseq ack_of_most_recent_window;
     public tcpseq initial_send_sequence;
     public tcpseq max_seq_so_far_send;
-    public Packet[] send_buffer; // NOTE saves effort over using a byte buffer -- we resend packets directly from the buffer.
+    // NOTE send_buffer is of type Packet[] since this saves effort over using
+    //      a byte buffer -- we resend packets directly from the buffer, but
+    //      will update metadata such as acknowledge number and window size,
+    //      (but not the sequence number).
+    public Packet[] send_buffer;
 
     // Receive sequence variables
     public tcpseq next_receive;

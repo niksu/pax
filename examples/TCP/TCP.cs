@@ -311,7 +311,8 @@ when get ACKs, slide the window
       // Return the number of bytes we've extracted.
       // (Block if necessary, otherwise return 0)
 
-      // FIXME check whether we should be non-blocking.
+      // FIXME check whether we should be non-blocking. Here we only support
+      //       blocking mode.
       int result = tcbs[sid.sockid].blocking_read(buf, count);
       Debug.Assert(result >= 0);
       return new Result<int> (result, null);
@@ -526,6 +527,7 @@ when get ACKs, slide the window
               tcb.seq_of_most_recent_window = tcp_p.SequenceNumber;
               tcb.ack_of_most_recent_window = tcp_p.AcknowledgmentNumber;
               // tcb.next_receive is set by advance_receive_window()
+
               // FIXME if ACK is set (and it should be) then update our send-related metadata, to advance the send window if bytes have been ACKd.
 
               break;
