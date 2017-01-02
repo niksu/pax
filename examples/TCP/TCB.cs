@@ -69,6 +69,7 @@ namespace Pax_TCP {
 
     // Checks if a segment falls in our receive window.
     public bool is_in_receive_window(TcpPacket tcp_p) {
+      Debug.Assert(tcp_p.PayloadData.Length != null);
       // See https://en.wikipedia.org/wiki/Serial_number_arithmetic
       int distance = (int)(tcp_p.SequenceNumber - next_receive);
       bool outcome = false;
@@ -78,18 +79,28 @@ namespace Pax_TCP {
 #endif
 
       if (distance == 0) {
+        // FIXME check that the segment will fit in receive buffer.
         outcome = true;
       } else if (distance < 0) {
         outcome = false;
       } else
         // It must be that "distance > 0".
-        if (distance < receive_buffer.Length &&
+        if (distance > 0 &&
+            distance < receive_buffer.Length &&
             // The previous line checks that the start of the segment is within the receive window.
+            // The next line checks that the payload is smaller than the receive buffer. This should be redundant, because of the line that follows it.
+            tcp_p.PayloadData.Length < receive_buffer.Length &&
             // The next line checks that the end of the segment is within the receive window.
-            distance + tcp_p.PayloadData.Length < receive_buffer.Length) {
+            (distance + tcp_p.PayloadData.Length) < receive_buffer.Length) {
+#if DEBUG
+            Console.WriteLine("distance=" + distance);
+            Console.WriteLine("tcp_p.PayloadData.Length=" + tcp_p.PayloadData.Length);
+            Console.WriteLine("receive_buffer.Length=" + receive_buffer.Length);
+#endif
           outcome = true;
       } else {
-        // The segment is too far ahead, outside the receive window.
+        // The segment is (partly or entirely) too far ahead or behind (outside
+        // the receive window) or it's too big for the receive buffer.
         outcome = false;
       }
 
@@ -103,19 +114,23 @@ namespace Pax_TCP {
       // The segment size cannot exceed the size of the receive buffer. (We'll
       // check how much of that buffer is available next, for storing the
       // segment's payload.)
-      Debug.Assert(tcp_p.PayloadData.Length < receive_buffer.Length);
+      Debug.Assert(tcp_p.PayloadData.Length < receive_buffer.Length, "Segment payload exceeds size of receive buffer");
+#if DEBUG
+      Console.WriteLine("tcp_p.PayloadData.Length = " + tcp_p.PayloadData.Length);
+      Console.WriteLine("receive_buffer.Length = " + receive_buffer.Length);
+#endif
 
-     // FIXME check that we're not overwriting bytes that are between the rb_read_ptr and the rb_write_ptr,
-     //       since those should already have been ACKd.
+      // FIXME check that we're not overwriting bytes that are between the rb_read_ptr and the rb_write_ptr,
+      //       since those should already have been ACKd.
 
-     long start_idx = tcp_p.SequenceNumber % receive_buffer.Length;
-     long end_idx = (tcp_p.SequenceNumber + tcp_p.PayloadData.Length) % receive_buffer.Length;
+      long start_idx = tcp_p.SequenceNumber % receive_buffer.Length;
+      long end_idx = (tcp_p.SequenceNumber + tcp_p.PayloadData.Length) % receive_buffer.Length;
 
 #if DEBUG
-     Console.WriteLine("start_idx = " + start_idx);
-     Console.WriteLine("end_idx = " + end_idx);
-     Console.WriteLine("rb_read_ptr = " + rb_read_ptr);
-     Console.WriteLine("rb_write_ptr = " + rb_write_ptr);
+      Console.WriteLine("start_idx = " + start_idx);
+      Console.WriteLine("end_idx = " + end_idx);
+      Console.WriteLine("rb_read_ptr = " + rb_read_ptr);
+      Console.WriteLine("rb_write_ptr = " + rb_write_ptr);
 #endif
 
 #if DEBUG
