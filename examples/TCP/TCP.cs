@@ -280,7 +280,7 @@ when get ACKs, slide the window
       // FIXME avoid copying
       Array.Copy(buf, 0, payload, 0, count);
 
-      send_payload_ACK(tcbs[sid.sockid].local_port, tcbs[sid.sockid].remote_port,
+      send_ACK(tcbs[sid.sockid].local_port, tcbs[sid.sockid].remote_port,
           tcbs[sid.sockid].remote_address,
           tcbs[sid.sockid].next_send,
           tcbs[sid.sockid].next_receive,
@@ -691,21 +691,6 @@ when get ACKs, slide the window
     }
 
     private void send_ACK(ushort src_port, ushort dst_port, IPAddress dst_ip,
-        uint seq_no, uint ack_no, UInt16 receive_window_size) {
-      IPv4Packet ip_p;
-      TcpPacket tcp_p;
-      Packet packet = raw_packet(out ip_p, out tcp_p, src_port, dst_port, dst_ip, receive_window_size);
-      EthernetPacket eth_p = (EthernetPacket)packet;
-
-      tcp_p.SequenceNumber = seq_no;
-      tcp_p.AcknowledgmentNumber = ack_no;
-      tcp_p.Ack = true;
-
-      send_packet(packet);
-    }
-
-    // FIXME looks like i can factor these 'send_' functions?
-    private void send_payload_ACK(ushort src_port, ushort dst_port, IPAddress dst_ip,
         uint seq_no, uint ack_no, UInt16 receive_window_size, byte[] payload = null) {
       IPv4Packet ip_p;
       TcpPacket tcp_p;
