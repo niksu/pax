@@ -47,6 +47,9 @@ namespace Pax_TCP {
     public UInt16 receive_window_size; // as we advertised to peer.
     public tcpseq initial_receive_sequence;
     public byte?[] receive_buffer;
+    // Read and write pointers for the circular receive_buffer.
+    private long rb_read_ptr;
+    private long rb_write_ptr;
 
     // For TCBs derived from Listen TCBs, for the former to point to the latter.
     // This allows us to keep track of the backlog of connections.
@@ -93,9 +96,6 @@ namespace Pax_TCP {
       return outcome;
     }
 
-    private long read_ptr;
-    private long write_ptr;
-
     // Segment payload is added to receive buffer.
     // NOTE we assume that is_in_receive_window has return 'true' for this
     //      segment.
@@ -105,7 +105,7 @@ namespace Pax_TCP {
       // segment's payload.)
       Debug.Assert(tcp_p.PayloadData.Length < receive_buffer.Length);
 
-     // FIXME check that we're not overwriting bytes that are between the read_ptr and the write_ptr,
+     // FIXME check that we're not overwriting bytes that are between the rb_read_ptr and the rb_write_ptr,
      //       since those should already have been ACKd.
 
      long start_idx = tcp_p.SequenceNumber % receive_buffer.Length;
@@ -114,8 +114,8 @@ namespace Pax_TCP {
 #if DEBUG
      Console.WriteLine("start_idx = " + start_idx);
      Console.WriteLine("end_idx = " + end_idx);
-     Console.WriteLine("read_ptr = " + read_ptr);
-     Console.WriteLine("write_ptr = " + write_ptr);
+     Console.WriteLine("rb_read_ptr = " + rb_read_ptr);
+     Console.WriteLine("rb_write_ptr = " + rb_write_ptr);
 #endif
 
       if (start_idx > end_idx)
@@ -136,17 +136,17 @@ namespace Pax_TCP {
     // Advances the receive window if possible, and as much as possible.
     // NOTE we assume that buffer_in_receive_window has been called for newly
     //      received segments.
-    // NOTE advance_receive_window changes write_ptr, and checks against read_ptr,
-    //      whereas the 'read' function in TCP changes read_ptr, and checks against write_ptr.
+    // NOTE advance_receive_window changes rb_write_ptr, and checks against rb_read_ptr,
+    //      whereas the 'read' function in TCP changes rb_read_ptr, and checks against rb_write_ptr.
     public uint advance_receive_window() {
       uint advance = 0; // how much have we advanced, this is returned to the caller.
       // FIXME little protection against wrapping.
 
-      while (receive_buffer[write_ptr] != null) {
+      while (receive_buffer[rb_write_ptr] != null) {
         // Continuous non-null bytes in the receive_buffer are made readable to
         // the client.
 
-        if (read_ptr == (write_ptr + 1) % receive_buffer.Length) {
+        if (rb_read_ptr == (rb_write_ptr + 1) % receive_buffer.Length) {
           // The receive buffer is full -- we must wait for the application to
           // read before advancing the window.
           break;
@@ -154,7 +154,7 @@ namespace Pax_TCP {
 
         // FIXME locking?
 
-        write_ptr = (write_ptr + 1) % receive_buffer.Length;
+        rb_write_ptr = (rb_write_ptr + 1) % receive_buffer.Length;
         next_receive++;
         advance++;
       }
@@ -169,16 +169,16 @@ namespace Pax_TCP {
     public int blocking_read (byte[] buf, uint count) {
       // FIXME instead of looping could perform some sort of wait for an event
       //       indicating that the buffer's got something for us.
-      while (read_ptr == write_ptr) {}
+      while (rb_read_ptr == rb_write_ptr) {}
 
       int idx = 0;
 
       // FIXME locking?
-      while (read_ptr != write_ptr) {
-        buf[idx] = receive_buffer[read_ptr].Value;
-        receive_buffer[read_ptr] = null; // Using null to indicate that the slot's available.
+      while (rb_read_ptr != rb_write_ptr) {
+        buf[idx] = receive_buffer[rb_read_ptr].Value;
+        receive_buffer[rb_read_ptr] = null; // Using null to indicate that the slot's available.
         idx++;
-        read_ptr = (read_ptr + 1) % receive_buffer.Length;
+        rb_read_ptr = (rb_read_ptr + 1) % receive_buffer.Length;
         if (idx == count) {
           break;
         }
@@ -264,8 +264,8 @@ namespace Pax_TCP {
       this.initial_receive_sequence = initial_receive_sequence;
 
       // We add one to the sequence number since SYN increments the sequence number but doesn't actually communicate a byte of data in the payload.
-      this.write_ptr = (1 + initial_receive_sequence) % receive_buffer.Length;
-      this.read_ptr = this.write_ptr;
+      this.rb_write_ptr = (1 + initial_receive_sequence) % receive_buffer.Length;
+      this.rb_read_ptr = this.rb_write_ptr;
     }
 
     // Demultiplexes a TCP segment to determine the TCB.
