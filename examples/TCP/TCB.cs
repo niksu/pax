@@ -118,14 +118,23 @@ namespace Pax_TCP {
      Console.WriteLine("rb_write_ptr = " + rb_write_ptr);
 #endif
 
+#if DEBUG
+      Console.Write("Buffering |");
+      for (int i = 0; i < tcp_p.PayloadData.Length; i++) {
+        Console.Write(tcp_p.PayloadData[i] + ",");
+      }
+      Console.WriteLine("|");
+#endif
+
       if (start_idx > end_idx)
       {
         // We wrap, so break the copy into two.
         long segment1_length = receive_buffer.Length - start_idx;
         long segment2_length = tcp_p.PayloadData.Length - segment1_length;
+        Debug.Assert(segment1_length + segment2_length == tcp_p.PayloadData.Length);
         Debug.Assert(segment2_length == end_idx);
         Array.Copy (tcp_p.PayloadData, 0, receive_buffer, start_idx, segment1_length);
-        Array.Copy (tcp_p.PayloadData, 0, receive_buffer, 0, segment2_length);
+        Array.Copy (tcp_p.PayloadData, segment1_length, receive_buffer, 0, segment2_length);
       } else {
         // We don't wrap, so the payload's bytes are contiguous in the receive buffer.
         Array.Copy (tcp_p.PayloadData, 0, receive_buffer,
@@ -174,15 +183,19 @@ namespace Pax_TCP {
       int idx = 0;
 
       // FIXME locking?
-      while (rb_read_ptr != rb_write_ptr) {
+      while (rb_read_ptr != rb_write_ptr && idx < count) {
+        Debug.Assert(receive_buffer[rb_read_ptr] != null);
+
         buf[idx] = receive_buffer[rb_read_ptr].Value;
         receive_buffer[rb_read_ptr] = null; // Using null to indicate that the slot's available.
+
         idx++;
         rb_read_ptr = (rb_read_ptr + 1) % receive_buffer.Length;
-        if (idx == count) {
-          break;
-        }
       }
+
+#if DEBUG
+      Console.WriteLine("blocking_read=" + idx);
+#endif
 
       return idx;
     }
