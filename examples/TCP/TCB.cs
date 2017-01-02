@@ -70,6 +70,10 @@ namespace Pax_TCP {
       int distance = (int)(tcp_p.SequenceNumber - next_receive);
       bool outcome = false;
 
+#if DEBUG
+      Console.WriteLine("is_in_receive_window distance = " + distance);
+#endif
+
       if (distance == 0) {
         outcome = true;
       } else if (distance < 0) {
@@ -106,6 +110,13 @@ namespace Pax_TCP {
 
      long start_idx = tcp_p.SequenceNumber % receive_buffer.Length;
      long end_idx = (tcp_p.SequenceNumber + tcp_p.PayloadData.Length) % receive_buffer.Length;
+
+#if DEBUG
+     Console.WriteLine("start_idx = " + start_idx);
+     Console.WriteLine("end_idx = " + end_idx);
+     Console.WriteLine("read_ptr = " + read_ptr);
+     Console.WriteLine("write_ptr = " + write_ptr);
+#endif
 
       if (start_idx > end_idx)
       {
@@ -148,6 +159,9 @@ namespace Pax_TCP {
         advance++;
       }
 
+#if DEBUG
+      Console.WriteLine("Received " + advance + " bytes payload");
+#endif
       return advance;
     }
 
@@ -247,7 +261,11 @@ namespace Pax_TCP {
     }
 
     public void initialise_receive_sequence(tcpseq initial_receive_sequence) {
-      this.read_ptr = this.write_ptr = this.initial_receive_sequence = initial_receive_sequence;
+      this.initial_receive_sequence = initial_receive_sequence;
+
+      // We add one to the sequence number since SYN increments the sequence number but doesn't actually communicate a byte of data in the payload.
+      this.write_ptr = (1 + initial_receive_sequence) % receive_buffer.Length;
+      this.read_ptr = this.write_ptr;
     }
 
     // Demultiplexes a TCP segment to determine the TCB.

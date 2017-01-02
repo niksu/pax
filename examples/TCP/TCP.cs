@@ -238,7 +238,14 @@ and put them in the send window
 put entire send window in out_q
 when get ACKs, slide the window
 */
-      throw new Exception("TODO");
+
+// FIXME debugging code, while i check that the 'read'-related code works OK.
+Console.Write("Writing |");
+for (int i = 0; i < count; i++) {
+  Console.Write(buf[i] + ",");
+}
+Console.WriteLine("|");
+while(true) {}
     }
 
     public Result<int> read (SockID sid, byte[] buf, uint count) {
@@ -367,10 +374,10 @@ when get ACKs, slide the window
                     tcbs[tcb_i].next_receive,
                     tcbs[tcb_i].receive_window_size);
 
-                tcbs[tcb_i].next_receive++;
-
+                // We increment the sequence number, having sent a SYN.
+                tcbs[tcb_i].next_send++;
 #if DEBUG
-                Console.WriteLine("Initiating connection");
+                Console.WriteLine("Initiating connection, TCB " + tcb_i + " from " + tcb.index);
 #endif
               } else {
                 // We don't check If the interface is set in "monopoly" mode to
@@ -392,6 +399,10 @@ when get ACKs, slide the window
               break;
 
             case TCP_State.SynRcvd:
+#if DEBUG
+              Console.WriteLine("SynRcvd: TCB " + tcb.index);
+#endif
+
               if (tcp_p.Rst) {
                 Debug.Assert(tcb != null);
                 tcb.free();
@@ -406,8 +417,14 @@ when get ACKs, slide the window
                 //       reset SYNACK timer.
                 throw new Exception("Retransmitted SYN?");
               } else if (tcp_p.Ack) {
+#if DEBUG
+                Console.WriteLine("SynRcvd: ACK for TCB " + tcb.index);
+#endif
                 if (!tcb.is_in_receive_window(tcp_p)) {
                   // Ignore segments that fall outside the receive window.
+#if DEBUG
+                  Console.WriteLine("Received segment was outside the window");
+#endif
                   break;
                 }
 
@@ -422,6 +439,9 @@ when get ACKs, slide the window
                       tcb.receive_window_size);
                 }
 
+#if DEBUG
+                Console.WriteLine("SynRcvd -> Established");
+#endif
                 // Update the connection metadata.
                 tcb.send_window_size = tcp_p.WindowSize;
                 tcb.seq_of_most_recent_window = tcp_p.SequenceNumber;
@@ -435,25 +455,35 @@ when get ACKs, slide the window
               break;
 
             case TCP_State.Established:
-/*
-slot the segment in the receive window
-  (and send ACK. as improvement could delay the ACKs)
-put payload in the receive buffer
-  if the segment is simply an ACK then nothing gets added to the receive buffer,
-  but the TCB might be updated (if ACK isn't dup for example)
-*/
+#if DEBUG
+              Console.WriteLine("Established: segment for TCB " + tcb.index);
+#endif
+              if (!tcb.is_in_receive_window(tcp_p)) {
+                // Ignore segments that fall outside the receive window.
+#if DEBUG
+                Console.WriteLine("Received segment was outside the window");
+#endif
+                break;
+              }
 
+              // Update the receive window.
+              tcb.buffer_in_receive_window(tcp_p);
+              if (tcb.advance_receive_window() > 0) {
+                // Send ACK for any payload we've jut received.
+                send_ACK(tcb.local_port, tcb.remote_port,
+                    tcb.remote_address,
+                    tcb.next_send,
+                    tcb.next_receive,
+                    tcb.receive_window_size);
+              }
+
+              // Update the connection metadata.
+              tcb.send_window_size = tcp_p.WindowSize; // FIXME decrement this according to how much of the window is still available?
               tcb.seq_of_most_recent_window = tcp_p.SequenceNumber;
               tcb.ack_of_most_recent_window = tcp_p.AcknowledgmentNumber;
-              tcb.next_receive = tcp_p.SequenceNumber +
-                (uint)tcp_p.PayloadData.Length/*FIXME cast*/ + 1;
-              tcb.send_window_size = tcp_p.WindowSize;
+              // tcb.next_receive is set by advance_receive_window()
+              // FIXME if ACK is set (and it should be) then update our send-related metadata, to advance the send window if bytes have been ACKd.
 
-              send_ACK(tcb.local_port, tcb.remote_port,
-                  tcb.remote_address,
-                  tcb.next_send,
-                  tcb.next_receive,
-                  tcb.receive_window_size);
               break;
 
             case TCP_State.FinWait1:
