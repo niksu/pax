@@ -216,6 +216,7 @@ namespace Pax_TCP {
 
     public Result<int> write (SockID sid, byte[] buf, uint count) {
       Debug.Assert(count > 0);
+      Debug.Assert(count <= buf.Length);
 
       if ((tcbs[sid.sockid].tcp_state() != TCP_State.Established) &&
           (tcbs[sid.sockid].tcp_state() != TCP_State.CloseWait)) {
@@ -229,8 +230,19 @@ namespace Pax_TCP {
       // Insert that many bytes (updating the index), copying the bytes from 'buf'
       // Return the number of bytes we've inserted.
       // (Block if necessary, otherwise return 0)
+
+      // FIXME blocking mode is assumed, and non-blocking mode isn't supported yet.
       // FIXME use heuristics to avoid sending small packets?
-      // FIXME start retransmission timer immediately?
+
+      // NOTE retransmission timer isn't started immediately, rather it's
+      //      started at the time of transmission.
+
+      if (count > this.max_segment_size) {
+        // FIXME currently i assume that the program's send requests fit within
+        //       a single segment, and don't currently implement segmentation.
+        throw new Exception("TODO: break up into segments");
+      }
+
 /*
 segmentation:
 then put into packets
@@ -239,13 +251,33 @@ put entire send window in out_q
 when get ACKs, slide the window
 */
 
-// FIXME debugging code, while i check that the 'read'-related code works OK.
-Console.Write("Writing |");
-for (int i = 0; i < count; i++) {
-  Console.Write(buf[i] + ",");
-}
-Console.WriteLine("|");
-while(true) {}
+#if DEBUG
+      Console.Write("Writing |");
+      for (int i = 0; i < count; i++) {
+        Console.Write(buf[i] + ",");
+      }
+      Console.WriteLine("|");
+#endif
+
+      // FIXME use send_buffer, rather than generating and queueing packets
+      //       directly, to make sure we don't queue too many packets (and
+      //       respect window size).
+
+      // FIXME use static allocation, rather than creating new ones.
+      byte[] payload = new byte[count];
+      // FIXME avoid copying
+      Array.Copy(buf, 0, payload, 0, count);
+
+      send_payload_ACK(tcbs[sid.sockid].local_port, tcbs[sid.sockid].remote_port,
+          tcbs[sid.sockid].remote_address,
+          tcbs[sid.sockid].next_send,
+          tcbs[sid.sockid].next_receive,
+          tcbs[sid.sockid].receive_window_size,
+          payload);
+
+      tcbs[sid.sockid].next_send += count;
+
+      return new Result<int> ((int)count, null);
     }
 
     public Result<int> read (SockID sid, byte[] buf, uint count) {
@@ -546,9 +578,9 @@ while(true) {}
           IpPacket ip_p = ((IpPacket)(p.Item1.PayloadPacket));
           TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
-          // FIXME also check that if we're sending a payload-carrying segment
-          if (!tcp_p.Rst) {
-            // FIXME start retransmission timer
+          if (!tcp_p.Rst && tcp_p.PayloadData != null && tcp_p.PayloadData.Length > 0) {
+            // FIXME start retransmission timer if we're not sending an empty
+            //       payload that isn't flagged as RST.
           }
 
           device.SendPacket(p.Item1);
@@ -606,6 +638,10 @@ while(true) {}
       IPv4Packet ip_p = ((IPv4Packet)(packet.PayloadPacket));
       TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
 
+      tcp_p.UpdateCalculatedValues();
+      ip_p.UpdateCalculatedValues();
+      eth_p.UpdateCalculatedValues();
+
       tcp_p.UpdateTCPChecksum();
       ip_p.UpdateIPChecksum();
       eth_p.UpdateCalculatedValues();
@@ -653,6 +689,25 @@ while(true) {}
       tcp_p.SequenceNumber = seq_no;
       tcp_p.AcknowledgmentNumber = ack_no;
       tcp_p.Ack = true;
+
+      send_packet(packet);
+    }
+
+    // FIXME looks like i can factor these 'send_' functions?
+    private void send_payload_ACK(ushort src_port, ushort dst_port, IPAddress dst_ip,
+        uint seq_no, uint ack_no, UInt16 receive_window_size, byte[] payload) {
+      Packet packet = raw_packet(src_port, dst_port, dst_ip, receive_window_size);
+      EthernetPacket eth_p = (EthernetPacket)packet;
+      IpPacket ip_p = ((IpPacket)(packet.PayloadPacket));
+      TcpPacket tcp_p = ((TcpPacket)(ip_p.PayloadPacket));
+
+      tcp_p.SequenceNumber = seq_no;
+      tcp_p.AcknowledgmentNumber = ack_no;
+      tcp_p.Ack = true;
+
+      if (payload != null) {
+        tcp_p.PayloadData = payload;
+      }
 
       send_packet(packet);
     }
