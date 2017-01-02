@@ -60,7 +60,9 @@ namespace Pax_TCP {
     // FIXME is this value incremented only, or also decayed in time?
     public uint retransmit_count = 0;
 
-    public TimerCB[] timers; // FIXME maximum number of allocated timers per TCB -- add as configuration parameter, and allocate this array at TCB initialisation.
+    // The maximum number of allocated timers per TCB is a configuration
+    // parameter. This array is allocated at TCB initialisation.
+    public TimerCB[] timers;
 
     private void initialise_segment_sequence() {
       // FIXME randomize;
@@ -91,6 +93,8 @@ namespace Pax_TCP {
         // The segment is (partly or entirely) too far ahead or behind (outside
         // the receive window) or it's too big for the receive buffer.
         outcome = false;
+        // FIXME would be useful to know if the segment was dropped because it
+        //       didn't fit in buffer -- could hint at resource exhaustion.
       }
 
       return outcome;
