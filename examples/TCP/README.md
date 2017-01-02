@@ -1,4 +1,4 @@
-# TCPuny: a C# implementation of TCP
+# TCPuny: a partial implementation of TCP in C#
 
 TCPuny exposes a Berkeley-style socket interface
 ([IBerkeleySocket.cs](IBerkeleySocket.cs)) for applications to send and receive
