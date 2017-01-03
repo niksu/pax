@@ -2,7 +2,7 @@
 
 TCPuny exposes a Berkeley-style socket interface
 ([IBerkeleySocket.cs](IBerkeleySocket.cs)) for applications to send and receive
-byte streams over an unreliably network, handling the following on the
+byte streams over an unreliable network, handling the following on the
 application's behalf:
 * loss (through retransmission)
 * delivery of duplicates
@@ -32,7 +32,7 @@ traffic you want TCPuny to receive and send.
 **Configure TCPuny**. For an example see [echo_wiring.json](echo_wiring.json).
 It's important to set the correct MAC and IP addresses, otherwise outgoing
 packets might be misrouted or dropped. You can check your MAC address using
-`ifconfig` and get an idea of who you've been interacting locally by using
+`ifconfig` and get an idea of with whom you've been interacting locally by using
 `arp`. To view MAC addresses when using `tcpdump` use the `-e` flag.
 
 
@@ -52,7 +52,7 @@ using [IBerkeleySocket.cs](IBerkeleySocket.cs)):
 $ sudo mono examples/Bin/Echo.exe --address 127.0.0.1 --port 7000 -v
 ```
 
-For either TCwraP or TCPuny, to test them run this rom another terminal:
+For either TCwraP or TCPuny, to test them run this from another terminal:
 ```
 $ telnet 127.0.0.1 7000
 ```
@@ -60,7 +60,7 @@ $ telnet 127.0.0.1 7000
 
 # Limitations
 This implementation can be improved and extended in various ways. Currently:
-* implement connection closure (via FIN) -- currently i rely on RST to shut it down.
+* implement connection closure (via FIN) -- currently I rely on RST to shut it down.
 * uses fixed-size segments -- no adaptation of MSS based on "distance" between peers.
 * no congestion control (and ssthresh, rto calculation).
 * doesn't support any options (e.g., mss, window scaling, fast open)
