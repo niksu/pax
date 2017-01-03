@@ -115,7 +115,6 @@ public class NonPax_Echo_Server {
 public class Pax_Echo_Server : PacketMonitor, IActive {
   bool verbose = false;
 
-  // FIXME currently no way of assigning defaults to Pax parameters in a wiring.json file?
   ushort port;
   IPAddress ip_address;
   PhysicalAddress my_mac_address;
@@ -137,8 +136,8 @@ public class Pax_Echo_Server : PacketMonitor, IActive {
   public Pax_Echo_Server (PhysicalAddress my_mac_address, PhysicalAddress
       gateway_mac_address, IPAddress ip_address, ushort port, uint max_conn,
       uint max_backlog, uint receive_buffer_size, uint send_buffer_size, uint
-      max_InQ_size, uint max_timers, uint max_tcb_timers, bool monopoly,
-      UInt16 max_window_size, uint max_segment_size) {
+      max_InQ_size, uint max_timers, uint max_tcb_timers,
+      UInt16 max_window_size, uint max_segment_size, bool monopoly = false) {
     this.my_mac_address = my_mac_address;
     this.gateway_mac_address = gateway_mac_address;
     this.ip_address = ip_address;

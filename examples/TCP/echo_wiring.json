@@ -14,7 +14,6 @@
         "max_InQ_size": "10",
         "max_timers": "1000",
         "max_tcb_timers": "100",
-        "monopoly": "false",
         "max_window_size": "600",
         "max_segment_size": "536"
       }
