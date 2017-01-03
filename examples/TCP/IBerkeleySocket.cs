@@ -78,70 +78,11 @@ namespace Pax_TCP {
     }
 
     override public string ToString() {
-      string result;
-
       if (error == null) {
         return this.result.ToString();
+      } else {
+        return error.Value.ToString("G");
       }
-
-      switch (error) {
-        case Error.EACCES:
-          result = "EACCESS";
-          break;
-        case Error.EADDRINUSE:
-          result = "EADDRINUSE";
-          break;
-        case Error.EBADF:
-          result = "EBADF";
-          break;
-        case Error.EINVAL:
-          result = "EINVAL";
-          break;
-        case Error.ENOTSOCK:
-          result = "ENOTSOCK";
-          break;
-        case Error.EOPNOTSUPP:
-          result = "EOPNOTSUPP";
-          break;
-        case Error.EINTR:
-          result = "EINTR";
-          break;
-        case Error.EIO:
-          result = "EIO";
-          break;
-        case Error.EAGAIN:
-          result = "EAGAIN";
-          break;
-        case Error.EWOULDBLOCK:
-          result = "EWOULDBLOCK";
-          break;
-        case Error.EDESTADDRREQ:
-          result = "EDESTADDRREQ";
-          break;
-        case Error.EDQUOT:
-          result = "EDQUOT";
-          break;
-        case Error.EFAULT:
-          result = "EFAULT";
-          break;
-        case Error.EFBIG:
-          result = "EFBIG";
-          break;
-        case Error.ENOSP:
-          result = "ENOSP";
-          break;
-        case Error.EPERM:
-          result = "EPERM";
-          break;
-        case Error.EPIPE:
-          result = "EPIPE";
-          break;
-        default:
-          result = "(Unknown error)";
-          break;
-      }
-
-      return result;
     }
   }
 
