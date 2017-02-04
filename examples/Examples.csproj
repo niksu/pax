@@ -13,22 +13,22 @@
     <Reference Include="System" />
     <Reference Include="PacketDotNet, Version=0.10.0.0, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\PacketDotNet.dll</HintPath>
+      <HintPath>$(PAX)\lib\PacketDotNet.dll</HintPath>
     </Reference>
     <Reference Include="SharpPcap, Version=4.2.0.0, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\SharpPcap.dll</HintPath>
+      <HintPath>$(PAX)\lib\SharpPcap.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=8.0.3.0, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(PAX)\lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Pax_Lite, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\Bin\Pax_Lite.dll</HintPath>
+      <HintPath>$(PAX)\Bin\Pax_Lite.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="Pax, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\Bin\Pax.exe</HintPath>
+      <HintPath>$(PAX)\Bin\Pax.exe</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
   </ItemGroup>

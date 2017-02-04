@@ -1,5 +1,8 @@
 # Building
 
+Important: set the `PAX` environment variable to the path where this repo is
+cloned.
+
 ## Dependencies
 1. libpcap (on UNIXy systems) or winpcap.dll (on Windows).
   On Ubuntu: `sudo apt-get install libpcap0.8`

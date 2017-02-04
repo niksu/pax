@@ -15,7 +15,7 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Reference Include="Pax_Lite, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\Bin\Pax_Lite.dll</HintPath>
+      <HintPath>$(PAX)\Bin\Pax_Lite.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
   </ItemGroup>
