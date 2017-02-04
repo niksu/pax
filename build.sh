@@ -17,6 +17,5 @@ xbuild Pax_Lite.csproj /t:Rebuild /p:DefineConstants="${DEFINE}"
 xbuild Pax.csproj /p:DefineConstants="${DEFINE}"
 xbuild examples/Examples.csproj /p:DefineConstants="${DEFINE}"
 xbuild examples/Hub.csproj /p:DefineConstants="${DEFINE}"
-xbuild examples/Echo.csproj /p:DefineConstants="${DEFINE}"
 
 echo Success
