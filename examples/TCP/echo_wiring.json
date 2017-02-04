@@ -1,0 +1,29 @@
+{
+  "handlers": [
+    {
+      "class_name": "Pax_Echo_Server",
+      "args": {
+        "my_mac_address": "02-00-00-00-00-01",
+        "gateway_mac_address": "02-00-00-00-00-02",
+        "ip_address": "127.0.0.1",
+        "port": "7000",
+        "max_conn": "100",
+        "max_backlog": "10",
+        "receive_buffer_size": "700",
+        "send_buffer_size": "10",
+        "max_InQ_size": "10",
+        "max_timers": "1000",
+        "max_tcb_timers": "100",
+        "max_window_size": "600",
+        "max_segment_size": "536"
+      }
+    }
+  ],
+  "interfaces": [
+    {
+      "interface_name" : "en0",
+      "lead_handler" : "Pax_Echo_Server",
+      "pcap_filter" : "tcp"
+    }
+  ]
+}
