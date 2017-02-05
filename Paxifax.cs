@@ -205,4 +205,21 @@ namespace Pax {
     void Start ();
     void Stop ();
   }
+
+  public abstract class ByteBased_PacketProcessor {
+    // FIXME include LL interface type as parameter.
+    abstract public void process_packet (int in_port, byte[] packet);
+
+    public void packetHandler (object sender, CaptureEventArgs e)
+    {
+      byte[] packet = e.Packet.Data;
+      int in_port = PaxConfig.rdeviceMap[e.Device.Name];
+      process_packet (in_port, packet);
+    }
+
+    public void send_packet (int out_port, byte[] packet, int packet_size) {
+      var device = PaxConfig.deviceMap[out_port];
+      device.SendPacket(packet, packet_size);
+    }
+  }
 }

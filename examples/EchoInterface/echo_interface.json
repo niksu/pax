@@ -1,0 +1,18 @@
+{
+  "handlers": [
+    {
+      "class_name": "EchoInterface",
+      "args": {
+        "processor_interval": "10",
+        "sender_interval": "20"
+      }
+    }
+  ],
+  "interfaces": [
+    {
+      "interface_name" : "eth0",
+      "lead_handler" : "EchoInterface",
+      "pcap_filter" : ""
+    }
+  ]
+}
