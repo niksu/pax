@@ -338,6 +338,8 @@ namespace Pax
           Console.ForegroundColor = ConsoleColor.Gray;
           Console.WriteLine(")");
           Console.ForegroundColor = tmp;
+          // If we don't have a packet processor for an interface, we assign the Dropper.
+          PaxConfig.deviceMap[idx].OnPacketArrival += (new Dropper()).packetHandler;
         } else {
           var tmp = Console.ForegroundColor;
           Console.ForegroundColor = ConsoleColor.Gray;
