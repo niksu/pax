@@ -68,7 +68,8 @@ namespace Pax
 #endif
 
       OptionSet p = new OptionSet ()
-        .Add ("v", _ => PaxConfig.opt_verbose = true);
+        .Add ("v", _ => PaxConfig.opt_verbose = true)
+        .Add ("nodefault", _ => PaxConfig.opt_nodefault = true);
       args = p.Parse(args).ToArray();
 
       if (args.Length < 2)
@@ -338,8 +339,11 @@ namespace Pax
           Console.ForegroundColor = ConsoleColor.Gray;
           Console.WriteLine(")");
           Console.ForegroundColor = tmp;
+
           // If we don't have a packet processor for an interface, we assign the Dropper.
-          PaxConfig.deviceMap[idx].OnPacketArrival += (new Dropper()).packetHandler;
+          if (!PaxConfig.opt_nodefault) {
+            PaxConfig.deviceMap[idx].OnPacketArrival += (new Dropper()).packetHandler;
+          }
         } else {
           var tmp = Console.ForegroundColor;
           Console.ForegroundColor = ConsoleColor.Gray;
