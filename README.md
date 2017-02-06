@@ -45,6 +45,7 @@ The drawing example shows an assembly with four packet processors, only two of w
 
 # Running
 Simply run `Pax.exe CONFIGURATION_FILENAME ASSEMBLY_FILENAME`.
+For more on command-line switches, see [CLI.md](CLI.md).
 Probably you'd have to run this command with root/administrator-level access
 because of the privileged access to hardware that's used while Pax is running.
 For the example code I run:
