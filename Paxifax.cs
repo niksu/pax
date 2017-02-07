@@ -205,4 +205,11 @@ namespace Pax {
     void Start ();
     void Stop ();
   }
+
+  public class Dropper : PacketMonitor {
+    override public ForwardingDecision process_packet (int in_port, ref Packet packet)
+    {
+      return ForwardingDecision.Drop.Instance;
+    }
+  }
 }

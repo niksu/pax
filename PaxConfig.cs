@@ -74,6 +74,7 @@ namespace Pax
     public static List<NetworkInterfaceConfig> config { get { return configFile.interfaces; } }
 
     public static bool opt_verbose = false;
+    public static bool opt_no_default = false;
 
     public static string resolve_config_parameter (int port_no, string key) {
       NetworkInterfaceConfig port_conf;
