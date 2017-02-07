@@ -226,4 +226,11 @@ namespace Pax {
       throw new Exception("Wrong instance of 'process_packet'");
     }
   }
+
+  public class Dropper : PacketMonitor {
+    override public ForwardingDecision process_packet (int in_port, ref Packet packet)
+    {
+      return ForwardingDecision.Drop.Instance;
+    }
+  }
 }
