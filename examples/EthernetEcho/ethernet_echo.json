@@ -1,7 +1,7 @@
 {
   "handlers": [
     {
-      "class_name": "EchoInterface",
+      "class_name": "EthernetEcho",
       "args": {
         "processor_interval": "10",
         "sender_interval": "20"
@@ -11,7 +11,7 @@
   "interfaces": [
     {
       "interface_name" : "eth0",
-      "lead_handler" : "EchoInterface",
+      "lead_handler" : "EthernetEcho",
       "pcap_filter" : ""
     }
   ]

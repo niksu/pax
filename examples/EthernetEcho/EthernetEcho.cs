@@ -18,8 +18,8 @@ using System.Collections.Concurrent;
 
 using Pax;
 
-public class EchoInterface : ByteBased_PacketProcessor, IActive {
-  string system_name = "EchoInterface";
+public class EthernetEcho : ByteBased_PacketProcessor, IActive {
+  string system_name = "EthernetEcho";
   Timer process_timer;
   Timer send_timer;
 
@@ -29,7 +29,7 @@ public class EchoInterface : ByteBased_PacketProcessor, IActive {
   ConcurrentQueue<Tuple<byte[], int>> in_q = new ConcurrentQueue<Tuple<byte[], int>>();
   ConcurrentQueue<Tuple<byte[], int>> out_q = new ConcurrentQueue<Tuple<byte[], int>>();
 
-  public EchoInterface (int processor_interval, int sender_interval) {
+  public EthernetEcho (int processor_interval, int sender_interval) {
     this.processor_interval = processor_interval;
     this.sender_interval = sender_interval;
   }

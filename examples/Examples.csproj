@@ -53,7 +53,7 @@
     <Compile Include="packet_formats/Syslog_Packet.cs" />
     <Compile Include="Test.cs" />
     <Compile Include="Generator.cs" />
-    <Compile Include="EchoInterface/EchoInterface.cs" />
+    <Compile Include="EthernetEcho/EthernetEcho.cs" />
   </ItemGroup>
 <!--
   <Target Name="Build">
