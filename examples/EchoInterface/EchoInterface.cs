@@ -63,20 +63,24 @@ public class EchoInterface : ByteBased_PacketProcessor, IActive {
 
   public void Processor (Object o) {
     Tuple<byte[], int> dMd;
-    byte[] tmp = new byte[3];
+    byte[] tmp = new byte[6];
     while (in_q.TryDequeue (out dMd)) {
       // FIXME assuming that LL is Ethernet
 
       // Swap src and dst addresses.
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < 6; i++) {
         tmp[i] = dMd.Item1[i];
       }
-      for (int i = 0; i < 3; i++) {
-        dMd.Item1[i] = dMd.Item1[i + 3];
+      for (int i = 0; i < 6; i++) {
+        dMd.Item1[i] = dMd.Item1[i + 6];
       }
-      for (int i = 0; i < 3; i++) {
-        dMd.Item1[i + 3] = tmp[i];
+      for (int i = 0; i < 6; i++) {
+        dMd.Item1[i + 6] = tmp[i];
       }
+
+#if DEBUG
+      Console.Write(".");
+#endif
 
       out_q.Enqueue(new Tuple<byte[], int>(dMd.Item1, dMd.Item2));
     }
