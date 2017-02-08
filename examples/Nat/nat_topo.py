@@ -17,13 +17,17 @@ import time
 import thread
 import threading
 
-# Add parent directory to path so we can use the PaxNode class
-from inspect import getsourcefile
-import os.path, sys
-current_dir = os.path.dirname(os.path.abspath(getsourcefile(lambda:0)))
-parent_dir = os.path.dirname(current_dir) #current_dir[:current_dir.rfind(os.path.sep)]
-sys.path.insert(0, parent_dir) # This is only temporary - disappears after python exits
+# Add Pax's mininet/ directory to path so we can use the PaxNode class
+PAX = None
+try:
+  PAX = os.environ['PAX']
+except KeyError:
+  print ""
+  exit(1)
+import sys
+sys.path.insert(0, PAX + "/mininet/")
 from pax_mininet_node import PaxNode
+# FIXME propagate use of PAX path prefix elsewhere
 
 config = None
 
