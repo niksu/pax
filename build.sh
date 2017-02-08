@@ -6,6 +6,8 @@
 
 set -e
 
+[ -z "${PAX}" ] && echo "Environment variable PAX must point to a clone of the Pax repo" && exit 2
+
 # NOTE to not have any symbols, instead of an empty ${DEFINE} use a dud one like "NOTHING"
 if [ -z "${DEFINE}" ]
 then
