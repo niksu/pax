@@ -234,3 +234,15 @@ tcpdump: listening on pktap, link-type PKTAP (Packet Tap), capture size 65535 by
 20:52:30.269609 IP (tos 0x0, ttl 64, id 0, offset 0, flags [none], proto TCP (6), length 40)
     10.0.0.4.10 > 10.0.0.5.11: Flags [none], cksum 0x9bc7 (correct), seq 0, win 0, length 0
 ```
+
+
+## Ethernet Echo
+[EthernetEcho.cs](EthernetEcho/EthernetEcho.cs) implements an element that swaps
+the source and destination Ethernet addresses.
+The goal of this example is to show the *byte-based* interface for packet
+processors in Pax, i.e., it avoids dissecting and constructing packets, but
+rather works at the lower level of byte arrays.
+This example was tested in Mininet using
+[ethernet_echo_test.py](EthernetEcho/ethernet_echo_test.py) to generate test
+packets using the
+[ECTP](https://en.wikipedia.org/wiki/Ethernet_Configuration_Testing_Protocol) [EtherType](https://en.wikipedia.org/wiki/EtherType).
