@@ -242,7 +242,9 @@ the source and destination Ethernet addresses.
 The goal of this example is to show the *byte-based* interface for packet
 processors in Pax, i.e., it avoids dissecting and constructing packets, but
 rather works at the lower level of byte arrays.
-This example was tested in Mininet using
-[ethernet_echo_test.py](EthernetEcho/ethernet_echo_test.py) to generate test
-packets using the
-[ECTP](https://en.wikipedia.org/wiki/Ethernet_Configuration_Testing_Protocol) [EtherType](https://en.wikipedia.org/wiki/EtherType).
+
+### Testing
+This example was tested in Mininet using the [mn_ethernet_echo.py](EthernetEcho/mn_ethernet_echo.py)
+script which automatically generates and tests for
+[ECTP](https://en.wikipedia.org/wiki/Ethernet_Configuration_Testing_Protocol) [EtherType](https://en.wikipedia.org/wiki/EtherType)
+frames.
