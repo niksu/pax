@@ -16,13 +16,14 @@ import random
 import time
 import thread
 import threading
+import os
 
 # Add Pax's mininet/ directory to path so we can use the PaxNode class
 PAX = None
 try:
   PAX = os.environ['PAX']
 except KeyError:
-  print ""
+  print "PAX environment variable must point to path where Pax repo is cloned"
   exit(1)
 import sys
 sys.path.insert(0, PAX + "/mininet/")
