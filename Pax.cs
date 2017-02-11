@@ -392,5 +392,9 @@ namespace Pax
       Console.ResetColor();
       Console.WriteLine ("Terminating");
     }
+
+    public static void shutdown () {
+      shutdown(null, null);
+    }
   }
 }
