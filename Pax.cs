@@ -26,9 +26,19 @@ using System.Threading;
 namespace Pax
 {
   public class Frontend {
+    private static OptionSet p = new OptionSet ()
+        .Add ("v", "verbose output", _ => PaxConfig.opt_verbose = true)
+        .Add ("q", "quiet mode", _ => PaxConfig.opt_quiet = true)
+        .Add ("no-logo", "suppress Pax version and URL", _ => PaxConfig.opt_no_logo = true)
+        .Add ("help", "usage info", _ => usage())
+        .Add ("no-default", "don't use a default packet handler when the one described in the configuration JSON file isn't found", _ => PaxConfig.opt_no_default = true);
 
     private static void usage() {
+      Console.ResetColor();
       Console.WriteLine("Required parameters: config file, and DLL containing packet handlers.");
+      Console.WriteLine("Options:");
+      p.WriteOptionDescriptions (Console.Out);
+      Environment.Exit(0);
     }
 
     private static void print_kv (string k, string v, bool secondary = false) {
@@ -67,11 +77,6 @@ namespace Pax
       Debug.Listeners.Add(new TextWriterTraceListener(System.Console.Out));
 #endif
 
-      OptionSet p = new OptionSet ()
-        .Add ("v", _ => PaxConfig.opt_verbose = true)
-        .Add ("q", _ => PaxConfig.opt_quiet = true)
-        .Add ("no-logo", _ => PaxConfig.opt_no_logo = true)
-        .Add ("no-default", _ => PaxConfig.opt_no_default = true);
       args = p.Parse(args).ToArray();
 
       if (args.Length < 2)
