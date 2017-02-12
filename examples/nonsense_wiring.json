@@ -5,5 +5,5 @@
       "lead_handler" : "SomeNameOfAHandlerThatDoesntExist10101010!"
     }
   ],
-  "reason": "This is used to test the -no-default command-line switch. I'd expect that '$ sudo mono ./Bin/Pax.exe examples/nonsense_wiring.json examples/Bin/Examples.dll' behaves fine but '$ sudo mono ./Bin/Pax.exe -no-default examples/nonsense_wiring.json examples/Bin/Examples.dll' will crash rather quickly with an unhandled exception related to 'SharpPcap.DeviceNotReadyException: No delegates assigned to OnPacketArrival, no where for captured packets to go.'."
+  "reason": "This is used to test the -no-default command-line switch. I'd expect that '$ sudo mono ./Bin/Pax.exe --config=examples/nonsense_wiring.json --code=examples/Bin/Examples.dll' behaves fine but '$ sudo mono ./Bin/Pax.exe -no-default --config=examples/nonsense_wiring.json --code=examples/Bin/Examples.dll' will crash rather quickly with an unhandled exception related to 'SharpPcap.DeviceNotReadyException: No delegates assigned to OnPacketArrival, no where for captured packets to go.'."
 }

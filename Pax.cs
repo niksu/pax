@@ -32,13 +32,15 @@ namespace Pax
         .Add ("monochrome", "no colour output", _ => PaxConfig.opt_no_colours = true)
         .Add ("no-logo", "suppress Pax version and URL", _ => PaxConfig.opt_no_logo = true)
         .Add ("help", "usage info", _ => usage())
-        .Add ("no-default", "don't use a default packet handler when the one described in the configuration JSON file isn't found", _ => PaxConfig.opt_no_default = true);
+        .Add ("config=", "path of JSON file containing the configuration", (string v) => PaxConfig.config_filename = v)
+        .Add ("code=", "path of DLL file containing the code for packet processors", (string v) => PaxConfig.assembly_filename = v)
+        .Add ("no-default", "by default Pax uses the 'Dropper' element when the handler named in a .json file cannot be found, as well as emits a message. Using this flag results in a default not being substituted (but a message is still emitted), as a consequence of which Pax might crash complaining that the handler couldn't be found. For more see 'examples/nonsense_wiring.json'", _ => PaxConfig.opt_no_default = true);
 
     private static void usage() {
       if (!PaxConfig.opt_no_colours)
         Console.ResetColor();
 
-      Console.WriteLine("Required parameters: config file, and DLL containing packet handlers.");
+      Console.WriteLine("Required parameters: --config and --code.");
       Console.WriteLine("Options:");
       p.WriteOptionDescriptions (Console.Out);
       Environment.Exit(0);
@@ -100,17 +102,6 @@ namespace Pax
       if (!PaxConfig.opt_no_colours)
         Console.ResetColor();
 
-      if (args.Length < 2)
-      {
-        usage();
-        return -1;
-      }
-
-      // FIXME use getopts to get parameters
-      PaxConfig.config_filename = args[0];
-      PaxConfig.assembly_filename = args[1];
-
-      // FIXME currently this is redundant, but it will be used after getopts gets used in the future.
       // These two parameters are essential for Pax to function.
       if (String.IsNullOrEmpty(PaxConfig.config_filename) ||
           String.IsNullOrEmpty(PaxConfig.assembly_filename))
