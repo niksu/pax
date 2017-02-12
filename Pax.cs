@@ -69,6 +69,8 @@ namespace Pax
 
       OptionSet p = new OptionSet ()
         .Add ("v", _ => PaxConfig.opt_verbose = true)
+        .Add ("q", _ => PaxConfig.opt_quiet = true)
+        .Add ("no-logo", _ => PaxConfig.opt_no_logo = true)
         .Add ("no-default", _ => PaxConfig.opt_no_default = true);
       args = p.Parse(args).ToArray();
 
@@ -110,7 +112,9 @@ namespace Pax
 
       RegisterHandlers();
 
-      print_heading("Starting");
+      if (!PaxConfig.opt_quiet) {
+        print_heading("Starting");
+      }
 
       // FIXME accept a -j parameter to limit number of threads?
       foreach (var device in PaxConfig.deviceMap)
@@ -121,17 +125,20 @@ namespace Pax
 
     private static void PrintIntro()
     {
-      Console.ForegroundColor = ConsoleColor.White;
-      Console.Write ("✌ ");
-      Console.ForegroundColor = ConsoleColor.Cyan;
-      Console.Write ("Pax v{0}", "0.1"/*FIXME const -- get value from AssemblyInfo*/);
-      Console.ForegroundColor = ConsoleColor.White;
-      Console.Write (" ☮ ");
-      Console.ForegroundColor = ConsoleColor.DarkBlue;
-      Console.Write ("http://www.cl.cam.ac.uk/~ns441/pax");
-      Console.ForegroundColor = ConsoleColor.White;
-      Console.WriteLine();
-      if (PaxConfig.opt_verbose) {
+      if (!PaxConfig.opt_no_logo) {
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.Write ("✌ ");
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write ("Pax v{0}", "0.1"/*FIXME const -- get value from AssemblyInfo*/);
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.Write (" ☮ ");
+        Console.ForegroundColor = ConsoleColor.DarkBlue;
+        Console.Write ("http://www.cl.cam.ac.uk/~ns441/pax");
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine();
+      }
+
+      if (PaxConfig.opt_verbose && !PaxConfig.opt_quiet) {
         print_kv  (indent + "running as ",
             (System.Environment.Is64BitProcess ? "64bit" : "32bit") + " process",
             true);
@@ -149,13 +156,17 @@ namespace Pax
                    true);
       }
 
-      print_kv ("Using configuration file: ", PaxConfig.config_filename);
-      print_kv ("Using assembly file: ", PaxConfig.assembly_filename);
+      if (!PaxConfig.opt_quiet) {
+        print_kv ("Using configuration file: ", PaxConfig.config_filename);
+        print_kv ("Using assembly file: ", PaxConfig.assembly_filename);
+      }
     }
 
     private static void Configure(CaptureDeviceList devices)
     {
-      print_heading("Configuration");
+      if (!PaxConfig.opt_quiet) {
+        print_heading("Configuration");
+      }
 
       using (JsonTextReader r = new JsonTextReader(File.OpenText(PaxConfig.config_filename))) {
         JsonSerializer j = new JsonSerializer();
@@ -174,14 +185,16 @@ namespace Pax
           //FIXME not using internal_name any more to avoid more lookups. Remove completely?
           //Console.Write(indent + i.internal_name);
           //Console.Write(" -- ");
-          Console.ForegroundColor = ConsoleColor.Gray;
-          Console.Write(indent + "[");
-          Console.ForegroundColor = ConsoleColor.Green;
-          Console.Write(idx.ToString());
-          Console.ForegroundColor = ConsoleColor.Gray;
-          Console.Write("] ");
-          Console.ForegroundColor = ConsoleColor.Yellow;
-          Console.WriteLine(i.interface_name);
+          if (!PaxConfig.opt_quiet) {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write(indent + "[");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write(idx.ToString());
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write("] ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(i.interface_name);
+          }
 
           PaxConfig.interface_lead_handler[idx] = i.lead_handler;
 
@@ -197,8 +210,10 @@ namespace Pax
               if (!String.IsNullOrEmpty(i.pcap_filter))
               {
                 device.Filter = i.pcap_filter;
-                print_kv (indent + /*FIXME code style sucks*/ indent +
-                    "Setting filter: ", i.pcap_filter);
+                if (!PaxConfig.opt_quiet) {
+                  print_kv (indent + /*FIXME code style sucks*/ indent +
+                      "Setting filter: ", i.pcap_filter);
+                }
               }
 
               break;
@@ -211,8 +226,10 @@ namespace Pax
             Console.WriteLine("No match for '" + i.interface_name + "'");
             Environment.Exit(-1);
           } else {
-            print_kv (indent + /*FIXME code style sucks*/ indent +
-                     "Link layer type: ", PaxConfig.deviceMap[idx].LinkType.ToString());
+            if (!PaxConfig.opt_quiet) {
+              print_kv (indent + /*FIXME code style sucks*/ indent +
+                       "Link layer type: ", PaxConfig.deviceMap[idx].LinkType.ToString());
+            }
           }
 
           idx++;
@@ -222,7 +239,9 @@ namespace Pax
 
     private static void LoadExternalHandlersFromDll()
     {
-      print_heading("Scanning assembly");
+      if (!PaxConfig.opt_quiet) {
+        print_heading("Scanning assembly");
+      }
 
       // Inspect each type that implements PacketProcessor, trying to instantiate it for use
       foreach (Type type in PaxConfig.assembly.GetExportedTypes()
@@ -248,11 +267,13 @@ namespace Pax
           }
         }
 
-        Console.Write (indent);
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write (type);
+        if (!PaxConfig.opt_quiet) {
+          Console.Write (indent);
+          Console.ForegroundColor = ConsoleColor.Green;
+          Console.Write (type);
+        }
 
-        if (PaxConfig.opt_verbose) {
+        if (PaxConfig.opt_verbose && !PaxConfig.opt_quiet) {
           // List the Pax interfaces this type implements:
           Console.ForegroundColor = ConsoleColor.Gray;
           Console.Write(" : ");
@@ -260,16 +281,18 @@ namespace Pax
           Console.Write(String.Join(", ", PacketProcessorHelper.GetUsedPaxTypes(type).Select(t => t.Name)));
         }
 
-        // Print which interfaces this type is the handler for
-        if (subscribed.Count != 0) {
-          Console.ForegroundColor = ConsoleColor.Gray;
-          Console.Write (" <- ");
-          Console.ForegroundColor = ConsoleColor.Yellow;
-          Console.Write(
-             String.Join(", ", subscribed.ConvertAll<string>(ofs => PaxConfig.deviceMap[ofs].Name)));
-        }
+        if (!PaxConfig.opt_quiet) {
+          // Print which interfaces this type is the handler for
+          if (subscribed.Count != 0) {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write (" <- ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write(
+               String.Join(", ", subscribed.ConvertAll<string>(ofs => PaxConfig.deviceMap[ofs].Name)));
+          }
 
-        Console.WriteLine("");
+          Console.WriteLine("");
+        }
       }
       // FIXME add check to see if there's an interface that references a lead_handler that doesn't appear in the assembly. That should be flagged up to the user, and lead to termination of Pax.
     }
@@ -345,18 +368,21 @@ namespace Pax
             PaxConfig.deviceMap[idx].OnPacketArrival += (new Dropper()).packetHandler;
           }
         } else {
-          var tmp = Console.ForegroundColor;
-          Console.ForegroundColor = ConsoleColor.Gray;
-          Console.Write("Registered packet processor for ");
-          Console.ForegroundColor = ConsoleColor.Yellow;
-          Console.Write(PaxConfig.deviceMap[idx].Name);
-          Console.ForegroundColor = ConsoleColor.Gray;
-          Console.Write(" (");
-          Console.ForegroundColor = ConsoleColor.Green;
-          Console.Write(idx);
-          Console.ForegroundColor = ConsoleColor.Gray;
-          Console.WriteLine(")");
-          Console.ForegroundColor = tmp;
+          if (!PaxConfig.opt_quiet) {
+            var tmp = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write("Registered packet processor for ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write(PaxConfig.deviceMap[idx].Name);
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write(" (");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write(idx);
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine(")");
+            Console.ForegroundColor = tmp;
+          }
+
           PaxConfig.deviceMap[idx].OnPacketArrival +=
             PaxConfig.interface_lead_handler_obj[idx].packetHandler;
 
@@ -389,8 +415,10 @@ namespace Pax
         PaxConfig.deviceMap[idx].Close();
       }
 
-      Console.ResetColor();
-      Console.WriteLine ("Terminating");
+      if (!PaxConfig.opt_quiet) {
+        Console.ResetColor();
+        Console.WriteLine ("Terminating");
+      }
     }
 
     public static void shutdown () {
