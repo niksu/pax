@@ -37,6 +37,10 @@ namespace Pax
         .Add ("no-default", "by default Pax uses the 'Dropper' element when the handler named in a .json file cannot be found, as well as emits a message. Using this flag results in a default not being substituted (but a message is still emitted), as a consequence of which Pax might crash complaining that the handler couldn't be found. For more see 'examples/nonsense_wiring.json'", _ => PaxConfig.opt_no_default = true);
 
     private static void usage() {
+      PaxConfig.opt_no_colours = true;
+      PaxConfig.opt_quiet = true;
+      PrintIntro();
+
       if (!PaxConfig.opt_no_colours)
         Console.ResetColor();
 
