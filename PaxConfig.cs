@@ -77,6 +77,7 @@ namespace Pax
     public static bool opt_quiet = false;
     public static bool opt_no_logo = false;
     public static bool opt_no_default = false;
+    public static bool opt_no_colours = false;
 
     public static string resolve_config_parameter (int port_no, string key) {
       NetworkInterfaceConfig port_conf;

@@ -29,12 +29,15 @@ namespace Pax
     private static OptionSet p = new OptionSet ()
         .Add ("v", "verbose output", _ => PaxConfig.opt_verbose = true)
         .Add ("q", "quiet mode", _ => PaxConfig.opt_quiet = true)
+        .Add ("monochrome", "no colour output", _ => PaxConfig.opt_no_colours = true)
         .Add ("no-logo", "suppress Pax version and URL", _ => PaxConfig.opt_no_logo = true)
         .Add ("help", "usage info", _ => usage())
         .Add ("no-default", "don't use a default packet handler when the one described in the configuration JSON file isn't found", _ => PaxConfig.opt_no_default = true);
 
     private static void usage() {
-      Console.ResetColor();
+      if (!PaxConfig.opt_no_colours)
+        Console.ResetColor();
+
       Console.WriteLine("Required parameters: config file, and DLL containing packet handlers.");
       Console.WriteLine("Options:");
       p.WriteOptionDescriptions (Console.Out);
@@ -43,33 +46,48 @@ namespace Pax
 
     private static void print_kv (string k, string v, bool secondary = false) {
       var tmp = Console.ForegroundColor;
-      if (secondary)
-        Console.ForegroundColor = ConsoleColor.Gray;
-      else
-        Console.ForegroundColor = ConsoleColor.White;
+      if (!PaxConfig.opt_no_colours) {
+        if (secondary)
+          Console.ForegroundColor = ConsoleColor.Gray;
+        else
+          Console.ForegroundColor = ConsoleColor.White;
+      }
+
       Console.Write(k);
-      if (secondary)
-        Console.ForegroundColor = ConsoleColor.DarkYellow;
-      else
-        Console.ForegroundColor = ConsoleColor.Yellow;
+
+      if (!PaxConfig.opt_no_colours) {
+        if (secondary)
+          Console.ForegroundColor = ConsoleColor.DarkYellow;
+        else
+          Console.ForegroundColor = ConsoleColor.Yellow;
+      }
+
       Console.WriteLine(v);
+
       //Console.ResetColor();
-      Console.ForegroundColor = tmp;
+      if (!PaxConfig.opt_no_colours) {
+        Console.ForegroundColor = tmp;
+      }
     }
 
     private static void print_heading (string s) {
-      Console.ForegroundColor = ConsoleColor.Black;
-      Console.BackgroundColor = ConsoleColor.White;
+      if (!PaxConfig.opt_no_colours) {
+        Console.ForegroundColor = ConsoleColor.Black;
+        Console.BackgroundColor = ConsoleColor.White;
+      }
+
       Console.Write(s);
-      Console.ResetColor();
+
+      if (!PaxConfig.opt_no_colours) {
+        Console.ResetColor();
+      }
+
       Console.WriteLine();
     }
 
     private const string indent = "  ";
 
     public static int Main (string[] args) {
-      Console.ResetColor();
-
       // FIXME when we load the DLL and wiring.cfg, check them against each other (e.g., that all handlers exist)
       //       we can resolve all the "links" (by looking at return statements) and draw a wiring diagram. -- this can be a script.
 
@@ -78,6 +96,9 @@ namespace Pax
 #endif
 
       args = p.Parse(args).ToArray();
+
+      if (!PaxConfig.opt_no_colours)
+        Console.ResetColor();
 
       if (args.Length < 2)
       {
@@ -106,7 +127,10 @@ namespace Pax
       Debug.Assert (devices.Count >= 0);
       if (devices.Count == 0)
       {
-        Console.ForegroundColor = ConsoleColor.Red;
+        if (!PaxConfig.opt_no_colours) {
+          Console.ForegroundColor = ConsoleColor.Red;
+        }
+
         Console.WriteLine("No capture devices found");
         return -1;
       }
@@ -131,15 +155,20 @@ namespace Pax
     private static void PrintIntro()
     {
       if (!PaxConfig.opt_no_logo) {
-        Console.ForegroundColor = ConsoleColor.White;
+        if (!PaxConfig.opt_no_colours)
+          Console.ForegroundColor = ConsoleColor.White;
         Console.Write ("✌ ");
-        Console.ForegroundColor = ConsoleColor.Cyan;
+        if (!PaxConfig.opt_no_colours)
+          Console.ForegroundColor = ConsoleColor.Cyan;
         Console.Write ("Pax v{0}", "0.1"/*FIXME const -- get value from AssemblyInfo*/);
-        Console.ForegroundColor = ConsoleColor.White;
+        if (!PaxConfig.opt_no_colours)
+          Console.ForegroundColor = ConsoleColor.White;
         Console.Write (" ☮ ");
-        Console.ForegroundColor = ConsoleColor.DarkBlue;
+        if (!PaxConfig.opt_no_colours)
+          Console.ForegroundColor = ConsoleColor.DarkBlue;
         Console.Write ("http://www.cl.cam.ac.uk/~ns441/pax");
-        Console.ForegroundColor = ConsoleColor.White;
+        if (!PaxConfig.opt_no_colours)
+          Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine();
       }
 
@@ -191,13 +220,17 @@ namespace Pax
           //Console.Write(indent + i.internal_name);
           //Console.Write(" -- ");
           if (!PaxConfig.opt_quiet) {
-            Console.ForegroundColor = ConsoleColor.Gray;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write(indent + "[");
-            Console.ForegroundColor = ConsoleColor.Green;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Green;
             Console.Write(idx.ToString());
-            Console.ForegroundColor = ConsoleColor.Gray;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write("] ");
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(i.interface_name);
           }
 
@@ -227,7 +260,8 @@ namespace Pax
 
           if (PaxConfig.deviceMap[idx] == null)
           {
-            Console.ForegroundColor = ConsoleColor.Red;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("No match for '" + i.interface_name + "'");
             Environment.Exit(-1);
           } else {
@@ -274,24 +308,29 @@ namespace Pax
 
         if (!PaxConfig.opt_quiet) {
           Console.Write (indent);
-          Console.ForegroundColor = ConsoleColor.Green;
+          if (!PaxConfig.opt_no_colours)
+            Console.ForegroundColor = ConsoleColor.Green;
           Console.Write (type);
         }
 
         if (PaxConfig.opt_verbose && !PaxConfig.opt_quiet) {
           // List the Pax interfaces this type implements:
-          Console.ForegroundColor = ConsoleColor.Gray;
+          if (!PaxConfig.opt_no_colours)
+            Console.ForegroundColor = ConsoleColor.Gray;
           Console.Write(" : ");
-          Console.ForegroundColor = ConsoleColor.Cyan;
+          if (!PaxConfig.opt_no_colours)
+            Console.ForegroundColor = ConsoleColor.Cyan;
           Console.Write(String.Join(", ", PacketProcessorHelper.GetUsedPaxTypes(type).Select(t => t.Name)));
         }
 
         if (!PaxConfig.opt_quiet) {
           // Print which interfaces this type is the handler for
           if (subscribed.Count != 0) {
-            Console.ForegroundColor = ConsoleColor.Gray;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write (" <- ");
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write(
                String.Join(", ", subscribed.ConvertAll<string>(ofs => PaxConfig.deviceMap[ofs].Name)));
           }
@@ -333,7 +372,8 @@ namespace Pax
 
     private static void RegisterHandlers()
     {
-      Console.ForegroundColor = ConsoleColor.Gray;
+      if (!PaxConfig.opt_no_colours)
+        Console.ForegroundColor = ConsoleColor.Gray;
 
       // Set up callbacks.
       Task.Factory.StartNew(() =>
@@ -356,17 +396,23 @@ namespace Pax
         if (PaxConfig.interface_lead_handler_obj[idx] == null)
         {
           var tmp = Console.ForegroundColor;
-          Console.ForegroundColor = ConsoleColor.Red;
+          if (!PaxConfig.opt_no_colours)
+            Console.ForegroundColor = ConsoleColor.Red;
           Console.Write("No packet processor for ");
-          Console.ForegroundColor = ConsoleColor.Yellow;
+          if (!PaxConfig.opt_no_colours)
+            Console.ForegroundColor = ConsoleColor.Yellow;
           Console.Write(PaxConfig.deviceMap[idx].Name);
-          Console.ForegroundColor = ConsoleColor.Gray;
+          if (!PaxConfig.opt_no_colours)
+            Console.ForegroundColor = ConsoleColor.Gray;
           Console.Write(" (");
-          Console.ForegroundColor = ConsoleColor.Green;
+          if (!PaxConfig.opt_no_colours)
+            Console.ForegroundColor = ConsoleColor.Green;
           Console.Write(idx);
-          Console.ForegroundColor = ConsoleColor.Gray;
+          if (!PaxConfig.opt_no_colours)
+            Console.ForegroundColor = ConsoleColor.Gray;
           Console.WriteLine(")");
-          Console.ForegroundColor = tmp;
+          if (!PaxConfig.opt_no_colours)
+            Console.ForegroundColor = tmp;
 
           // If we don't have a packet processor for an interface, we assign the Dropper.
           if (!PaxConfig.opt_no_default) {
@@ -375,17 +421,23 @@ namespace Pax
         } else {
           if (!PaxConfig.opt_quiet) {
             var tmp = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Gray;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write("Registered packet processor for ");
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write(PaxConfig.deviceMap[idx].Name);
-            Console.ForegroundColor = ConsoleColor.Gray;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write(" (");
-            Console.ForegroundColor = ConsoleColor.Green;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Green;
             Console.Write(idx);
-            Console.ForegroundColor = ConsoleColor.Gray;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine(")");
-            Console.ForegroundColor = tmp;
+            if (!PaxConfig.opt_no_colours)
+              Console.ForegroundColor = tmp;
           }
 
           PaxConfig.deviceMap[idx].OnPacketArrival +=
@@ -421,7 +473,8 @@ namespace Pax
       }
 
       if (!PaxConfig.opt_quiet) {
-        Console.ResetColor();
+        if (!PaxConfig.opt_no_colours)
+          Console.ResetColor();
         Console.WriteLine ("Terminating");
       }
     }
