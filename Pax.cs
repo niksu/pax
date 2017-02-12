@@ -119,12 +119,16 @@ namespace Pax
       return 0;
     }
 
+    public static string Version {
+      get { return FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion; }
+    }
+
     private static void PrintIntro()
     {
       Console.ForegroundColor = ConsoleColor.White;
       Console.Write ("✌ ");
       Console.ForegroundColor = ConsoleColor.Cyan;
-      Console.Write ("Pax v{0}", "0.1"/*FIXME const -- get value from AssemblyInfo*/);
+      Console.Write ("Pax v{0}", Version);
       Console.ForegroundColor = ConsoleColor.White;
       Console.Write (" ☮ ");
       Console.ForegroundColor = ConsoleColor.DarkBlue;
