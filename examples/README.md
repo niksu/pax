@@ -248,3 +248,5 @@ This example was tested in Mininet using the [mn_ethernet_echo.py](EthernetEcho/
 script which automatically generates and tests for
 [ECTP](https://en.wikipedia.org/wiki/Ethernet_Configuration_Testing_Protocol) [EtherType](https://en.wikipedia.org/wiki/EtherType)
 frames.
+When running Mininet in a VM, remember that to compile/run Pax elements in that
+VM you must have Mono installed there too.
