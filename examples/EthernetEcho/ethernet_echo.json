@@ -10,7 +10,7 @@
   ],
   "interfaces": [
     {
-      "interface_name" : "eth0",
+      "interface_name" : "echoer-eth0",
       "lead_handler" : "EthernetEcho",
       "pcap_filter" : ""
     }
