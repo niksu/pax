@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: latin-1
+
 # Mininet testing script for EthernetEcho
 # Nik Sultana, February 2017
 #
@@ -35,7 +38,7 @@ echoer.cmd("sysctl -w net.ipv4.ip_forward=0")
 
 echoer.cmd("sudo " + PAX + "/Bin/Pax.exe " + PAX + "/examples/EthernetEcho/ethernet_echo.json " + PAX + "/examples/Bin/Examples.dll &")
 
-output = host.cmdPrint("sudo python " + PAX + "/ee_test.py")
+output = host.cmdPrint("sudo python " + PAX + "/examples/EthernetEcho/mn_ethernet_echo_test.py")
 print output
 
 net.stop()
