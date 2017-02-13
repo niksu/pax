@@ -16,6 +16,13 @@ using System.Diagnostics;
 // FIXME use javadoc-style comments to describe the API
 namespace Pax {
 
+  public interface IVersioned {
+    int least_major_Pax_version();
+    int least_minor_Pax_version();
+    int greatest_major_Pax_version();
+    int greatest_minor_Pax_version();
+  }
+
   // An abstract interface to packet processors.
   public interface IAbstract_PacketProcessor {
     ForwardingDecision process_packet (int in_port, ref Packet packet);
