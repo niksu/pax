@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: latin-1
+
 # Mininet testing script for EthernetEcho
 # Nik Sultana, February 2017
 #

@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: latin-1
+
 # Scapy testing script for EthernetEcho
 # Nik Sultana, February 2017
 #
