@@ -206,6 +206,27 @@ namespace Pax {
     void Stop ();
   }
 
+  public abstract class ByteBased_PacketProcessor : IPacketProcessor {
+    // FIXME include LL interface type as parameter.
+    abstract public void process_packet (int in_port, byte[] packet);
+
+    public void packetHandler (object sender, CaptureEventArgs e)
+    {
+      byte[] packet = e.Packet.Data;
+      int in_port = PaxConfig.rdeviceMap[e.Device.Name];
+      process_packet (in_port, packet);
+    }
+
+    public void send_packet (int out_port, byte[] packet, int packet_size) {
+      var device = PaxConfig.deviceMap[out_port];
+      device.SendPacket(packet, packet_size);
+    }
+
+    public ForwardingDecision process_packet (int in_port, ref Packet packet) {
+      throw new Exception("Wrong instance of 'process_packet'");
+    }
+  }
+
   public class Dropper : PacketMonitor {
     override public ForwardingDecision process_packet (int in_port, ref Packet packet)
     {
