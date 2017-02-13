@@ -10,7 +10,7 @@ using System.Reflection;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("http://www.cl.cam.ac.uk/~ns441")]
 [assembly: AssemblyProduct("pax")]
-[assembly: AssemblyCopyright("Nik Sultana")]
+[assembly: AssemblyCopyright("Nik Sultana and Jonny Shipton")]
 [assembly: AssemblyCulture("")]
 
 //
@@ -54,4 +54,3 @@ using System.Reflection;
 [assembly: AssemblyDelaySign(false)]
 [assembly: AssemblyKeyFile("")]
 [assembly: AssemblyKeyName("")]
-
