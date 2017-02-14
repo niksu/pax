@@ -304,6 +304,18 @@ namespace Pax
       IPacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(type, arguments);
       if (pp == null)
         Console.WriteLine("Couldn't instantiate {0}", type.FullName);
+
+      System.Version version = new System.Version(Frontend.Version);
+      if (pp is IVersioned) {
+        IVersioned pp_v = pp as IVersioned;
+        if (pp_v.expected_major_Pax_version() != version.Major ||
+            pp_v.expected_minor_Pax_version() != version.Minor) {
+
+          // FIXME create custom version-related exception.
+          throw new Exception("Version incompatibility: could not instantiate " + type.ToString());
+        }
+      }
+
       return pp;
     }
 
