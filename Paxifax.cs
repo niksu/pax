@@ -227,6 +227,8 @@ namespace Pax {
     }
   }
 
+  // This element does nothing to the packets it receives, and doesn't forward
+  // them on.
   public class Dropper : PacketMonitor {
     override public ForwardingDecision process_packet (int in_port, ref Packet packet)
     {
