@@ -305,6 +305,9 @@ namespace Pax
       if (pp == null)
         Console.WriteLine("Couldn't instantiate {0}", type.FullName);
 
+      // FIXME could extract this into a separate function to check version
+      //       compatibility, as part of a more general extraction of an API
+      //       from the Frotend class.
       System.Version version = new System.Version(Frontend.Version);
       if (pp is IVersioned) {
         IVersioned pp_v = pp as IVersioned;
