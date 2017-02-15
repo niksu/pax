@@ -315,7 +315,10 @@ namespace Pax
             pp_v.expected_minor_Pax_version() != version.Minor) {
 
           // FIXME create custom version-related exception.
-          throw new Exception("Version incompatibility: could not instantiate " + type.ToString());
+          throw new Exception("Version incompatibility: could not instantiate " + type.ToString() +
+              " since it was expecting to run on Pax v" + pp_v.expected_major_Pax_version().ToString() +
+              "." + pp_v.expected_minor_Pax_version().ToString() + " but this Pax is v" +
+              version.Major.ToString() + "." + version.Minor.ToString());
         }
       }
 
