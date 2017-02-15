@@ -21,7 +21,14 @@ ports (according to its configuration).
 
 Pax provides a library and runtime support that wrap underlying wrappers so
 you can quickly test prototypes of packet-processors written in high-level
-languages. Some [example](https://github.com/niksu/pax/tree/master/examples) implementations are included in the repo.
+languages.
+
+# Example code
+Various [example](https://github.com/niksu/pax/tree/master/examples)
+implementations are included in this repo.
+Additional examples involving Pax show how to replay a pcap file on the network
+([recap](https://github.com/niksu/recap)) and an implementation of TCP
+([TCPuny](https://github.com/niksu/tcpuny)).
 
 # Building
 Follow the instructions in [BUILD.md](BUILD.md).
