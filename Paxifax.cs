@@ -22,8 +22,8 @@ namespace Pax {
   // checking of this kind can help avoid situations involving mysterious
   // failures.
   public interface IVersioned {
-    int expected_major_Pax_version();
-    int expected_minor_Pax_version();
+    int expected_major_Pax_version { get; }
+    int expected_minor_Pax_version { get; }
   }
 
   // An abstract interface to packet processors.

@@ -88,11 +88,15 @@ public class Printer : IPacketProcessor {
 
 public class Versioned_Printer : Printer, IVersioned {
 
-  public int expected_major_Pax_version() {
-    return -1; // NOTE this should cause the test to fail.
+  public int expected_major_Pax_version {
+    get {
+      return -1; // NOTE this should cause the test to fail.
+    }
   }
-  public int expected_minor_Pax_version() {
-    return 1;
+  public int expected_minor_Pax_version {
+    get {
+      return 1;
+    }
   }
 }
 
