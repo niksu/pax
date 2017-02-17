@@ -37,7 +37,7 @@ be hard to get it running wherever .NET runs.
 
 # Writing for Pax
 Packet processers using Pax can be written in any [.NET language](https://en.wikipedia.org/wiki/List_of_CLI_languages).
-They use Pax's API and define one or more functions that handle incoming packets.
+They use Pax's [API](API.md) and define one or more functions that handle incoming packets.
 The [examples](examples) included with Pax could help get you going.
 The workflow is as follows:
 
@@ -79,6 +79,7 @@ The main handler function of our [NAT example](examples/Nat/NATBase.cs) looks li
 The return value is the port over which to emit the (modified) packet. The
 actual network interface connected to that port is determined by the
 configuration file.
+You can also read more about Pax's [API](API.md).
 ```csharp
 // Get the forwarding decision
 ForwardingDecision forwardingDecision;
