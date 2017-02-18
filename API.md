@@ -80,7 +80,7 @@ configuration, and that runs the packet processors in your OS.
 The code for this is in [Pax.cs](Pax.cs), in the class called `Frontend`.
 You can interact with this in two ways:
 * providing switches to the tool, to control its appearance perhaps, as if it was called from the command line.
-* terminating the Frontend, for batch processes for example, by calling `Frontend.shutdown ()`.
+* terminating the Frontend, for batch processes for example, by calling [Frontend.shutdown](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Pax.cs#L395).
 
 
 ### FIXME: Versioning
@@ -100,6 +100,7 @@ allowed to forward to.
 #### Basic packet processors
 
 ##### IAbstract_PacketProcessor
+([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L20))
 ```csharp
   public interface IAbstract_PacketProcessor {
     ForwardingDecision process_packet (int in_port, ref Packet packet);
@@ -107,6 +108,7 @@ allowed to forward to.
 ```
 
 ##### IHostbased_PacketProcessor
+([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L45))
 ```csharp
   public interface IHostbased_PacketProcessor {
     void packetHandler (object sender, CaptureEventArgs e);
@@ -116,11 +118,13 @@ allowed to forward to.
 #### Derived packet processors
 
 ##### IPacketProcessor
+([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L49))
 ```csharp
   public interface IPacketProcessor : IAbstract_PacketProcessor, IHostbased_PacketProcessor {}
 ```
 
 ##### PacketMonitor
+([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L56))
 ```csharp
   // A packet monitor does not output anything onto the network, it simply
   // accumulates state based on what it observes happening on the network.
@@ -134,6 +138,7 @@ allowed to forward to.
 *Example*: [Dropper](https://github.com/niksu/pax/blob/bbbbc34f412b196c24baa30ec4395b1455314bc5/Paxifax.cs#L232)
 
 ##### SimplePacketProcessor
+([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L74))
 ```csharp
   // Simple packet processor: it can only transform the given packet and forward it to at most one interface.
   public abstract class SimplePacketProcessor : IPacketProcessor {
@@ -144,6 +149,7 @@ allowed to forward to.
 *Example*: [Mirror](examples/Mirror.cs)
 
 ##### MultiInterface_SimplePacketProcessor
+([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L112))
 ```csharp
   // Simple packet processor that can forward to multiple interfaces. It is "simple" because
   // it can only transform the given packet, and cannot generate new ones.
@@ -155,6 +161,7 @@ allowed to forward to.
 *Example*: [Hub](https://github.com/niksu/pax/blob/bbbbc34f412b196c24baa30ec4395b1455314bc5/examples/Hub.cs) and [Switch](https://github.com/niksu/pax/blob/bbbbc34f412b196c24baa30ec4395b1455314bc5/examples/LearningSwitch.cs)
 
 ##### PacketProcessor_Chain
+([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L175))
 ```csharp
   public class PacketProcessor_Chain : IPacketProcessor {
     List<IPacketProcessor> chain;
@@ -167,6 +174,7 @@ allowed to forward to.
 *Example*: [Nested_Chained_Test](https://github.com/niksu/pax/blob/bbbbc34f412b196c24baa30ec4395b1455314bc5/examples/Test.cs#L90) and [Nested_Chained_Test2](https://github.com/niksu/pax/blob/bbbbc34f412b196c24baa30ec4395b1455314bc5/examples/Test.cs#L108)
 
 ##### IActive
+([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L201))
 ```csharp
   public interface IActive {
     // NOTE "PreStart" and "Start" might be called multiple times -- once for
@@ -179,6 +187,7 @@ allowed to forward to.
 *Examples*: [Generator](examples/Generator.cs) and [TCPuny](https://github.com/niksu/tcpuny) and [Recap](https://github.com/niksu/recap).
 
 ##### ByteBased_PacketProcessor
+([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L209))
 ```csharp
   public abstract class ByteBased_PacketProcessor : IPacketProcessor {
     // FIXME include LL interface type as parameter.
