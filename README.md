@@ -7,21 +7,9 @@ several APIs and tools.  Pax aspires to be your peaceful
 [gesture](http://en.wikipedia.org/wiki/V_sign) at complexity, and seeks to
 facilitate prototype development.
 
-Using Pax you describe a network packet processor in terms of what it does to
-packets sent and received through network logical *ports*, which are attached
-at runtime to network interfaces made available by your OS. The interfaces may
-be physical or virtual (e.g., a tap device).
-
-![A Pax packet processor](http://www.cl.cam.ac.uk/~ns441/pax/packetproc.png)
-
-A Pax processor can have any number of ports (numbered 0-3 in the drawing
-above) which serve as the main interface with the outside world. The processor
-can write to any of these ports, and processes data that arrives on some of the
-ports (according to its configuration).
-
 Pax provides a library and runtime support that wrap underlying wrappers so
 you can quickly test prototypes of packet-processors written in high-level
-languages.
+languages. More information can be found in our [API documentation](API.md).
 
 # Example code
 Various [example](https://github.com/niksu/pax/tree/master/examples)
@@ -72,54 +60,6 @@ It connects the network interfaces with the handlers in the assembly, as specifi
 Then Pax activates the handlers, and your code takes it from there.
 
 ![Startup](http://www.cl.cam.ac.uk/~ns441/pax/start_screenshot.png)
-
-
-# What does a Pax processor look like?
-The main handler function of our [NAT example](examples/Nat/NATBase.cs) looks like this.
-The return value is the port over which to emit the (modified) packet. The
-actual network interface connected to that port is determined by the
-configuration file.
-You can also read more about Pax's [API](API.md).
-```csharp
-// Get the forwarding decision
-ForwardingDecision forwardingDecision;
-if (incomingNetworkInterface == Port_Outside)
-  forwardingDecision = OutsideToInside(packet);
-else
-  forwardingDecision = InsideToOutside(packet, incomingNetworkInterface);
-
-return forwardingDecision;
-```
-And the `OutsideToInside` function is implemented as follows:
-```csharp
-private ForwardingDecision OutsideToInside(TEncapsulation packet)
-{
-  // Retrieve the mapping. If a mapping doesn't exist, then it means that we're not
-  // aware of a session to which the packet belongs: so drop the packet.
-  var key = new ConnectionKey(packet.GetSourceNode(), packet.GetDestinationNode());
-  NatConnection<TPacket,TNode> connection;
-  if (NAT_MapToInside.TryGetValue(key, out connection))
-  {
-    var destination = connection.InsideNode;
-
-    // Update any connection state, including resetting the inactivity timer
-    connection.ReceivedPacket(packet, packetFromInside: false);
-
-    // Rewrite the packet destination
-    packet.SetDestination(destination);
-
-    // Update checksums
-    packet.UpdateChecksums();
-
-    // Forward on the mapped network port
-    return new ForwardingDecision.SinglePortForward(destination.InterfaceNumber);
-  }
-  else
-  {
-    return Drop;
-  }
-}
-```
 
 # License
 Pax is licensed under [Apache 2.0](license).
