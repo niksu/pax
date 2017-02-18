@@ -72,6 +72,8 @@ The API consists of 3 parts:
 * Pax's [frontend](#Frontend)
 * [Version management](#Versioning)
 
+(FIXME: this doesn't yet cover the "Lite" API and PaxConfig.)
+
 
 ### Frontend
 The *frontend* consists of the command-line tool that is passed a DLL and
@@ -98,8 +100,16 @@ processor is allow to forward packets for example, and how many ports its
 allowed to forward to.
 
 #### Basic packet processors
+All packet processors in Pax implement at least one of two interfaces. These
+interfaces reflect the abstraction that there are two kinds of basic packet
+processors:
+* `IAbstract_PacketProcessor` implements a `process_packet` function that indicates on which logical interfaces to map a (possibly modified) packet to.
+* `IHostbased_PacketProcessor` implements a `packetHandler` functions that works through side-effects to forward packets, and that is not directly given a packet but rather needs to extract it from another argument.
 
 ##### IAbstract_PacketProcessor
+Ideally packet processors should implement this interface, since it was intended
+to be used by packet processors that don't necessarily run on Pax's runtime
+(i.e., some other runtime environment).
 ([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L20))
 ```csharp
   public interface IAbstract_PacketProcessor {
@@ -108,6 +118,8 @@ allowed to forward to.
 ```
 
 ##### IHostbased_PacketProcessor
+"Hostbased" here means that this interface is intended for packet processors
+that *do* run on the Pax runtime, running on some microprocessor.
 ([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L45))
 ```csharp
   public interface IHostbased_PacketProcessor {
@@ -116,14 +128,23 @@ allowed to forward to.
 ```
 
 #### Derived packet processors
+Derived packet processors extend basic packet processors and usually add
+more behaviour, usually to derive more convenient-to-use interfaces.
+
 
 ##### IPacketProcessor
+`IPacketProcessor` is the basic derived interface: currently all packet
+processors in Pax implement this interface.
+This interface is intended to reflect that the behaviour can be described using
+a combination of both basic packet processor types, but specialises the
+processors to run on the Pax runtime.
 ([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L49))
 ```csharp
   public interface IPacketProcessor : IAbstract_PacketProcessor, IHostbased_PacketProcessor {}
 ```
 
 ##### PacketMonitor
+Here the resulting `ForwardingDecision` is always expected to be `Drop`.
 ([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L56))
 ```csharp
   // A packet monitor does not output anything onto the network, it simply
@@ -161,6 +182,7 @@ allowed to forward to.
 *Example*: [Hub](https://github.com/niksu/pax/blob/bbbbc34f412b196c24baa30ec4395b1455314bc5/examples/Hub.cs) and [Switch](https://github.com/niksu/pax/blob/bbbbc34f412b196c24baa30ec4395b1455314bc5/examples/LearningSwitch.cs)
 
 ##### PacketProcessor_Chain
+This collects packet processors to be run in sequence.
 ([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L175))
 ```csharp
   public class PacketProcessor_Chain : IPacketProcessor {
@@ -174,6 +196,13 @@ allowed to forward to.
 *Example*: [Nested_Chained_Test](https://github.com/niksu/pax/blob/bbbbc34f412b196c24baa30ec4395b1455314bc5/examples/Test.cs#L90) and [Nested_Chained_Test2](https://github.com/niksu/pax/blob/bbbbc34f412b196c24baa30ec4395b1455314bc5/examples/Test.cs#L108)
 
 ##### IActive
+Initially the packet processors developed using Pax were *reactive* to network
+traffic, but sometimes processors might need to *act* at their own initiative --
+for instance, TCP resubmission usually takes place at the expiry of a timer, and
+not always on receipt of repeated ACKs.
+This interface was devised to facilitate writing such packet processors:
+`Start()` is called to start a new thread, which the packet processor can
+continue to control.
 ([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L201))
 ```csharp
   public interface IActive {
@@ -187,6 +216,9 @@ allowed to forward to.
 *Examples*: [Generator](examples/Generator.cs) and [TCPuny](https://github.com/niksu/tcpuny) and [Recap](https://github.com/niksu/recap).
 
 ##### ByteBased_PacketProcessor
+Instead of using the `Packet` type we use `byte[]` to encode the packet. This
+lower-level interface is more suitable when the user wants to handle packet
+parsing and unparsing.
 ([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L209))
 ```csharp
   public abstract class ByteBased_PacketProcessor : IPacketProcessor {
