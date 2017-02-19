@@ -305,9 +305,12 @@ namespace Pax
       if (pp == null)
         Console.WriteLine("Couldn't instantiate {0}", type.FullName);
 
-      // FIXME could extract this into a separate function to check version
-      //       compatibility, as part of a more general extraction of an API
-      //       from the Frotend class.
+      check_version_exc(pp);
+
+      return pp;
+    }
+
+    public static void check_version_exc(Object pp) {
       System.Version version = new System.Version(Frontend.Version);
       if (pp is IVersioned) {
         IVersioned pp_v = pp as IVersioned;
@@ -315,14 +318,12 @@ namespace Pax
             pp_v.expected_minor_Pax_version != version.Minor) {
 
           // FIXME create custom version-related exception.
-          throw new Exception("Version incompatibility: could not instantiate " + type.ToString() +
+          throw new Exception("Version incompatibility: could not instantiate " + pp.ToString() +
               " since it was expecting to run on Pax v" + pp_v.expected_major_Pax_version.ToString() +
               "." + pp_v.expected_minor_Pax_version.ToString() + " but this Pax is v" +
               version.Major.ToString() + "." + version.Minor.ToString());
         }
       }
-
-      return pp;
     }
 
     private static void RegisterHandlers()
