@@ -17,7 +17,7 @@ using System.Diagnostics;
 namespace Pax {
 
   // Support for checking the version of Pax that an element expects to be run on.
-  // An element declares the expected major+minor version of the Pax runtime,
+  // An element declares the expected major.minor.patch version of the Pax runtime,
   // and the runtime checks whether it can run this element. Up-front version
   // checking of this kind can help avoid situations involving mysterious
   // failures.
