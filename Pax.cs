@@ -33,8 +33,7 @@ namespace Pax
         .Add ("no-logo", "suppress Pax version and URL", _ => PaxConfig.opt_no_logo = true)
         .Add ("help", "usage info", _ => usage())
         .Add ("config=", "path of JSON file containing the configuration", (string v) => PaxConfig.config_filename = v)
-        .Add ("code=", "path of DLL file containing the code for packet processors", (string v) => PaxConfig.assembly_filename = v)
-        .Add ("no-default", "by default Pax uses the 'Dropper' element when the handler named in a .json file cannot be found, as well as emits a message. Using this flag results in a default not being substituted (but a message is still emitted), as a consequence of which Pax might crash complaining that the handler couldn't be found. For more see 'examples/nonsense_wiring.json'", _ => PaxConfig.opt_no_default = true);
+        .Add ("code=", "path of DLL file containing the code for packet processors", (string v) => PaxConfig.assembly_filename = v);
 
     private static void usage() {
       PaxConfig.opt_no_colours = true;
