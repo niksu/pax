@@ -109,7 +109,7 @@ processors:
 Ideally packet processors should implement this interface, since it was intended
 to be used by packet processors that don't necessarily run on Pax's runtime
 (i.e., some other runtime environment).
-([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L20))
+(Code@[6cffc3edd2741896a068d7832a2b1d39a29589af](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L20))
 ```csharp
   public interface IAbstract_PacketProcessor {
     ForwardingDecision process_packet (int in_port, ref Packet packet);
@@ -119,7 +119,7 @@ to be used by packet processors that don't necessarily run on Pax's runtime
 ##### IHostbased_PacketProcessor
 "Hostbased" here means that this interface is intended for packet processors
 that *do* run on the Pax runtime, running on some microprocessor.
-([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L45))
+(Code@[6cffc3edd2741896a068d7832a2b1d39a29589af](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L45))
 ```csharp
   public interface IHostbased_PacketProcessor {
     void packetHandler (object sender, CaptureEventArgs e);
@@ -137,14 +137,14 @@ processors in Pax implement this interface.
 This interface is intended to reflect that the behaviour can be described using
 a combination of both basic packet processor types, but specialises the
 processors to run on the Pax runtime.
-([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L49))
+(Code@[6cffc3edd2741896a068d7832a2b1d39a29589af](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L49))
 ```csharp
   public interface IPacketProcessor : IAbstract_PacketProcessor, IHostbased_PacketProcessor {}
 ```
 
 ##### PacketMonitor
 Here the resulting `ForwardingDecision` is always expected to be `Drop`.
-([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L56))
+(Code@[6cffc3edd2741896a068d7832a2b1d39a29589af](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L56))
 ```csharp
   // A packet monitor does not output anything onto the network, it simply
   // accumulates state based on what it observes happening on the network.
@@ -158,7 +158,7 @@ Here the resulting `ForwardingDecision` is always expected to be `Drop`.
 *Example*: [Dropper](https://github.com/niksu/pax/blob/bbbbc34f412b196c24baa30ec4395b1455314bc5/Paxifax.cs#L232)
 
 ##### SimplePacketProcessor
-([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L74))
+(Code@[6cffc3edd2741896a068d7832a2b1d39a29589af](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L74))
 ```csharp
   // Simple packet processor: it can only transform the given packet and forward it to at most one interface.
   public abstract class SimplePacketProcessor : IPacketProcessor {
@@ -169,7 +169,7 @@ Here the resulting `ForwardingDecision` is always expected to be `Drop`.
 *Example*: [Mirror](examples/Mirror.cs)
 
 ##### MultiInterface_SimplePacketProcessor
-([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L112))
+(Code@[6cffc3edd2741896a068d7832a2b1d39a29589af](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L112))
 ```csharp
   // Simple packet processor that can forward to multiple interfaces. It is "simple" because
   // it can only transform the given packet, and cannot generate new ones.
@@ -182,7 +182,7 @@ Here the resulting `ForwardingDecision` is always expected to be `Drop`.
 
 ##### PacketProcessor_Chain
 This collects packet processors to be run in sequence.
-([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L175))
+(Code@[6cffc3edd2741896a068d7832a2b1d39a29589af](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L175))
 ```csharp
   public class PacketProcessor_Chain : IPacketProcessor {
     List<IPacketProcessor> chain;
@@ -202,7 +202,7 @@ not always on receipt of repeated ACKs.
 This interface was devised to facilitate writing such packet processors:
 `Start()` is called to start a new thread, which the packet processor can
 continue to control.
-([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L201))
+(Code@[6cffc3edd2741896a068d7832a2b1d39a29589af](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L201))
 ```csharp
   public interface IActive {
     // NOTE "PreStart" and "Start" might be called multiple times -- once for
@@ -218,7 +218,7 @@ continue to control.
 Instead of using the `Packet` type we use `byte[]` to encode the packet. This
 lower-level interface is more suitable when the user wants to handle packet
 parsing and unparsing.
-([Code](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L209))
+(Code@[6cffc3edd2741896a068d7832a2b1d39a29589af](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Paxifax.cs#L209))
 ```csharp
   public abstract class ByteBased_PacketProcessor : IPacketProcessor {
     // FIXME include LL interface type as parameter.
