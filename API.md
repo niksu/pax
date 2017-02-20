@@ -23,7 +23,6 @@ The main handler function of our [NAT example](examples/Nat/NATBase.cs) looks li
 The return value is the port over which to emit the (modified) packet. The
 actual network interface connected to that port is determined by the
 configuration file.
-You can also read more about Pax's [API](API.md).
 ```csharp
 // Get the forwarding decision
 ForwardingDecision forwardingDecision;
