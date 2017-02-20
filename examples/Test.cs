@@ -98,6 +98,11 @@ public class Versioned_Printer : Printer, IVersioned {
       return 1;
     }
   }
+  public int expected_patch_Pax_version {
+    get {
+      return 0;
+    }
+  }
 }
 
 // Nested packet processor -- it contains a sequence of chained processors.

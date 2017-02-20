@@ -24,6 +24,7 @@ namespace Pax {
   public interface IVersioned {
     int expected_major_Pax_version { get; }
     int expected_minor_Pax_version { get; }
+    int expected_patch_Pax_version { get; }
   }
 
   // An abstract interface to packet processors.

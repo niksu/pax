@@ -315,13 +315,19 @@ namespace Pax
       if (pp is IVersioned) {
         IVersioned pp_v = pp as IVersioned;
         if (pp_v.expected_major_Pax_version != version.Major ||
-            pp_v.expected_minor_Pax_version != version.Minor) {
-
+            (pp_v.expected_major_Pax_version == version.Major &&
+             pp_v.expected_minor_Pax_version < version.Minor) ||
+            (pp_v.expected_major_Pax_version == version.Major &&
+             pp_v.expected_minor_Pax_version == version.Minor &&
+             pp_v.expected_patch_Pax_version < version.Build)) {
           // FIXME create custom version-related exception.
           throw new Exception("Version incompatibility: could not instantiate " + pp.ToString() +
               " since it was expecting to run on Pax v" + pp_v.expected_major_Pax_version.ToString() +
-              "." + pp_v.expected_minor_Pax_version.ToString() + " but this Pax is v" +
-              version.Major.ToString() + "." + version.Minor.ToString());
+              "." + pp_v.expected_minor_Pax_version.ToString() +
+              "." + pp_v.expected_patch_Pax_version.ToString() +
+              " but this Pax is v" +
+              version.Major.ToString() + "." + version.Minor.ToString() + "." +
+              version.Build.ToString());
         }
       }
     }
