@@ -81,12 +81,28 @@ configuration, and that runs the packet processors in your OS.
 The code for this is in [Pax.cs](Pax.cs), in the class called `Frontend`.
 You can interact with Frontend in these ways:
 * providing switches to the tool, to control its appearance perhaps, as if it was called from the command line.
-* terminating the Frontend, for batch processes for example, by calling [Frontend.shutdown](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Pax.cs#L395).
+* terminating the Frontend, for batch processes for example, by calling [Frontend.shutdown()](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Pax.cs#L395).
+* checking whether a given object's Pax IVersioned data is compatible with the (version of the) Pax runtime currently being used, by calling [Frontend.check_version_exc(Object obj)](https://github.com/niksu/pax/blob/8ec7ce6896cd4e8ac03e24e40e7afe37141b2b20/Pax.cs#L312).
 
-
-### FIXME: Versioning
-(Talk about static and dynamic checking)
-
+### Versioning
+An element can commit to a particular version of Pax (used as a library and a
+runtime) in two ways: *statically* by specifying a particular Pax version as a
+dependency (in the .csproj) and *dynamically* by implementing the IVersioned interface (in the .cs file):
+(Code@[8ec7ce6896cd4e8ac03e24e40e7afe37141b2b20](https://github.com/niksu/pax/blob/8ec7ce6896cd4e8ac03e24e40e7afe37141b2b20/Paxifax.cs#L19))
+```csharp
+  // Support for checking the version of Pax that an element expects to be run on.
+  // An element declares the expected major+minor version of the Pax runtime,
+  // and the runtime checks whether it can run this element. Up-front version
+  // checking of this kind can help avoid situations involving mysterious
+  // failures.
+  public interface IVersioned {
+    int expected_major_Pax_version { get; }
+    int expected_minor_Pax_version { get; }
+    int expected_patch_Pax_version { get; }
+  }
+```
+Naturally, the version numbers used for both static and dynamic checks
+should be identical.
 
 ### Interfaces
 Pax provides different interface types to facilitate the writing of different kinds
