@@ -31,6 +31,9 @@ be hard to get it running wherever .NET runs.
 # Writing for Pax
 Packet processers using Pax can be written in any [.NET language](https://en.wikipedia.org/wiki/List_of_CLI_languages).
 They use Pax's API and define one or more functions that handle incoming packets.
+[Semantic versioning](http://semver.org) is used for Pax, to facilitate checking
+whether a given version of a packet processor should run on a given version of
+Pax.
 The [examples](examples) included with Pax could help get you going.
 The workflow is as follows:
 
