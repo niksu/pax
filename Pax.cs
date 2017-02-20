@@ -409,10 +409,10 @@ namespace Pax
           if (!PaxConfig.opt_no_colours)
             Console.ForegroundColor = tmp;
 
-          // If we don't have a packet processor for an interface, we assign the Dropper.
-          if (!PaxConfig.opt_no_default) {
-            PaxConfig.deviceMap[idx].OnPacketArrival += (new Dropper()).packetHandler;
-          }
+          // FIXME create a custom exception subtype for this situation.
+          throw new Exception("Could not instantiate '" +
+              PaxConfig.config[idx].lead_handler +
+              "' -- perhaps not a packet processor?");
         } else {
           if (!PaxConfig.opt_quiet) {
             var tmp = Console.ForegroundColor;
