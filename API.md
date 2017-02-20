@@ -14,7 +14,7 @@ interfaces may be physical or virtual (e.g., a tap device).
 
 A Pax processor can have any number of ports (numbered 0-3 in the drawing
 above) which serve as the main interface with the outside world. The processor
-can write to any of these ports, and processes data that arrives on some of the
+can write to any of these ports, and it processes data that arrives on some of the
 ports (according to its configuration).
 
 
@@ -22,7 +22,7 @@ ports (according to its configuration).
 The main handler function of our [NAT example](examples/Nat/NATBase.cs) looks like this.
 The return value is the port over which to emit the (modified) packet. The
 actual network interface connected to that port is determined by the
-configuration file.
+[configuration file](examples/Nat/nat_wiring.json).
 ```csharp
 // Get the forwarding decision
 ForwardingDecision forwardingDecision;
@@ -79,7 +79,7 @@ The *frontend* consists of the command-line tool that is passed a DLL and
 configuration, and that runs the packet processors in your OS.
 
 The code for this is in [Pax.cs](Pax.cs), in the class called `Frontend`.
-You can interact with this in two ways:
+You can interact with Frontend in these ways:
 * providing switches to the tool, to control its appearance perhaps, as if it was called from the command line.
 * terminating the Frontend, for batch processes for example, by calling [Frontend.shutdown](https://github.com/niksu/pax/blob/6cffc3edd2741896a068d7832a2b1d39a29589af/Pax.cs#L395).
 
@@ -89,13 +89,13 @@ You can interact with this in two ways:
 
 
 ### Interfaces
-Pax provides different interfaces to facilitate the writing of different kinds
+Pax provides different interface types to facilitate the writing of different kinds
 of packet processors. The code for this can be found in
 [Paxifax.cs](Paxifax.cs).
 Remember that ultimately the programming model consists of reading/writing to
 logical network ports that are linked to resources made available by the OS
 (e.g., physical NICs). But it's useful to differentiate between whether a packet
-processor is allow to forward packets for example, and how many ports its
+processor is allowed to forward packets for example, and how many ports it's
 allowed to forward to.
 
 #### Basic packet processors
@@ -103,7 +103,7 @@ All packet processors in Pax implement at least one of two interfaces. These
 interfaces reflect the abstraction that there are two kinds of basic packet
 processors:
 * `IAbstract_PacketProcessor` implements a `process_packet` function that indicates on which logical interfaces to map a (possibly modified) packet to.
-* `IHostbased_PacketProcessor` implements a `packetHandler` functions that works through side-effects to forward packets, and that is not directly given a packet but rather needs to extract it from another argument.
+* `IHostbased_PacketProcessor` implements a `packetHandler` function that works through side-effects to forward packets, and that is not directly given a packet but rather needs to extract it from another argument.
 
 ##### IAbstract_PacketProcessor
 Ideally packet processors should implement this interface, since it was intended
