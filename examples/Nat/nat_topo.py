@@ -16,13 +16,17 @@ import random
 import time
 import thread
 import threading
+import os
 
-# Add parent directory to path so we can use the PaxNode class
-from inspect import getsourcefile
-import os.path, sys
-current_dir = os.path.dirname(os.path.abspath(getsourcefile(lambda:0)))
-parent_dir = os.path.dirname(current_dir) #current_dir[:current_dir.rfind(os.path.sep)]
-sys.path.insert(0, parent_dir) # This is only temporary - disappears after python exits
+# Add Pax's mininet/ directory to path so we can use the PaxNode class
+PAX = None
+try:
+  PAX = os.environ['PAX']
+except KeyError:
+  print "PAX environment variable must point to path where Pax repo is cloned"
+  exit(1)
+import sys
+sys.path.insert(0, PAX + "/mininet/")
 from pax_mininet_node import PaxNode
 
 config = None
@@ -113,7 +117,7 @@ def test():
     # Start the Pax NAT process on the NAT node:
     # Start it in a separate terminal so that we can see the output in real time.
     print "Starting Pax NAT process on %s:" % nat0
-    cmd = 'Bin/Pax.exe examples/Nat/nat_wiring_test.json examples/Bin/Examples.dll'
+    cmd = PAX + '/Bin/Pax.exe ' + PAX + '/examples/Nat/nat_wiring_test.json ' + PAX + '/examples/Bin/Examples.dll'
     if config.X_windows:
         cmd = 'x-terminal-emulator -e \'%s\' &' % (cmd)
         runCmd(net, nat0, cmd)
@@ -172,9 +176,9 @@ def test():
     print "Scapy test #1"
     print "  This test checks that a TCP connection can be opened from the inside to the outside and " + \
             "that the connection entry is removed after the inactivity timeout elapses."
-    sendCmd(net, out0, "examples/Nat/nat_scapy_tests.py server 35001", xterm=True)
+    sendCmd(net, out0, PAX + "/examples/Nat/nat_scapy_tests.py server 35001", xterm=True)
     runCmd(net, in1, "sleep 1")
-    runCmd(net, in1, "examples/Nat/nat_scapy_tests.py client", xterm=True)
+    runCmd(net, in1, PAX + "/examples/Nat/nat_scapy_tests.py client", xterm=True)
     waitOutput(net, out0)
     clientExitcode = runCmd(net, in1, "echo $?").rstrip('\n\r')
     serverExitcode = runCmd(net, out0, "echo $?").rstrip('\n\r')
@@ -188,9 +192,9 @@ def test():
     print "Scapy test #2"
     print "  This test checks that a TCP connection can be opened from the inside to the outside, and " + \
             "that when it is closed with Fin packets, the connection entry is removed after the TIME_WAIT timeout elapses."
-    sendCmd(net, out0, "examples/Nat/nat_scapy_tests.py server2 35002", xterm=True)
+    sendCmd(net, out0, PAX + "/examples/Nat/nat_scapy_tests.py server2 35002", xterm=True)
     runCmd(net, in1, "sleep 1")
-    runCmd(net, in1, "examples/Nat/nat_scapy_tests.py client2", xterm=True)
+    runCmd(net, in1, PAX + "/examples/Nat/nat_scapy_tests.py client2", xterm=True)
     waitOutput(net, out0)
     clientExitcode = runCmd(net, in1, "echo $?").rstrip('\n\r')
     serverExitcode = runCmd(net, out0, "echo $?").rstrip('\n\r')
@@ -308,7 +312,7 @@ def sendInt(net, name, **args):
     h.sendInt(**args)
 
 
-# This code runs when the script is executed (e.g. $ sudo ./examples/Nat/nat_topo.py)
+# This code runs when the script is executed (e.g. $ sudo ${PAX}/examples/Nat/nat_topo.py)
 import sys
 import argparse
 if __name__ == '__main__':
