@@ -127,7 +127,6 @@ def run_client(serverport=12012, clientport=12011):
     print "  client> $ %s" % (iptables_remove_rule_fmt % iptables_rule)
     subprocess.check_call(iptables_remove_rule_fmt % iptables_rule, shell=True)
 
-
     if (len(rcv) != 0):
         return 1
     else:
@@ -278,4 +277,3 @@ if __name__ == '__main__':
     # If we reach this point, the correct syntax wasn't used
     usage()
     sys.exit(2)
-
