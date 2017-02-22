@@ -117,7 +117,7 @@ def test():
     # Start the Pax NAT process on the NAT node:
     # Start it in a separate terminal so that we can see the output in real time.
     print "Starting Pax NAT process on %s:" % nat0
-    cmd = PAX + '/Bin/Pax.exe ' + PAX + '/examples/Nat/nat_wiring_test.json ' + PAX + '/examples/Bin/Examples.dll'
+    cmd = PAX + '/Bin/Pax.exe --config=' + PAX + '/examples/Nat/nat_wiring_test.json --code=' + PAX + '/examples/Bin/Examples.dll'
     if config.X_windows:
         cmd = 'x-terminal-emulator -e \'%s\' &' % (cmd)
         runCmd(net, nat0, cmd)
