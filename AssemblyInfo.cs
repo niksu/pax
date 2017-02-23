@@ -10,7 +10,7 @@ using System.Reflection;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("http://www.cl.cam.ac.uk/~ns441")]
 [assembly: AssemblyProduct("pax")]
-[assembly: AssemblyCopyright("Nik Sultana")]
+[assembly: AssemblyCopyright("Nik Sultana and Jonny Shipton")]
 [assembly: AssemblyCulture("")]
 
 //
@@ -24,7 +24,7 @@ using System.Reflection;
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
 
-[assembly: AssemblyVersion("0.1.0")]
+[assembly: AssemblyVersion("0.2.0")]
 
 //
 // In order to sign your assembly you must specify a key to use. Refer to the 
@@ -54,4 +54,3 @@ using System.Reflection;
 [assembly: AssemblyDelaySign(false)]
 [assembly: AssemblyKeyFile("")]
 [assembly: AssemblyKeyName("")]
-

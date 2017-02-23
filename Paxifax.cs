@@ -16,6 +16,17 @@ using System.Diagnostics;
 // FIXME use javadoc-style comments to describe the API
 namespace Pax {
 
+  // Support for checking the version of Pax that an element expects to be run on.
+  // An element declares the expected major.minor.patch version of the Pax runtime,
+  // and the runtime checks whether it can run this element. Up-front version
+  // checking of this kind can help avoid situations involving mysterious
+  // failures.
+  public interface IVersioned {
+    int expected_major_Pax_version { get; }
+    int expected_minor_Pax_version { get; }
+    int expected_patch_Pax_version { get; }
+  }
+
   // An abstract interface to packet processors.
   public interface IAbstract_PacketProcessor {
     ForwardingDecision process_packet (int in_port, ref Packet packet);

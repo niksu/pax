@@ -146,6 +146,10 @@ namespace Pax
       return 0;
     }
 
+    public static string Version {
+      get { return FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion; }
+    }
+
     private static void PrintIntro()
     {
       if (!PaxConfig.opt_no_logo) {
@@ -154,7 +158,7 @@ namespace Pax
         Console.Write ("✌ ");
         if (!PaxConfig.opt_no_colours)
           Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write ("Pax v{0}", "0.1"/*FIXME const -- get value from AssemblyInfo*/);
+        Console.Write ("Pax v{0}", Version);
         if (!PaxConfig.opt_no_colours)
           Console.ForegroundColor = ConsoleColor.White;
         Console.Write (" ☮ ");
@@ -361,7 +365,32 @@ namespace Pax
       IPacketProcessor pp = PacketProcessorHelper.InstantiatePacketProcessor(type, arguments);
       if (pp == null)
         Console.WriteLine("Couldn't instantiate {0}", type.FullName);
+
+      check_version_exc(pp);
+
       return pp;
+    }
+
+    public static void check_version_exc(Object pp) {
+      System.Version version = new System.Version(Frontend.Version);
+      if (pp is IVersioned) {
+        IVersioned pp_v = pp as IVersioned;
+        if (pp_v.expected_major_Pax_version != version.Major ||
+            (pp_v.expected_major_Pax_version == version.Major &&
+             pp_v.expected_minor_Pax_version < version.Minor) ||
+            (pp_v.expected_major_Pax_version == version.Major &&
+             pp_v.expected_minor_Pax_version == version.Minor &&
+             pp_v.expected_patch_Pax_version < version.Build)) {
+          // FIXME create custom version-related exception.
+          throw new Exception("Version incompatibility: could not instantiate " + pp.ToString() +
+              " since it was expecting to run on Pax v" + pp_v.expected_major_Pax_version.ToString() +
+              "." + pp_v.expected_minor_Pax_version.ToString() +
+              "." + pp_v.expected_patch_Pax_version.ToString() +
+              " but this Pax is v" +
+              version.Major.ToString() + "." + version.Minor.ToString() + "." +
+              version.Build.ToString());
+        }
+      }
     }
 
     private static void RegisterHandlers()

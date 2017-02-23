@@ -1,0 +1,17 @@
+{
+  "handlers": [
+    {
+      "class_name": "Versioned_Printer",
+      "args": {
+        "id": "1"
+      }
+    }
+  ],
+  "interfaces": [
+    {
+      "interface_name" : "en0",
+      "lead_handler" : "Versioned_Printer",
+      "pcap_filter" : "udp"
+    }
+  ]
+}
