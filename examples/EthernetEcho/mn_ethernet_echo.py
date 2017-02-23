@@ -21,8 +21,12 @@ except KeyError:
   print "PAX environment variable must point to path where Pax repo is cloned"
   exit(1)
 
+import sys
+sys.path.insert(0, PAX + "/mininet/")
+from pax_mininet_node import PaxNode
+
 net = Mininet()
-echoer = net.addHost('echoer', mac=echoer_mac)
+echoer = net.addHost('echoer', mac=echoer_mac, cls=PaxNode)
 host = net.addHost('host', mac=host_mac)
 switch = net.addSwitch('s0')
 controller = net.addController('c0')
@@ -30,11 +34,6 @@ net.addLink(echoer, switch)
 net.addLink(host, switch)
 
 net.start()
-
-# FIXME use Jonny Shipton's PaxNode node type, to set these up automatically.
-echoer.cmd("iptables -A INPUT -p tcp -i " + echoer_iface_name + " -j DROP")
-echoer.cmd("arptables -P INPUT DROP")
-echoer.cmd("sysctl -w net.ipv4.ip_forward=0")
 
 echoer.cmd("sudo " + PAX + "/Bin/Pax.exe " + PAX + "/examples/EthernetEcho/ethernet_echo.json " + PAX + "/examples/Bin/Examples.dll &")
 

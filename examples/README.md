@@ -216,7 +216,7 @@ The generator emits TCP segments from (`src_port`,`src_ip`,`src_mac`) to
 ### Testing
 I ran the generator by calling
 ```
-$ sudo mono ./Bin/Pax.exe examples/generator_wiring.json examples/Bin/Examples.dll
+$ sudo mono ./Bin/Pax.exe --config=examples/generator_wiring.json --code=examples/Bin/Examples.dll
 ```
 and, in parallel used tcpdump  -- with a suitable filter -- to see what the generator is producing:
 ```

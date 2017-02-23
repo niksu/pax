@@ -42,20 +42,20 @@ The configuration file "wires up" the network interfaces with packet processors 
 The drawing example shows an assembly with four packet processors, only two of which is used. The blue processor handles packets coming on network port 0. The configuration file determines which processors handle traffic coming on which network interface.
 
 # Running
-Simply run `Pax.exe CONFIGURATION_FILENAME ASSEMBLY_FILENAME`.
-For more on command-line switches, see [CLI.md](CLI.md).
+Simply run `Pax.exe --config=CONFIGURATION_FILENAME --code=ASSEMBLY_FILENAME`.
+For more on command-line switches, run `Pax.exe --help`.
 Probably you'd have to run this command with root/administrator-level access
 because of the privileged access to hardware that's used while Pax is running.
 For the example code I run:
 ```
-sudo ./Bin/Pax.exe examples/wiring.json examples/Bin/Examples.dll
+sudo ./Bin/Pax.exe --config=examples/wiring.json --code=examples/Bin/Examples.dll
 ```
 
 This runs the Printer element, which simply prints an integer whenever a
 particular kind of packet arrives on an interface. For another element we use
 for debugging, try:
 ```
-sudo ./Bin/Pax.exe examples/tallyer_wiring.json examples/Bin/Examples.dll
+sudo ./Bin/Pax.exe --config=examples/tallyer_wiring.json --code=examples/Bin/Examples.dll
 ```
 
 Pax then starts up and checks the configuration file and assembly, listing some of their contents.
