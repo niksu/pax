@@ -1,16 +1,22 @@
-This directory contains examples of packet processors written using Pax's API.
+This directory contains examples of packet processors written using Pax's API:
+* [Hub](#hub)
+* [Learning switch](#learningswitch)
+* [Mirror](#mirror)
+* [NAT](#nat)
+* [Packet generator](#packetgenerator)
+* [Ethernet Echo](#ethernetecho)
 These examples are written in C#, but any [.NET language](https://en.wikipedia.org/wiki/List_of_CLI_languages) can be used.
 
 # Examples
-* [Hub](Hub.cs) simply forwards all receives all traffic that's received on a port to every other port, as illustrated below.
+* <a name="hub"></a>[Hub](Hub.cs) simply forwards all receives all traffic that's received on a port to every other port, as illustrated below.
 
 ![Hub](http://www.cl.cam.ac.uk/~ns441/pax/hub.png)
 
-* [Learning Switch](LearningSwitch.cs) forwards traffic between ports based on a mapping that it "learned" by forwarding traffic(!) If its mapping doesn't specify where to forward traffic, then the switch forwards it to all other ports. In the example below, we receive a frame for destination Yellow, from Pink. The switch learns that Pink can be reached through port 3. Not knowing how to reach Yellow, it forwards the frame through all ports. When it later receives a packet from Green to Pink, it only forwards the frame through port 3.
+* <a name="learningswitch"></a>[Learning Switch](LearningSwitch.cs) forwards traffic between ports based on a mapping that it "learned" by forwarding traffic(!) If its mapping doesn't specify where to forward traffic, then the switch forwards it to all other ports. In the example below, we receive a frame for destination Yellow, from Pink. The switch learns that Pink can be reached through port 3. Not knowing how to reach Yellow, it forwards the frame through all ports. When it later receives a packet from Green to Pink, it only forwards the frame through port 3.
 
 ![LearningSwitch](http://www.cl.cam.ac.uk/~ns441/pax/learningswitch.png)
 
-* [Mirror](Mirror.cs) involves duplicating a frame and sending it over an additional port.
+* <a name="mirror"></a>[Mirror](Mirror.cs) involves duplicating a frame and sending it over an additional port.
 
 ![Mirror](http://www.cl.cam.ac.uk/~ns441/pax/mirror.png)
 
@@ -18,7 +24,7 @@ These examples are written in C#, but any [.NET language](https://en.wikipedia.o
 
 ![Chained](http://www.cl.cam.ac.uk/~ns441/pax/chained.png)
 
-* [Network Address Translation](NAT.cs) is perhaps the most interesting example. Our example works for TCP. You can find out more about NAT from article such as [Wikipedia's](https://en.wikipedia.org/wiki/Network_Address_Translation).
+* <a name="nat"></a>[Network Address Translation](NAT.cs) is perhaps the most interesting example. Our example works for TCP. You can find out more about NAT from article such as [Wikipedia's](https://en.wikipedia.org/wiki/Network_Address_Translation).
 
 ## NAT example
 
@@ -177,7 +183,7 @@ Feel free to look in [`examples/Nat/nat_topo.py`](Nat/nat_topo.py):
 - The `test()` procedure creates a network, tests the NAT implementation by
   creating a connection between in1 and out0, and then cleans up.
 
-## Packet generator
+## <a name="packetgenerator"></a>Packet generator
 The packet generator example emits packets on a specific interface at regular
 intervals. It's a very simple affair, but can easily be extended for more
 complex behaviour.
@@ -236,7 +242,7 @@ tcpdump: listening on pktap, link-type PKTAP (Packet Tap), capture size 65535 by
 ```
 
 
-## Ethernet Echo
+## <a name="ethernetecho"></a>Ethernet Echo
 [EthernetEcho.cs](EthernetEcho/EthernetEcho.cs) implements an element that swaps
 the source and destination Ethernet addresses.
 The goal of this example is to show the *byte-based* interface for packet
