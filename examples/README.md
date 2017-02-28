@@ -8,25 +8,41 @@ This directory contains examples of packet processors written using Pax's API:
 These examples are written in C#, but any [.NET language](https://en.wikipedia.org/wiki/List_of_CLI_languages) can be used.
 
 # Examples
-* <a name="hub"></a>[Hub](Hub.cs) simply forwards all receives all traffic that's received on a port to every other port, as illustrated below.
+
+## <a name="hub"></a>Hub
+The [Hub](Hub.cs) simply forwards all receives all traffic that's received on a
+port to every other port, as illustrated below.
 
 ![Hub](http://www.cl.cam.ac.uk/~ns441/pax/hub.png)
 
-* <a name="learningswitch"></a>[Learning Switch](LearningSwitch.cs) forwards traffic between ports based on a mapping that it "learned" by forwarding traffic(!) If its mapping doesn't specify where to forward traffic, then the switch forwards it to all other ports. In the example below, we receive a frame for destination Yellow, from Pink. The switch learns that Pink can be reached through port 3. Not knowing how to reach Yellow, it forwards the frame through all ports. When it later receives a packet from Green to Pink, it only forwards the frame through port 3.
+## <a name="learningswitch"></a>Learning Switch
+The [Learning Switch](LearningSwitch.cs) forwards traffic between ports based on
+a mapping that it "learned" by forwarding traffic(!) If its mapping doesn't
+specify where to forward traffic, then the switch forwards it to all other
+ports. In the example below, we receive a frame for destination Yellow, from
+Pink. The switch learns that Pink can be reached through port 3. Not knowing how
+to reach Yellow, it forwards the frame through all ports. When it later receives
+a packet from Green to Pink, it only forwards the frame through port 3.
 
 ![LearningSwitch](http://www.cl.cam.ac.uk/~ns441/pax/learningswitch.png)
 
-* <a name="mirror"></a>[Mirror](Mirror.cs) involves duplicating a frame and sending it over an additional port.
+## <a name="mirror"></a>Mirror
+The [Mirror](Mirror.cs) duplicates a frame and sends it over an additional port.
 
 ![Mirror](http://www.cl.cam.ac.uk/~ns441/pax/mirror.png)
 
-[Test](Test.cs) includes a variety of different packet processors (mostly contrived), including nested and chained packet processors. This means that packet processors can be combined with others to form a new kind of packet processor. Our assembly can accommodate such packet processors, as illustrated below. [Test](Test.cs) contains an example of a Mirror chained with a Switch.
+[Test](Test.cs) includes a variety of different packet processors (mostly
+contrived), including nested and chained packet processors. This means that
+packet processors can be combined with others to form a new kind of packet
+processor. Our assembly can accommodate such packet processors, as illustrated
+below. [Test](Test.cs) contains an example of a Mirror chained with a Switch.
 
 ![Chained](http://www.cl.cam.ac.uk/~ns441/pax/chained.png)
 
-* <a name="nat"></a>[Network Address Translation](NAT.cs) is perhaps the most interesting example. Our example works for TCP. You can find out more about NAT from article such as [Wikipedia's](https://en.wikipedia.org/wiki/Network_Address_Translation).
-
-## NAT example
+## <a name="nat"></a>Network Address Translation
+[Network Address Translation](NAT.cs) is perhaps the most interesting example.
+Our example works for TCP. You can find out more about NAT from article such as
+[Wikipedia's](https://en.wikipedia.org/wiki/Network_Address_Translation).
 
 ### Configuration
 The configuration needs to specify three parameters to the NAT's constructor:
