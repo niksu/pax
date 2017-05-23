@@ -15,7 +15,7 @@ For an example in F# see [Recap](https://github.com/niksu/recap).
 The [Hub](Hub.cs) simply forwards all receives all traffic that's received on a
 port to every other port, as illustrated below.
 
-![Hub](http://www.cl.cam.ac.uk/~ns441/pax/hub.png)
+![Hub](https://www.nik.network/pax/hub.png)
 
 ## <a name="learningswitch"></a>Learning Switch
 The [Learning Switch](LearningSwitch.cs) forwards traffic between ports based on
@@ -26,12 +26,12 @@ Pink. The switch learns that Pink can be reached through port 3. Not knowing how
 to reach Yellow, it forwards the frame through all ports. When it later receives
 a packet from Green to Pink, it only forwards the frame through port 3.
 
-![LearningSwitch](http://www.cl.cam.ac.uk/~ns441/pax/learningswitch.png)
+![LearningSwitch](https://www.nik.network/pax/learningswitch.png)
 
 ## <a name="mirror"></a>Mirror
 The [Mirror](Mirror.cs) duplicates a frame and sends it over an additional port.
 
-![Mirror](http://www.cl.cam.ac.uk/~ns441/pax/mirror.png)
+![Mirror](https://www.nik.network/pax/mirror.png)
 
 [Test](Test.cs) includes a variety of different packet processors (mostly
 contrived), including nested and chained packet processors. This means that
@@ -39,7 +39,7 @@ packet processors can be combined with others to form a new kind of packet
 processor. Our assembly can accommodate such packet processors, as illustrated
 below. [Test](Test.cs) contains an example of a Mirror chained with a Switch.
 
-![Chained](http://www.cl.cam.ac.uk/~ns441/pax/chained.png)
+![Chained](https://www.nik.network/pax/chained.png)
 
 ## <a name="nat"></a>Network Address Translation
 [Network Address Translation](NAT.cs) is perhaps the most interesting example.

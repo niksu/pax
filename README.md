@@ -1,4 +1,4 @@
-![Pax](http://www.cl.cam.ac.uk/~ns441/pax/pax.png)
+![Pax](https://www.nik.network/pax/pax.png)
 
 # [Pax](https://en.wiktionary.org/wiki/pax#Latin) be upon packets
 
@@ -36,7 +36,7 @@ The workflow is as follows:
 2. Write a configuration file (or scheme) for your packet processor. This specifies all parameters to your packet processor, including which specific network interfaces that are bound to logical ports. Configuration in Pax is [JSON](https://en.wikipedia.org/wiki/JSON)-encoded.
 3. Run Pax, indicating your configuration and DLL.
 
-![A running Pax processor](http://www.cl.cam.ac.uk/~ns441/pax/running.png)
+![A running Pax processor](https://www.nik.network/pax/running.png)
 
 The configuration file "wires up" the network interfaces with packet processors in your assembly. Not all packet processors in your assembly need be connected, and different network interfaces may be connected to the same handler.
 The drawing example shows an assembly with four packet processors, only two of which is used. The blue processor handles packets coming on network port 0. The configuration file determines which processors handle traffic coming on which network interface.
@@ -62,7 +62,7 @@ Pax then starts up and checks the configuration file and assembly, listing some 
 It connects the network interfaces with the handlers in the assembly, as specified in the configuration.
 Then Pax activates the handlers, and your code takes it from there.
 
-![Startup](http://www.cl.cam.ac.uk/~ns441/pax/start_screenshot.png)
+![Startup](https://www.nik.network/pax/start_screenshot.png)
 
 # License
 Pax is licensed under [Apache 2.0](license).
